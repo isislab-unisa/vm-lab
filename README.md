@@ -46,9 +46,9 @@ CREATE TABLE users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(128) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    role VARCHAR(10)
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    role VARCHAR(10) NOT NULL
 );
 ```
 
@@ -60,6 +60,6 @@ CREATE TABLE virtual_machines (
     bookmark BOOL NOT NULL,
     user_id SERIAL NOT NULL, 
     CONSTRAINT fk_user FOREIGN KEY (user_id)
-    REFERENCES users(id)
+        REFERENCES users(id) ON DELETE CASCADE 
 );
 ```

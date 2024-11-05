@@ -1,2 +1,6 @@
 streamlit~=1.39.0
+SQLAlchemy~=2.0.36
 webssh~=1.6.2
+psycopg2~=2.9.10
+bcrypt~=4.2.0
+PyYAML~=6.0.2
