@@ -76,10 +76,6 @@ def get_credentials():
 	with get_db() as db:
 		users = db.query(User).all()
 
-		if len(users) == 0:
-			with open('first_users.yaml') as file:
-				users = yaml.load(file, Loader=SafeLoader)["usernames"]
-
 		for user in users:
 			credentials["usernames"][user.username] = {
 				"email": user.email,
@@ -87,7 +83,6 @@ def get_credentials():
 				"last_name": user.last_name,
 				"password": user.password,
 				"roles": [user.role],
-				"test_vms": user.virtual_machines
 			}
 
 		return credentials
