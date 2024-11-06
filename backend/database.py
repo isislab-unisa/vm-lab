@@ -1,11 +1,17 @@
-from contextlib import contextmanager
+import sqlalchemy.orm
 import yaml
-from yaml.loader import SafeLoader
 import bcrypt
 import streamlit as st
+from contextlib import contextmanager
+from yaml.loader import SafeLoader
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
+from sqlalchemy.ext.declarative import declarative_base
+
+################################
+#     Database Connection      #
+################################
+
 
 db_username = st.secrets['db_username']
 db_password = st.secrets['db_password']
@@ -16,10 +22,27 @@ DATABASE_URL = f"postgresql+psycopg2://{db_username}:{db_password}@{db_address}/
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
+@contextmanager
+def get_db() -> Session:
+	"""Context manager to provide a database session."""
+	db = SessionLocal()
+	try:
+		yield db
+	finally:
+		db.close()
+
+
+################################
+#       Database Models        #
+################################
+
+
 Base = declarative_base()
 
 
 class User(Base):
+	"""Class representing a User in the database."""
 	__tablename__ = 'users'
 	id = Column(Integer, primary_key=True)
 	username = Column(String(50), unique=True, nullable=False, index=True)
@@ -29,14 +52,16 @@ class User(Base):
 	first_name = Column(String(50), nullable=False)
 	last_name = Column(String(50), nullable=False)
 
-	# one-to-many relationship
+	# Relationship one-to-many
 	virtual_machines = relationship("VirtualMachine", back_populates="user", lazy='joined')
 
 	@staticmethod
 	def hash_password(plain_password):
+		"""Hashes a plain text password."""
 		return bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 	def verify_password(self, plain_password):
+		"""Verifies a plain text password against the hashed one."""
 		return bcrypt.checkpw(plain_password.encode('utf-8'), self.password.encode('utf-8'))
 
 	def __str__(self):
@@ -46,6 +71,7 @@ class User(Base):
 
 
 class VirtualMachine(Base):
+	"""Class representing a Virtual Machine in the database."""
 	__tablename__ = 'virtual_machines'
 	id = Column(Integer, primary_key=True)
 	name = Column(String(50), nullable=False)
@@ -61,21 +87,15 @@ class VirtualMachine(Base):
 				f"user_id={self.user_id})")
 
 
-@contextmanager
-def get_db() -> Session:
-	db = SessionLocal()
-
-	try:
-		yield db
-	finally:
-		db.close()
-
-
-def get_credentials():
+def get_credentials() -> dict:
+	"""
+    Fetches user credentials from the database and organizes them into a dictionary for use in streamlit-authentication.
+    :return: A dictionary containing the usernames, emails, first names, last names, passwords, and roles for all
+    users in the database.
+    """
 	credentials = {"usernames": {}}
 	with get_db() as db:
 		users = db.query(User).all()
-
 		for user in users:
 			credentials["usernames"][user.username] = {
 				"email": user.email,
@@ -84,24 +104,34 @@ def get_credentials():
 				"password": user.password,
 				"roles": [user.role],
 			}
+	return credentials
 
-		return credentials
+
+################################
+#       Load First Users       #
+################################
 
 
-db_empty_users = SessionLocal()
+def load_initial_users():
+	"""
+    Loads initial users into the database from a YAML file if the users table is empty.
+    """
+	with get_db() as db:
+		if db.query(User).count() == 0:
+			with open('first_users.yaml') as file:
+				initial_users = yaml.load(file, Loader=SafeLoader)
+				for user_data in initial_users['first_users']:
+					new_user = User(
+						username=user_data['username'],
+						password=User.hash_password(user_data['password']),
+						email=user_data['email'],
+						first_name=user_data['first_name'],
+						last_name=user_data['last_name'],
+						role=user_data['role']
+					)
+					db.add(new_user)
+					db.commit()
+					print("Added initial user:", new_user)
 
-if db_empty_users.query(User).count() == 0:
-	with open('first_users.yaml') as initial_users_file:
-		initial_users = yaml.load(initial_users_file, Loader=SafeLoader)
-		for initial_user in initial_users:
-			new_user = User(
-				username=initial_user['username'],
-				password=User.hash_password(initial_user['password']),
-				email=initial_user['email'],
-				first_name=initial_user['first_name'],
-				last_name=initial_user['last_name'],
-				role=initial_user['role']
-			)
-			db_empty_users.add(new_user)
-			db_empty_users.commit()
-			print("Added initial user:", new_user)
+
+load_initial_users()

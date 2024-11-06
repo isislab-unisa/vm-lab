@@ -1,14 +1,14 @@
--
-    username: jsmith
-    email: jsmith@gmail.com
-    first_name: John
-    last_name: Smith
-    password: abc
-    role: admin
--
-    username: rbriggs
-    email: rbriggs@gmail.com
-    first_name: Rebecca
-    last_name: Briggs
-    password: def
-    role: viewer
+first_users:
+    - username: jsmith
+      email: jsmith@gmail.com
+      first_name: John
+      last_name: Smith
+      password: abc
+      role: admin
+
+    - username: rbriggs
+      email: rbriggs@gmail.com
+      first_name: Rebecca
+      last_name: Briggs
+      password: def
+      role: viewer
