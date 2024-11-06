@@ -87,7 +87,7 @@ class VirtualMachine(Base):
 				f"user_id={self.user_id})")
 
 
-def get_credentials() -> dict:
+def get_db_users_credentials() -> dict:
 	"""
     Fetches user credentials from the database and organizes them into a dictionary for use in streamlit-authentication.
     :return: A dictionary containing the usernames, emails, first names, last names, passwords, and roles for all
