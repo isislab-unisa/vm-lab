@@ -1,7 +1,14 @@
 # vm-lab
+[![Python Version](https://img.shields.io/badge/Python-3.12.7-blue?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3127/)
+
 Manage all your VMs in the browser.
 
-Using [Python 3.12.7](https://www.python.org/downloads/release/python-3127/).
+---
+## Update pip requirements
+```shell
+pip install -r requirements.txt
+```
+
 
 ---
 ## Useful stuff (for PyCharm)
