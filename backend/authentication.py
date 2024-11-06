@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from streamlit import switch_page
 from streamlit_authenticator import Authenticate
 
 from backend.database import get_db_users_credentials
@@ -48,7 +47,7 @@ def is_logged_in() -> bool:
 		return False
 
 
-def check_unauthorized_redirect_page(accepted_roles: list[str] = None) -> str | None:
+def find_unauthorized_redirect_page(accepted_roles: list[str] = None) -> str | None:
 	"""
 	If the user is not authorized, find the page name of the redirect, otherwise returns None.
 	"""
