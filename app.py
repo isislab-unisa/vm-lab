@@ -1,6 +1,7 @@
 import streamlit as st
 
 from backend.database import get_db, User
+from frontend.page_names import PageNames
 
 with get_db() as db:
     users = db.query(User).all()
@@ -17,3 +18,6 @@ with get_db() as db:
         })
 
     st.table(user_data)
+
+    st.page_link(PageNames.my_vms, label="My VMs")
+    st.page_link(PageNames.login, label="Login")

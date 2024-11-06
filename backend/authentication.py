@@ -59,7 +59,7 @@ def find_unauthorized_redirect_page(accepted_roles: list[str] = None) -> str | N
 		return PageNames.login
 
 	# User logged in but not authorized
-	role = get_session_state('role')
+	role = get_session_state('roles')
 	if (accepted_roles is not None
 			and not is_role_accepted(role, accepted_roles)):
 		set_session_state('error_message', 'Not authorized')

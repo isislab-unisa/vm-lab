@@ -7,4 +7,4 @@ class PageNames:
 	wait = "pages/wait.py"								# NEW_USER
 	my_vms = "pages/my_vms.py"							# ADMIN, MANAGER, USER
 	terminal = "pages/terminal.py"						# ADMIN, MANAGER, USER
-	manage_users = "pages/manage_users"					# ADMIN, MANAGER
+	manage_users = "pages/manage_users.py"				# ADMIN, MANAGER

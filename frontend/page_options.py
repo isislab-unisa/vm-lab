@@ -46,7 +46,9 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 def render_sidebar_menu():
 	"""Renders the sidebar menu based on the user's role stored in the session state."""
 	with st.sidebar:
-		match get_session_state('role'):
+		role = get_session_state('roles')
+
+		match role:
 			case Roles.NEW_USER:
 				st.page_link(PageNames.logout, label="Logout")
 

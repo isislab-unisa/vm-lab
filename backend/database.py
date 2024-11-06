@@ -102,7 +102,7 @@ def get_db_users_credentials() -> dict:
 				"first_name": user.first_name,
 				"last_name": user.last_name,
 				"password": user.password,
-				"roles": [user.role],
+				"roles": user.role,
 			}
 	return credentials
 
