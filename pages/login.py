@@ -1,18 +1,13 @@
 import streamlit as st
-from streamlit import switch_page
 
-from backend.authentication import is_logged_in, get_authenticator_object
-from frontend.page_names import PageNames
-from frontend.page_options import page_setup
+from frontend.page_options import page_setup, AccessControlType
 from utils.session_state import get_session_state, pop_session_state
 
-page_setup(title="Login", is_restricted=False)
-
-if is_logged_in():
-	# Correct credentials or already logged in
-	switch_page(PageNames.my_vms)
-
-authenticator = get_authenticator_object()
+authenticator = page_setup(
+	title="Login",
+	access_control=AccessControlType.UNREGISTERED_ONLY,
+	print_session_state=True
+)
 
 try:
 	authenticator.login()

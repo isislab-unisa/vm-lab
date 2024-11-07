@@ -9,18 +9,17 @@ from streamlit_authenticator.utilities import Validator, Helpers
 from backend.database import User
 from backend.database import get_db_users_credentials, get_db
 from backend.roles import Roles
-from frontend.page_names import PageNames
-from utils.session_state import in_session_state, set_session_state, get_session_state
+from utils.session_state import set_session_state, get_session_state
 
 
 def create_authenticator_object() -> Authenticate:
-	"""Creates a streamlit-authenticator object and stores it in the session state."""
+	"""Creates a streamlit-authenticator object and stores it in the session state"""
 	credentials = get_db_users_credentials()
 	cookie_name = st.secrets['cookie_name']
 	cookie_key = st.secrets['cookie_key']
 	cookie_expiry_days = st.secrets['cookie_expiry_days']
 
-	authenticator: Authenticate = stauth.Authenticate(
+	authenticator = stauth.Authenticate(
 		credentials=credentials,
 		cookie_name=cookie_name,
 		cookie_key=cookie_key,
@@ -33,7 +32,7 @@ def create_authenticator_object() -> Authenticate:
 
 def add_new_user_to_authenticator_object(new_user: User) -> Authenticate:
 	"""Adds a new user to the current streamlit-authenticator object and updates it in the session state"""
-	authenticator: Authenticate = get_authenticator_object()
+	authenticator: Authenticate = get_or_create_authenticator_object()
 	credentials = authenticator.authentication_controller.authentication_model.credentials['usernames']
 	new_credentials = new_user.to_credentials_dict()
 
@@ -43,17 +42,20 @@ def add_new_user_to_authenticator_object(new_user: User) -> Authenticate:
 	return authenticator
 
 
-def get_authenticator_object() -> Authenticate:
-	"""Retrieves the streamlit-authenticator object in the session state."""
-	if not in_session_state('authenticator'):
-		return create_authenticator_object()
-	else:
-		return get_session_state('authenticator')
+def get_or_create_authenticator_object() -> Authenticate:
+	"""Retrieves the streamlit-authenticator object in the session state"""
+	authenticator = get_session_state('authenticator')
+
+	if authenticator is None:
+		authenticator = create_authenticator_object()
+
+	return authenticator
 
 
-def is_role_accepted(role: str, accepted_roles: list[str]) -> bool:
-	"""Check if a role is in the list of accepted roles"""
-	return role in accepted_roles
+def get_current_user_role() -> Roles | None:
+	"""Retrieves the role of the user if it is logged-in, otherwise it will return None"""
+	role_str = get_session_state('roles')
+	return Roles.from_str(role_str)
 
 
 def is_logged_in() -> bool:
@@ -63,26 +65,6 @@ def is_logged_in() -> bool:
 	else:
 		# Status is None or False
 		return False
-
-
-def find_unauthorized_redirect_page(accepted_roles: list[str] = None) -> str | None:
-	"""If the user is not authorized, find the page name of the redirect, otherwise returns None."""
-	authenticator = get_authenticator_object()
-	authenticator.login(location='unrendered')  # Attempt to log in with cookie
-
-	# User not logged in
-	if not is_logged_in():
-		return PageNames.login
-
-	# User logged in but not authorized
-	role = get_session_state('roles')
-	if (accepted_roles is not None
-			and not is_role_accepted(role, accepted_roles)):
-		set_session_state('error_message', 'Not authorized')
-		return PageNames.error
-
-	# User logged in and authorized
-	return None
 
 
 def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
@@ -143,9 +125,10 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		username=new_username,
 		password=User.hash_password(new_password),
 		email=new_email,
-		role=Roles.USER,  # TODO: change this to NEW_USER
+		role=Roles.NEW_USER,
 	)
 
+	# Push new user to database
 	try:
 		with get_db() as db:
 			db.add(new_user)

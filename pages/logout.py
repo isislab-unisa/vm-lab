@@ -1,12 +1,8 @@
-from streamlit import switch_page
+from frontend.page_options import page_setup, AccessControlType
 
-from backend.authentication import get_authenticator_object, is_logged_in
-from frontend.page_names import PageNames
-from frontend.page_options import page_setup
+authenticator = page_setup(
+    title="Logout",
+    access_control=AccessControlType.LOGGED_IN_ONLY,
+)
 
-page_setup()
-
-if is_logged_in():
-    get_authenticator_object().logout(location="unrendered")
-else:
-    switch_page(PageNames.login)
+authenticator.logout(location="unrendered")

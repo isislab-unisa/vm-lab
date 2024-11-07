@@ -11,4 +11,4 @@ first_users:
       first_name: Rebecca
       last_name: Briggs
       password: def
-      role: user
+      role: new_user
