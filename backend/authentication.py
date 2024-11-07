@@ -2,15 +2,15 @@ from typing import Optional, List
 
 import streamlit as st
 import streamlit_authenticator as stauth
+from sqlalchemy.exc import IntegrityError
 from streamlit_authenticator import Authenticate, RegisterError
-from streamlit_authenticator.controllers import AuthenticationController
 from streamlit_authenticator.utilities import Validator, Helpers
 
+from backend.database import User
 from backend.database import get_db_users_credentials, get_db
 from backend.roles import Roles
 from frontend.page_names import PageNames
-from utils.session_state import in_session_state, set_session_state, get_session_state, get_session_state_all
-from backend.database import User
+from utils.session_state import in_session_state, set_session_state, get_session_state
 
 
 def create_authenticator_object() -> Authenticate:
@@ -27,16 +27,13 @@ def create_authenticator_object() -> Authenticate:
 		cookie_expiry_days=cookie_expiry_days
 	)
 
-	# authenticator.authentication_controller.authentication_model.credentials = credentials
-
 	set_session_state('authenticator', authenticator)
 	return authenticator
 
 
-def add_new_user_authenticator_object(new_user: User) -> Authenticate:
-	"""Adds a new user to the current streamlit-authenticator object"""
+def add_new_user_to_authenticator_object(new_user: User) -> Authenticate:
+	"""Adds a new user to the current streamlit-authenticator object and updates it in the session state"""
 	authenticator: Authenticate = get_authenticator_object()
-
 	credentials = authenticator.authentication_controller.authentication_model.credentials['usernames']
 	new_credentials = new_user.to_credentials_dict()
 
@@ -139,6 +136,7 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		if not Helpers.check_captcha('register_user_captcha', entered_captcha):
 			raise RegisterError('Captcha entered incorrectly')
 
+	# All data is correct
 	new_user = User(
 		first_name=new_first_name,
 		last_name=new_last_name,
@@ -148,11 +146,21 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		role=Roles.USER,  # TODO: change this to NEW_USER
 	)
 
-	with get_db() as db:
-		db.add(new_user)
-		db.commit()
-		db.refresh(new_user)
+	try:
+		with get_db() as db:
+			db.add(new_user)
+			db.commit()
 
-	print("New user created:", new_user)
-
-	add_new_user_authenticator_object(new_user)
+			db.refresh(new_user)
+			print("New user created:", new_user)
+			add_new_user_to_authenticator_object(new_user)
+	except IntegrityError as e:
+		message = str(e)
+		if "users_username_key" in message:
+			raise RegisterError('Username already exists')
+		elif "users_email_key" in message:
+			raise RegisterError('Email already exists')
+		else:
+			raise RegisterError('Unknown error')
+	except:
+		raise RegisterError('Unknown error')

@@ -11,15 +11,21 @@ from utils.session_state import set_session_state
 
 
 def register_user(key: str = 'Register user', domains: Optional[List[str]] = None, captcha: bool = True):
-	"""Renders a form for user registration"""
+	"""
+	Renders a form for user registration
+	:param key: (optional) The key of the form
+	:param domains: (optional) The accepted domains for the registration, example: `domains=["gmail.com"]`
+	:param captcha: (optional) Whether to show the captcha input or not
+	:raises RegisterError If the data is not correct
+	"""
 	with st.form(key):
 		st.subheader('Register user')
 
 		col1_1, col2_1 = st.columns(2)
 
 		new_first_name = col1_1.text_input('First name')
-		new_last_name = col2_1.text_input('Last name')
-		new_email = col1_1.text_input('Email')
+		new_last_name = col1_1.text_input('Last name')
+		new_email = col2_1.text_input('Email')
 		new_username = col2_1.text_input('Username')
 
 		col1_2, col2_2 = st.columns(2)
