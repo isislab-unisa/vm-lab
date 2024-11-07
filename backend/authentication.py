@@ -9,7 +9,7 @@ from streamlit_authenticator.utilities import Validator, Helpers
 from backend.database import get_db_users_credentials, get_db
 from backend.roles import Roles
 from frontend.page_names import PageNames
-from utils.session_state import in_session_state, set_session_state, get_session_state
+from utils.session_state import in_session_state, set_session_state, get_session_state, get_session_state_all
 from backend.database import User
 
 
@@ -27,7 +27,22 @@ def create_authenticator_object() -> Authenticate:
 		cookie_expiry_days=cookie_expiry_days
 	)
 
+	# authenticator.authentication_controller.authentication_model.credentials = credentials
+
 	set_session_state('authenticator', authenticator)
+	return authenticator
+
+
+def add_new_user_authenticator_object(new_user: User) -> Authenticate:
+	"""Adds a new user to the current streamlit-authenticator object"""
+	authenticator: Authenticate = get_authenticator_object()
+
+	credentials = authenticator.authentication_controller.authentication_model.credentials['usernames']
+	new_credentials = new_user.to_credentials_dict()
+
+	credentials[new_user.username] = new_credentials
+	set_session_state('authenticator', authenticator)
+
 	return authenticator
 
 
@@ -54,9 +69,7 @@ def is_logged_in() -> bool:
 
 
 def find_unauthorized_redirect_page(accepted_roles: list[str] = None) -> str | None:
-	"""
-	If the user is not authorized, find the page name of the redirect, otherwise returns None.
-	"""
+	"""If the user is not authorized, find the page name of the redirect, otherwise returns None."""
 	authenticator = get_authenticator_object()
 	authenticator.login(location='unrendered')  # Attempt to log in with cookie
 
@@ -76,8 +89,13 @@ def find_unauthorized_redirect_page(accepted_roles: list[str] = None) -> str | N
 
 
 def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
-                      new_username: str, new_password: str, new_password_repeat: str,
-                      captcha: bool=True, entered_captcha: Optional[str]=None, domains: Optional[List[str]]=None):
+					  new_username: str, new_password: str, new_password_repeat: str,
+					  captcha: bool = True, entered_captcha: Optional[str] = None,
+					  domains: Optional[List[str]] = None):
+	"""
+	Checks the validity of the form data and creates a new user in the database
+	:raises RegisterError If the data is not correct
+	"""
 	validator = Validator()
 
 	new_first_name = new_first_name.strip()
@@ -121,15 +139,13 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		if not Helpers.check_captcha('register_user_captcha', entered_captcha):
 			raise RegisterError('Captcha entered incorrectly')
 
-	print("Everything seems fine")
-
 	new_user = User(
 		first_name=new_first_name,
 		last_name=new_last_name,
 		username=new_username,
 		password=User.hash_password(new_password),
 		email=new_email,
-		role=Roles.USER,
+		role=Roles.USER,  # TODO: change this to NEW_USER
 	)
 
 	with get_db() as db:
@@ -139,4 +155,4 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 
 	print("New user created:", new_user)
 
-	create_authenticator_object()
+	add_new_user_authenticator_object(new_user)

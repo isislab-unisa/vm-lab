@@ -1,14 +1,17 @@
 # Modified code from streamlit_authenticator\views\authentication_view.py (Authenticate.register_user)
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List
 
 import streamlit as st
+from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
 from backend.authentication import register_new_user
+from frontend.page_names import PageNames
 from utils.session_state import set_session_state
 
 
-def register_user(key: str='Register user', domains: Optional[List[str]]=None, captcha: bool=True):
+def register_user(key: str = 'Register user', domains: Optional[List[str]] = None, captcha: bool = True):
+	"""Renders a form for user registration"""
 	with st.form(key):
 		st.subheader('Register user')
 
@@ -40,8 +43,6 @@ def register_user(key: str='Register user', domains: Optional[List[str]]=None, c
 		submitted = st.form_submit_button('Register', type='primary')
 
 		if submitted:
-			print("Submitted:", new_first_name, new_last_name, new_email, new_username, new_password,
-				  new_password_repeat, entered_captcha)
 			register_new_user(
 				new_first_name=new_first_name,
 				new_last_name=new_last_name,
@@ -52,4 +53,6 @@ def register_user(key: str='Register user', domains: Optional[List[str]]=None, c
 				entered_captcha=entered_captcha,
 				domains=domains
 			)
-			set_session_state('registration_success', True)
+			# Switch page if there is no error with the registration
+			set_session_state('registration-success', True)
+			switch_page(PageNames.login)

@@ -64,6 +64,16 @@ class User(Base):
 		"""Verifies a plain text password against the hashed one."""
 		return bcrypt.checkpw(plain_password.encode('utf-8'), self.password.encode('utf-8'))
 
+	def to_credentials_dict(self):
+		"""Creates a dict readable by the streamlit-authentication authenticator object"""
+		return {
+			'email': self.email,
+			'first_name': self.first_name,
+			'last_name': self.last_name,
+			'password': self.password,
+			'roles': self.role,
+		}
+
 	def __str__(self):
 		return (f"User(id={self.id}, role={self.role}, username={self.username}, password={self.password}, "
 				f"email={self.email}, first_name={self.first_name}, last_name={self.last_name}, "
@@ -107,9 +117,9 @@ def get_db_users_credentials() -> dict:
 	return credentials
 
 
-################################
-#       Load First Users       #
-################################
+##################################
+#       Load Initial Users       #
+##################################
 
 
 def load_initial_users():
