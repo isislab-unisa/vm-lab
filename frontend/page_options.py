@@ -5,7 +5,7 @@ from typing import Literal
 from streamlit import switch_page
 from backend.authentication import is_logged_in, get_current_user_role, \
 	get_or_create_authenticator_object
-from backend.roles import Roles
+from backend.role import Role
 from frontend.page_names import PageNames
 from streamlit_authenticator import Authenticate
 
@@ -34,7 +34,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 				   AccessControlType.UNREGISTERED_ONLY,
 				   AccessControlType.ACCEPTED_ROLES_ONLY
 			   ] = AccessControlType.FREE_ACCESS,
-			   accepted_roles: list[Roles] = None,
+			   accepted_roles: list[Role] = None,
 			   callback=None,
 			   print_session_state: bool = False,
 			   logged_in_not_accepted_redirect: str = PageNames.my_vms,
@@ -82,7 +82,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 				switch_page(unregistered_not_accepted_in_redirect)
 
 			if role not in accepted_roles:
-				if new_user_redirect_to_wait_page and role == Roles.NEW_USER:
+				if new_user_redirect_to_wait_page and role == Role.NEW_USER:
 					switch_page(PageNames.wait)
 
 				switch_page(role_not_accepted_redirect)
@@ -111,23 +111,23 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 	return authenticator
 
 
-def render_sidebar_menu(role: Roles | None):
+def render_sidebar_menu(role: Role | None):
 	"""Renders the sidebar menu based on the user's role stored in the session state"""
 	with st.sidebar:
 		match role:
-			case Roles.NEW_USER:
+			case Role.NEW_USER:
 				st.page_link(PageNames.logout, label="Logout")
 
-			case Roles.USER:
+			case Role.USER:
 				st.page_link(PageNames.my_vms, label="My VMs")
 				st.page_link(PageNames.logout, label="Logout")
 
-			case Roles.MANAGER:
+			case Role.MANAGER:
 				st.page_link(PageNames.my_vms, label="My VMs")
 				st.page_link(PageNames.manage_users, label="Manage Users")
 				st.page_link(PageNames.logout, label="Logout")
 
-			case Roles.ADMIN:
+			case Role.ADMIN:
 				st.page_link(PageNames.my_vms, label="My VMs")
 				st.page_link(PageNames.manage_users, label="Manage Users")
 				st.page_link(PageNames.logout, label="Logout")

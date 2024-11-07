@@ -8,7 +8,7 @@ from streamlit_authenticator.utilities import Validator, Helpers
 
 from backend.database import User
 from backend.database import get_db_users_credentials, get_db
-from backend.roles import Roles
+from backend.role import Role
 from utils.session_state import set_session_state, get_session_state
 
 
@@ -52,10 +52,10 @@ def get_or_create_authenticator_object() -> Authenticate:
 	return authenticator
 
 
-def get_current_user_role() -> Roles | None:
+def get_current_user_role() -> Role | None:
 	"""Retrieves the role of the user if it is logged-in, otherwise it will return None"""
 	role_str = get_session_state('roles')
-	return Roles.from_str(role_str)
+	return Role.from_str(role_str)
 
 
 def is_logged_in() -> bool:
@@ -125,7 +125,7 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		username=new_username,
 		password=User.hash_password(new_password),
 		email=new_email,
-		role=Roles.NEW_USER,
+		role=Role.NEW_USER.value,
 	)
 
 	# Push new user to database
@@ -144,6 +144,7 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		elif "users_email_key" in message:
 			raise RegisterError('Email already exists')
 		else:
-			raise RegisterError('Unknown error')
-	except:
+			raise RegisterError('Unknown Integrity Error')
+	except Exception as e:
+		print(e)
 		raise RegisterError('Unknown error')
