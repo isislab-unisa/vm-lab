@@ -42,10 +42,14 @@ def get_or_create_authenticator_object() -> Authenticate:
 
 
 def add_new_user_to_authenticator_object(new_user_data: User, replace_username: str = None) -> Authenticate:
-	"""Adds a new user to the current streamlit-authenticator object and updates it in the session state"""
+	"""
+	Adds a new user to the current streamlit-authenticator object and updates it in the session state
+	:param new_user_data: The new user data
+	:param replace_username: Used by the edit version of this function to replace the data for an existing user
+	"""
 	authenticator: Authenticate = get_or_create_authenticator_object()
-	credentials = authenticator.authentication_controller.authentication_model.credentials['usernames']
-	new_credentials: dict = new_user_data.to_credentials_dict()
+	credentials: dict = authenticator.authentication_controller.authentication_model.credentials['usernames']
+	new_credentials = new_user_data.to_credentials_dict()
 
 	if replace_username is not None:
 		credentials.pop(replace_username)
@@ -57,7 +61,11 @@ def add_new_user_to_authenticator_object(new_user_data: User, replace_username: 
 
 
 def edit_user_in_authenticator_object(username: str, new_user_data: User) -> Authenticate:
-	"""Edits the credentials of a user in the current streamlit-authenticator object and updates it in the session state"""
+	"""
+	Edits the credentials of a user in the current streamlit-authenticator object and updates it in the session state
+	:param username: The username of the user to be edited
+	:param new_user_data: The new user data
+	"""
 	return add_new_user_to_authenticator_object(new_user_data, replace_username=username)
 
 
@@ -82,16 +90,26 @@ def create_new_user(new_first_name: str, new_last_name: str, new_email: str,
 					domains: Optional[List[str]] = None):
 	"""
 	Checks the validity of the form data and creates a new user in the database
+	:param new_first_name: The first name of the new user
+	:param new_last_name: The last name of the new user
+	:param new_email: The email of the new user
+	:param new_username: The username of the new user
+	:param new_password: The password of the new user
+	:param new_password_repeat: The repeated password
+	:param captcha: Whether the captcha input has been shown or not
+	:param entered_captcha: The captcha entered by the user
+	:param domains: The accepted domains for the registration, example: `domains=["gmail.com"]`
 	:raises RegisterError If the data is not correct
 	"""
-	validator = Validator()
-
 	new_first_name = new_first_name.strip()
 	new_last_name = new_last_name.strip()
 	new_email = new_email.strip()
 	new_username = new_username.lower().strip()
 	new_password = new_password.strip()
 	new_password_repeat = new_password_repeat.strip()
+
+	# Data validation
+	validator = Validator()
 
 	if not validator.validate_name(new_first_name):
 		raise RegisterError('First name is not valid')
@@ -161,20 +179,31 @@ def create_new_user(new_first_name: str, new_last_name: str, new_email: str,
 
 
 def edit_username(old_username: str, new_username: str):
-	validator = Validator()
+	"""
+	Edits the username of a user in the database
+	:param old_username: The old username of the user to be edited
+	:param new_username: The new username of the user to be edited
+	:raises UpdateError If the data is not correct
+	"""
 	new_username = new_username.lower().strip()
+
+	# Data validation
+	validator = Validator()
+
+	if old_username == new_username:
+		raise UpdateError('New and current usernames are the same')
 
 	if not validator.validate_username(new_username):
 		raise UpdateError('Username is not valid')
-
-	if old_username == new_username:
-		raise UpdateError('New and current values are the same')
 
 	with get_db() as db:
 		user = db.query(User).filter(User.username == old_username).first()
 
 		if user is None:
 			raise UpdateError(f'User with username {old_username} does not exist')
+
+		# All data is correct
+		# Push changes to database
 		try:
 			user.username = new_username
 			db.commit()
@@ -182,6 +211,7 @@ def edit_username(old_username: str, new_username: str):
 
 			print(f"Username updated (old={old_username}):", user)
 
+			# Logout to remove cookie and set to it again after login
 			authenticator = get_or_create_authenticator_object()
 			authenticator.logout(location="unrendered")
 
@@ -199,14 +229,22 @@ def edit_username(old_username: str, new_username: str):
 
 
 def edit_email(old_email: str, new_email: str):
-	validator = Validator()
+	"""
+	Edits the email of a user in the database
+	:param old_email: The old email of the user to be edited
+	:param new_email: The new email of the user to be edited
+	:raises UpdateError If the data is not correct
+	"""
 	new_email = new_email.strip()
+
+	# Data validation
+	validator = Validator()
+
+	if old_email == new_email:
+		raise UpdateError('New and current emails are the same')
 
 	if not validator.validate_email(new_email):
 		raise RegisterError('Email is not valid')
-
-	if old_email == new_email:
-		raise UpdateError('New and current values are the same')
 
 	with get_db() as db:
 		user = db.query(User).filter(User.email == old_email).first()
@@ -214,6 +252,8 @@ def edit_email(old_email: str, new_email: str):
 		if user is None:
 			raise UpdateError(f'User with email {old_email} does not exist')
 
+		# All data is correct
+		# Push changes to database
 		try:
 			user.email = new_email
 			db.commit()
@@ -228,6 +268,55 @@ def edit_email(old_email: str, new_email: str):
 				raise UpdateError('Email already exists')
 			else:
 				raise UpdateError('Unknown Integrity Error')
+		except Exception as e:
+			print(e)
+			raise UpdateError('Unknown error')
+
+
+def edit_password(username: str, current_password: str, new_password: str, new_password_repeat: str):
+	"""
+	Edits the password of a user in the database
+	:param username: The username of the user to be edited
+	:param current_password: The current password of the user to be edited
+	:param new_password: The new password of the user to be edited
+	:param new_password_repeat: The repeated new password
+	:raises UpdateError If the data is not correct
+	"""
+	current_password = current_password.strip()
+	new_password = new_password.strip()
+	new_password_repeat = new_password_repeat.strip()
+
+	# Data validation
+	validator = Validator()
+
+	if new_password != new_password_repeat:
+		raise RegisterError('Passwords do not match')
+
+	if not validator.validate_password(new_password):
+		raise RegisterError('Password does not meet criteria')
+
+	with get_db() as db:
+		user = db.query(User).filter(User.username == username).first()
+
+		if user is None:
+			raise UpdateError(f'User with username {username} does not exist')
+
+		if not user.verify_password(current_password):
+			raise RegisterError('Current password is incorrect')
+
+		if user.verify_password(new_password):
+			raise RegisterError('New and current passwords are the same')
+
+		# All data is correct
+		# Push changes to database
+		try:
+			user.password = User.hash_password(new_password)
+			db.commit()
+			db.refresh(user)
+
+			print(f"Password updated for {username}:", user)
+
+			edit_user_in_authenticator_object(username, user)
 		except Exception as e:
 			print(e)
 			raise UpdateError('Unknown error')

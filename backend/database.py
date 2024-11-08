@@ -56,12 +56,18 @@ class User(Base):
 	virtual_machines = relationship("VirtualMachine", back_populates="user", lazy='joined')
 
 	@staticmethod
-	def hash_password(plain_password):
-		"""Hashes a plain text password."""
+	def hash_password(plain_password) -> str:
+		"""
+		Hashes a plain text password.
+		:return: The hashed password as a string.
+		"""
 		return bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-	def verify_password(self, plain_password):
-		"""Verifies a plain text password against the hashed one."""
+	def verify_password(self, plain_password) -> bool:
+		"""
+		Verifies a plain text password against the hashed one.
+		:return: True if the password matches, False otherwise.
+		"""
 		return bcrypt.checkpw(plain_password.encode('utf-8'), self.password.encode('utf-8'))
 
 	def to_credentials_dict(self):

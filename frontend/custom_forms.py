@@ -6,20 +6,38 @@ import streamlit as st
 from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
-from backend.authentication import create_new_user, edit_username, get_or_create_authenticator_object, edit_email
+from backend.authentication import create_new_user, edit_username, get_or_create_authenticator_object, edit_email, \
+	edit_password
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state, get_session_state, pop_session_state
 
+PASSWORD_INSTRUCTIONS = """
+		**Password must be:**
+		- Between 8 and 20 characters long.
+		- Contain at least one lowercase letter.
+		- Contain at least one uppercase letter.
+		- Contain at least one digit.
+		- Contain at least one special character from [@$!%*?&].
+		"""
 
-def register_user(key: str = 'Register user', domains: Optional[List[str]] = None, captcha: bool = True):
+USERNAME_INSTRUCTIONS = """
+		**Username must be:**
+		- Between 1 and 20 characters long.
+		- Lowercase.
+		"""
+
+
+def register_user(key: str = 'Register user', clear_on_submit: bool = False, domains: Optional[List[str]] = None,
+				  captcha: bool = True):
 	"""
 	Renders a form for user registration
-	:param key: (optional) The key of the form
-	:param domains: (optional) The accepted domains for the registration, example: `domains=["gmail.com"]`
-	:param captcha: (optional) Whether to show the captcha input or not
+	:param clear_on_submit: Whether to clear the inserted data in the form after submit
+	:param key: The key of the form (must be different from other forms on the same page)
+	:param domains: The accepted domains for the registration, example: `domains=["gmail.com"]`
+	:param captcha: Whether to show the captcha input or not
 	:raises RegisterError If the data is not correct
 	"""
-	with st.form(key):
+	with st.form(key=key, clear_on_submit=clear_on_submit):
 		st.subheader('Register user')
 
 		col1_1, col2_1 = st.columns(2)
@@ -27,25 +45,11 @@ def register_user(key: str = 'Register user', domains: Optional[List[str]] = Non
 		new_first_name = col1_1.text_input('First name')
 		new_last_name = col1_1.text_input('Last name')
 		new_email = col2_1.text_input('Email')
-
-		username_instructions = """
-				**Username must be:**
-				- Between 1 and 20 characters long.
-				- Lowercase.
-				"""
-		new_username = col2_1.text_input('Username', help=username_instructions)
+		new_username = col2_1.text_input('Username', help=USERNAME_INSTRUCTIONS)
 
 		col1_2, col2_2 = st.columns(2)
 
-		password_instructions = """
-				**Password must be:**
-				- Between 8 and 20 characters long.
-				- Contain at least one lowercase letter.
-				- Contain at least one uppercase letter.
-				- Contain at least one digit.
-				- Contain at least one special character from [@$!%*?&].
-				"""
-		new_password = col1_2.text_input('Password', type='password', help=password_instructions)
+		new_password = col1_2.text_input('Password', type='password', help=PASSWORD_INSTRUCTIONS)
 		new_password_repeat = col2_2.text_input('Repeat password', type='password')
 
 		entered_captcha = None
@@ -71,35 +75,40 @@ def register_user(key: str = 'Register user', domains: Optional[List[str]] = Non
 			switch_page(PageNames.login)
 
 
-def change_username(current_username: str, key: str = 'Change username'):
-	with st.form(key):
+def change_username(current_username: str, clear_on_submit: bool = False, key: str = 'Change username'):
+	"""
+	Renders a form for username change
+	:param current_username: The current username
+	:param clear_on_submit: Whether to clear the inserted data in the form after submit
+	:param key: The key of the form (must be different from other forms on the same page)
+	"""
+	with st.form(key=key, clear_on_submit=clear_on_submit):
 		st.subheader('Change username')
 		st.write(f"Current username: `{current_username}`")
 
-		username_instructions = """
-				**Username must be:**
-				- Between 1 and 20 characters long.
-				- Lowercase.
-				"""
-		new_username = st.text_input('New username', help=username_instructions)
-
+		new_username = st.text_input('New username', help=USERNAME_INSTRUCTIONS)
 		st.warning("After submitting, you will be logged out and the new username can be used to log back in")
 
 		submitted = st.form_submit_button('Change username', type='primary')
-
 
 		if submitted:
 			try:
 				edit_username(current_username, new_username)
 				set_session_state('username-change-success', True)
-				sleep(0.2) # Wait to let the login cookie deletion happen during logout
+				sleep(0.2)  # Wait to let the login cookie deletion happen during logout
 				switch_page(PageNames.login)
 			except Exception as e:
 				st.error(e)
 
 
-def change_email(current_email: str, key: str = 'Change email'):
-	with st.form(key):
+def change_email(current_email: str, clear_on_submit: bool = False, key: str = 'Change email'):
+	"""
+	Renders a form for email change
+	:param current_email: The current email
+	:param clear_on_submit: Whether to clear the inserted data in the form after submit
+	:param key: The key of the form (must be different from other forms on the same page)
+	"""
+	with st.form(key=key, clear_on_submit=clear_on_submit):
 		st.subheader('Change email')
 		st.write(f"Current email: `{current_email}`")
 
@@ -116,6 +125,35 @@ def change_email(current_email: str, key: str = 'Change email'):
 				edit_email(current_email, new_email)
 				set_session_state('email', new_email)
 				set_session_state('email-change-success', True)
+				switch_page(PageNames.user_settings)
+			except Exception as e:
+				st.error(e)
+
+
+def change_password(current_username: str, clear_on_submit: bool = False, key: str = 'Change password'):
+	"""
+	Renders a form for password change.
+	:param current_username: The current username
+	:param clear_on_submit: Whether to clear the inserted data in the form after submit
+	:param key: The key of the form (must be different from other forms on the same page)
+	"""
+	with st.form(key=key, clear_on_submit=clear_on_submit):
+		st.subheader('Change password')
+
+		current_password = st.text_input('Current password', type='password')
+		new_password = st.text_input('New password', type='password', help=PASSWORD_INSTRUCTIONS)
+		new_password_repeat = st.text_input('Repeat password', type='password')
+
+		submitted = st.form_submit_button('Change password', type='primary')
+
+		if get_session_state('password-change-success'):
+			pop_session_state('password-change-success')
+			st.success(f"Password changed successfully")
+
+		if submitted:
+			try:
+				edit_password(current_username, current_password, new_password, new_password_repeat)
+				set_session_state('password-change-success', True)
 				switch_page(PageNames.user_settings)
 			except Exception as e:
 				st.error(e)
