@@ -1,6 +1,6 @@
 import streamlit as st
 
-from frontend.custom_forms import change_username
+from frontend.custom_forms import change_username, change_email
 from frontend.page_options import page_setup, AccessControlType
 from utils.session_state import get_session_state
 
@@ -19,7 +19,10 @@ if username is None:
 change_username(username)
 
 
-st.header("Change email")
+email = get_session_state("email")
+if email is None:
+	st.error("Error, no email found")
+change_email(email)
 
 
 

@@ -17,6 +17,11 @@ else:
 	if get_session_state('registration-success'):
 		st.success('Registration successful')
 		pop_session_state('registration-success')
+
+	if get_session_state('username-change-success'):
+		st.success(f"Username changed successfully changed")
+		pop_session_state('username-change-success')
+
 	if get_session_state('authentication_status') is None:
 		st.warning('Please type your credentials')
 	elif get_session_state('authentication_status') is False:

@@ -1,11 +1,12 @@
 # Modified code from streamlit_authenticator\views\authentication_view.py (Authenticate.register_user)
+from time import sleep
 from typing import Optional, List
 
 import streamlit as st
 from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
-from backend.authentication import create_new_user, edit_username, get_or_create_authenticator_object
+from backend.authentication import create_new_user, edit_username, get_or_create_authenticator_object, edit_email
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state, get_session_state, pop_session_state
 
@@ -82,18 +83,39 @@ def change_username(current_username: str, key: str = 'Change username'):
 				"""
 		new_username = st.text_input('New username', help=username_instructions)
 
+		st.warning("After submitting, you will be logged out and the new username can be used to log back in")
+
 		submitted = st.form_submit_button('Change username', type='primary')
 
-		if get_session_state('username-change-success'):
-			pop_session_state('username-change-success')
-			st.success(f"Username changed successfully to `{new_username}`")
 
 		if submitted:
 			try:
 				edit_username(current_username, new_username)
-				set_session_state('username', new_username)
 				set_session_state('username-change-success', True)
-				switch_page(PageNames.user_settings)
+				sleep(0.2) # Wait to let the login cookie deletion happen during logout
+				switch_page(PageNames.login)
 			except Exception as e:
 				st.error(e)
 
+
+def change_email(current_email: str, key: str = 'Change email'):
+	with st.form(key):
+		st.subheader('Change email')
+		st.write(f"Current email: `{current_email}`")
+
+		new_email = st.text_input('New email')
+
+		submitted = st.form_submit_button('Change email', type='primary')
+
+		if get_session_state('email-change-success'):
+			pop_session_state('email-change-success')
+			st.success(f"Email changed successfully to `{new_email}`")
+
+		if submitted:
+			try:
+				edit_email(current_email, new_email)
+				set_session_state('email', new_email)
+				set_session_state('email-change-success', True)
+				switch_page(PageNames.user_settings)
+			except Exception as e:
+				st.error(e)

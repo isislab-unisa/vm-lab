@@ -4,6 +4,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 from sqlalchemy.exc import IntegrityError
 from streamlit_authenticator import Authenticate, RegisterError, UpdateError
+from streamlit_authenticator.controllers import CookieController
 from streamlit_authenticator.utilities import Validator, Helpers
 
 from backend.database import User
@@ -141,9 +142,10 @@ def create_new_user(new_first_name: str, new_last_name: str, new_email: str,
 		with get_db() as db:
 			db.add(new_user)
 			db.commit()
-
 			db.refresh(new_user)
+
 			print("New user created:", new_user)
+
 			add_new_user_to_authenticator_object(new_user)
 	except IntegrityError as e:
 		message = str(e)
@@ -172,19 +174,58 @@ def edit_username(old_username: str, new_username: str):
 		user = db.query(User).filter(User.username == old_username).first()
 
 		if user is None:
-			raise UpdateError('User does not exist')
-
+			raise UpdateError(f'User with username {old_username} does not exist')
 		try:
 			user.username = new_username
 			db.commit()
-
 			db.refresh(user)
-			print("Username updated:", user)
+
+			print(f"Username updated (old={old_username}):", user)
+
+			authenticator = get_or_create_authenticator_object()
+			authenticator.logout(location="unrendered")
+
 			edit_user_in_authenticator_object(old_username, user)
+
 		except IntegrityError as e:
 			message = str(e)
 			if "users_username_key" in message:
 				raise UpdateError('Username already exists')
+			else:
+				raise UpdateError('Unknown Integrity Error')
+		except Exception as e:
+			print(e)
+			raise UpdateError('Unknown error')
+
+
+def edit_email(old_email: str, new_email: str):
+	validator = Validator()
+	new_email = new_email.strip()
+
+	if not validator.validate_email(new_email):
+		raise RegisterError('Email is not valid')
+
+	if old_email == new_email:
+		raise UpdateError('New and current values are the same')
+
+	with get_db() as db:
+		user = db.query(User).filter(User.email == old_email).first()
+
+		if user is None:
+			raise UpdateError(f'User with email {old_email} does not exist')
+
+		try:
+			user.email = new_email
+			db.commit()
+			db.refresh(user)
+
+			print(f"Email updated (old={old_email}):", user)
+
+			edit_user_in_authenticator_object(user.username, user)
+		except IntegrityError as e:
+			message = str(e)
+			if "users_email_key" in message:
+				raise UpdateError('Email already exists')
 			else:
 				raise UpdateError('Unknown Integrity Error')
 		except Exception as e:
