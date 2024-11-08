@@ -113,7 +113,7 @@ def get_db_users_credentials() -> dict:
 	with get_db() as db:
 		users = db.query(User).all()
 		for user in users:
-			credentials["usernames"][user.username] = {
+			credentials["usernames"][user.username] = { # TODO: change this with user.to_credentials
 				"email": user.email,
 				"first_name": user.first_name,
 				"last_name": user.last_name,

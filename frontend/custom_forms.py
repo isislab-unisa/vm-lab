@@ -7,7 +7,7 @@ from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
 from backend.authentication import create_new_user, edit_username, get_or_create_authenticator_object, edit_email, \
-	edit_password
+	edit_password, edit_first_last_name
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state, get_session_state, pop_session_state
 
@@ -154,6 +154,46 @@ def change_password(current_username: str, clear_on_submit: bool = False, key: s
 			try:
 				edit_password(current_username, current_password, new_password, new_password_repeat)
 				set_session_state('password-change-success', True)
+				switch_page(PageNames.user_settings)
+			except Exception as e:
+				st.error(e)
+
+
+def change_first_last_name(current_username: str, current_name_surname: str, clear_on_submit: bool = False,
+						   key: str = 'Change name surname'):
+	"""
+	Renders a form for email change
+	:param current_username: The current username
+	:param current_name_surname: The current name and surname from the session_state
+	:param clear_on_submit: Whether to clear the inserted data in the form after submit
+	:param key: The key of the form (must be different from other forms on the same page)
+	"""
+	with st.form(key=key, clear_on_submit=clear_on_submit):
+		st.subheader('Change name and surname')
+		st.write(f"Current name and surname: `{current_name_surname}`, leave a field blank to not change it")
+
+		new_first_name = st.text_input('New first name')
+		new_last_name = st.text_input('New last name')
+
+		submitted = st.form_submit_button('Change name and surname', type='primary')
+
+		if get_session_state('name-surname-change-success'):
+			pop_session_state('name-surname-success')
+
+			if new_first_name == "" and new_last_name == "":
+				pass
+			elif new_first_name == "":
+				st.success(f"Last name changed successfully to `{new_last_name}`")
+			elif new_last_name == "":
+				st.success(f"First name changed successfully to `{new_first_name}`")
+			else:
+				st.success(f"First name and last name changed successfully to `{new_first_name} {new_last_name}`")
+
+		if submitted:
+			try:
+				edited_first_name, edited_last_name = edit_first_last_name(current_username, new_first_name, new_last_name)
+				set_session_state('name', f'{edited_first_name} {edited_last_name}')
+				set_session_state('name-surname-change-success', True)
 				switch_page(PageNames.user_settings)
 			except Exception as e:
 				st.error(e)

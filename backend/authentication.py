@@ -320,3 +320,60 @@ def edit_password(username: str, current_password: str, new_password: str, new_p
 		except Exception as e:
 			print(e)
 			raise UpdateError('Unknown error')
+
+
+def edit_first_last_name(username: str, new_first_name: str, new_last_name: str):
+	"""
+	Edits the email of a user in the database
+	:param username: The username of the user to be edited
+	:param new_first_name: The new first name of the user to be edited, can be blank
+	:param new_last_name: The new last name of the user to be edited, can be blank
+	:raises UpdateError If the data is not correct
+	"""
+	new_first_name = new_first_name.strip()
+	new_last_name = new_last_name.strip()
+
+	# Data validation
+	validator = Validator()
+
+	if new_first_name == "" and new_last_name == "":
+		raise RegisterError('First and last name cannot both be empty')
+
+	if new_first_name != "" and not validator.validate_name(new_first_name):
+		raise RegisterError('First name is not valid')
+
+	if new_last_name != "" and not validator.validate_name(new_last_name):
+		raise RegisterError('Last name is not valid')
+
+	with get_db() as db:
+		user = db.query(User).filter(User.username == username).first()
+
+		if user is None:
+			raise UpdateError(f'User with username {username} does not exist')
+
+		if new_first_name != "":
+			if user.first_name == new_first_name:
+				raise UpdateError('New and current first names are the same')
+			else:
+				user.first_name = new_first_name
+
+		if new_last_name != "":
+			if user.last_name == new_last_name:
+				raise UpdateError('New and current last names are the same')
+			else:
+				user.last_name = new_last_name
+
+		# All data is correct
+		# Push changes to database
+		try:
+			db.commit()
+			db.refresh(user)
+
+			print(f"Name and surname updated for {username}:", user)
+
+			edit_user_in_authenticator_object(username, user)
+
+			return user.first_name, user.last_name
+		except Exception as e:
+			print(e)
+			raise UpdateError('Unknown error')
