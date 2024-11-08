@@ -112,24 +112,31 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 
 
 def render_sidebar_menu(role: Role | None):
-	"""Renders the sidebar menu based on the user's role stored in the session state"""
+	"""
+	Renders the sidebar menu based on the user's role stored in the session state
+	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
+	"""
 	with st.sidebar:
 		match role:
 			case Role.NEW_USER:
+				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case Role.USER:
 				st.page_link(PageNames.my_vms, label="My VMs")
+				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case Role.MANAGER:
 				st.page_link(PageNames.my_vms, label="My VMs")
 				st.page_link(PageNames.manage_users, label="Manage Users")
+				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case Role.ADMIN:
 				st.page_link(PageNames.my_vms, label="My VMs")
 				st.page_link(PageNames.manage_users, label="Manage Users")
+				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case _:  # Not logged in

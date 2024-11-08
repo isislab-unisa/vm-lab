@@ -3,14 +3,18 @@
 
 Manage all your VMs in the browser.
 
----
 ## Update pip requirements
 ```shell
 pip install -r requirements.txt
 ```
 
+## Run
+After having installed all the requirements, run this in venv:
+```shell
+streamlit run app.py
+```
 
----
+
 ## Useful stuff (for PyCharm)
 ### Update the pip requirements
 
@@ -20,7 +24,7 @@ Search everywhere:
 1. `Tools`
 2. `Sync Python Requirements...`
 
----
+
 ## Secrets
 Create a `.streamlit/secrets.toml` file and write this:
 ```toml
@@ -36,7 +40,7 @@ cookie_expiry_days = 30
 
 These are used in `backend/database.py` to create the connection.
 
----
+
 ## Database
 ```postgresql
 CREATE DATABASE "vm-lab"

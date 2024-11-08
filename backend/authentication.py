@@ -3,7 +3,7 @@ from typing import Optional, List
 import streamlit as st
 import streamlit_authenticator as stauth
 from sqlalchemy.exc import IntegrityError
-from streamlit_authenticator import Authenticate, RegisterError
+from streamlit_authenticator import Authenticate, RegisterError, UpdateError
 from streamlit_authenticator.utilities import Validator, Helpers
 
 from backend.database import User
@@ -30,18 +30,6 @@ def create_authenticator_object() -> Authenticate:
 	return authenticator
 
 
-def add_new_user_to_authenticator_object(new_user: User) -> Authenticate:
-	"""Adds a new user to the current streamlit-authenticator object and updates it in the session state"""
-	authenticator: Authenticate = get_or_create_authenticator_object()
-	credentials = authenticator.authentication_controller.authentication_model.credentials['usernames']
-	new_credentials = new_user.to_credentials_dict()
-
-	credentials[new_user.username] = new_credentials
-	set_session_state('authenticator', authenticator)
-
-	return authenticator
-
-
 def get_or_create_authenticator_object() -> Authenticate:
 	"""Retrieves the streamlit-authenticator object in the session state"""
 	authenticator = get_session_state('authenticator')
@@ -50,6 +38,26 @@ def get_or_create_authenticator_object() -> Authenticate:
 		authenticator = create_authenticator_object()
 
 	return authenticator
+
+
+def add_new_user_to_authenticator_object(new_user_data: User, replace_username: str = None) -> Authenticate:
+	"""Adds a new user to the current streamlit-authenticator object and updates it in the session state"""
+	authenticator: Authenticate = get_or_create_authenticator_object()
+	credentials = authenticator.authentication_controller.authentication_model.credentials['usernames']
+	new_credentials: dict = new_user_data.to_credentials_dict()
+
+	if replace_username is not None:
+		credentials.pop(replace_username)
+
+	credentials[new_user_data.username] = new_credentials
+	set_session_state('authenticator', authenticator)
+
+	return authenticator
+
+
+def edit_user_in_authenticator_object(username: str, new_user_data: User) -> Authenticate:
+	"""Edits the credentials of a user in the current streamlit-authenticator object and updates it in the session state"""
+	return add_new_user_to_authenticator_object(new_user_data, replace_username=username)
 
 
 def get_current_user_role() -> Role | None:
@@ -67,10 +75,10 @@ def is_logged_in() -> bool:
 		return False
 
 
-def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
-					  new_username: str, new_password: str, new_password_repeat: str,
-					  captcha: bool = True, entered_captcha: Optional[str] = None,
-					  domains: Optional[List[str]] = None):
+def create_new_user(new_first_name: str, new_last_name: str, new_email: str,
+					new_username: str, new_password: str, new_password_repeat: str,
+					captcha: bool = True, entered_captcha: Optional[str] = None,
+					domains: Optional[List[str]] = None):
 	"""
 	Checks the validity of the form data and creates a new user in the database
 	:raises RegisterError If the data is not correct
@@ -148,3 +156,37 @@ def register_new_user(new_first_name: str, new_last_name: str, new_email: str,
 	except Exception as e:
 		print(e)
 		raise RegisterError('Unknown error')
+
+
+def edit_username(old_username: str, new_username: str):
+	validator = Validator()
+	new_username = new_username.lower().strip()
+
+	if not validator.validate_username(new_username):
+		raise UpdateError('Username is not valid')
+
+	if old_username == new_username:
+		raise UpdateError('New and current values are the same')
+
+	with get_db() as db:
+		user = db.query(User).filter(User.username == old_username).first()
+
+		if user is None:
+			raise UpdateError('User does not exist')
+
+		try:
+			user.username = new_username
+			db.commit()
+
+			db.refresh(user)
+			print("Username updated:", user)
+			edit_user_in_authenticator_object(old_username, user)
+		except IntegrityError as e:
+			message = str(e)
+			if "users_username_key" in message:
+				raise UpdateError('Username already exists')
+			else:
+				raise UpdateError('Unknown Integrity Error')
+		except Exception as e:
+			print(e)
+			raise UpdateError('Unknown error')
