@@ -12,3 +12,45 @@ first_users:
       last_name: Briggs
       password: def
       role: new_user
+
+    - username: mgarcia
+      email: mgarcia@gmail.com
+      first_name: Maria
+      last_name: Garcia
+      password: ghi
+      role: user
+
+    - username: kteo
+      email: kteo@gmail.com
+      first_name: Kevin
+      last_name: Teo
+      password: jkl
+      role: manager
+
+    - username: dpeters
+      email: dpeters@gmail.com
+      first_name: David
+      last_name: Peters
+      password: pqr
+      role: user
+
+    - username: slong
+      email: slong@gmail.com
+      first_name: Sarah
+      last_name: Long
+      password: stu
+      role: manager
+
+    - username: bbaker
+      email: bbaker@gmail.com
+      first_name: Ben
+      last_name: Baker
+      password: vwx
+      role: new_user
+
+    - username: jlee
+      email: jlee@gmail.com
+      first_name: Jasmine
+      last_name: Lee
+      password: yz1
+      role: user
