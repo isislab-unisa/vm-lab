@@ -6,6 +6,7 @@ from streamlit import switch_page
 from backend.authentication import is_logged_in, get_current_user_role, \
 	get_or_create_authenticator_object
 from backend.role import Role
+from frontend.custom_components import render_sidebar_menu
 from frontend.page_names import PageNames
 from streamlit_authenticator import Authenticate
 
@@ -111,35 +112,3 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 	return authenticator
 
 
-def render_sidebar_menu(role: Role | None):
-	"""
-	Renders the sidebar menu based on the user's role stored in the session state
-	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
-	"""
-	with st.sidebar:
-		match role:
-			case Role.NEW_USER:
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case Role.USER:
-				st.page_link(PageNames.my_vms, label="My VMs")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case Role.MANAGER:
-				st.page_link(PageNames.my_vms, label="My VMs")
-				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case Role.ADMIN:
-				st.page_link(PageNames.my_vms, label="My VMs")
-				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case _:  # Not logged in
-				st.page_link(PageNames.login, label="Login")
-				st.page_link(PageNames.register, label="Register")
-				st.page_link(PageNames.forgot_credentials, label="Forgot Credentials")
