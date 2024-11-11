@@ -1,6 +1,7 @@
 from typing import List, cast
 
 import streamlit as st
+from streamlit import switch_page
 
 from backend.database import get_db, User
 from backend.role import Role
@@ -19,7 +20,7 @@ def get_users() -> List[User]:
 
 
 page_setup(
-	title="Manage Users",
+	title="New Users",
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
@@ -30,11 +31,27 @@ st.header("New Users Waiting List")
 
 users = get_users()
 
-def user_print(callback_user: User):
-	print(callback_user.id)
+def user_accepted(callback_user: User):
+	with get_db() as db:
+		user = db.query(User).filter(User.id == callback_user.id).first()
+		user.role = Role.USER.value
+		db.commit()
+
+	print("Accepted", callback_user.id)
+	switch_page(PageNames.waiting_list)
+
+def user_denied(callback_user: User):
+	with get_db() as db:
+		user = db.query(User).filter(User.id == callback_user.id).first()
+		db.delete(user)
+		db.commit()
+
+	print("Denied", callback_user.id)
+	switch_page(PageNames.waiting_list)
 
 user_table_with_actions(
 	is_new_users_table=True,
 	user_list=users,
-	button_callback=user_print
+	accept_callback=user_accepted,
+	deny_callback=user_denied
 )

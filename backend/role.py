@@ -21,3 +21,27 @@ class Role(Enum):
 				return Role.ADMIN
 			case _:
 				return None
+
+	@staticmethod
+	def from_phrase(phrase: str):
+		match phrase.lower():
+			case 'admin':
+				return Role.ADMIN
+			case 'manager':
+				return Role.MANAGER
+			case 'user':
+				return Role.USER
+			case _:
+				return Role.NEW_USER
+
+	@staticmethod
+	def to_phrase(self):
+		match self:
+			case Role.NEW_USER:
+				return 'New User'
+			case Role.USER:
+				return 'User'
+			case Role.MANAGER:
+				return 'Manager'
+			case Role.ADMIN:
+				return 'Admin'

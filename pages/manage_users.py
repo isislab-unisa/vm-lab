@@ -1,14 +1,16 @@
 from typing import List, cast
 
+import pandas as pd
 import streamlit as st
 from streamlit import switch_page
+from streamlit.source_util import PageName
 
 from backend.database import get_db, User
 from backend.role import Role
 from frontend.custom_components import user_table_with_actions
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
-from utils.session_state import get_session_state
+from utils.session_state import get_session_state, set_session_state
 
 
 def get_users(avoid_username: str) -> List[User]:
@@ -37,10 +39,23 @@ if current_username is None:
 
 users = get_users(current_username)
 
-# df_users = pd.DataFrame(user_data)
+# user_list = []
+# for user in users:
+# 	user_list.append({
+# 		"ID": user.id,
+# 		"Username": user.username,
+# 		"Email": user.email,
+# 		"First Name": user.first_name,
+# 		"Last Name": user.last_name,
+# 		"VM Count": len(user.virtual_machines),
+# 		"Role": user.role
+# 	})
+#
+# df_users = pd.DataFrame(user_list)
 #
 # # Option 1: DATA EDITOR
 # st.write("#### Option 1: DATA EDITOR")
+# # Showcase solution, database change not implemented
 # st.data_editor(
 # 	df_users,
 # 	column_config={
@@ -62,8 +77,8 @@ users = get_users(current_username)
 # )
 #
 #
-# st.write("#### Option 2: TABLE")
-# st.table(user_data)
+# st.write("#### Option 2: STATIC TABLE")
+# st.table(user_list)
 #
 #
 # st.write("#### Option 3: DATA FRAME WITH SELECTION")
@@ -81,15 +96,22 @@ users = get_users(current_username)
 # 	email = df_users.iloc[selected_row]['Email']
 #
 # 	st.session_state['user_data'] = {'username': username, 'email': email}
-# 	st.write(f"Goto {username}'s page")
+#
+# 	if st.button(f"Go to {username}'s page"):
+# 		with get_db() as db:
+# 			# Showcase solution, avoid doing this
+# 			user = db.query(User).filter(User.username == username).first()
+# 			set_session_state("selected_user", user)
+# 		switch_page(PageNames.user_details)
 #
 #
 # st.write("#### Option 4: CUSTOM TABLE")
 
-def user_print(callback_user: User):
-	print(callback_user.id)
+def go_to_user_details(callback_user: User):
+	set_session_state("selected_user", callback_user)
+	switch_page(PageNames.user_details)
 
 user_table_with_actions(
 	user_list=users,
-	button_callback=user_print
+	details_callback=go_to_user_details
 )

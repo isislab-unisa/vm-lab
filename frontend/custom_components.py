@@ -7,23 +7,25 @@ from backend.role import Role
 from frontend.page_names import PageNames
 
 
-def user_table_with_actions(user_list: list[User], button_callback: Callable[[User], None],
-							is_new_users_table: bool = False, button_label: str = "Action",
-							button_type: Literal["primary", "secondary"] = "primary"):
+def user_table_with_actions(user_list: list[User],
+							details_callback: Callable[[User], None] = None,
+							accept_callback: Callable[[User], None] = None,
+							deny_callback: Callable[[User], None] = None,
+							is_new_users_table: bool = False):
 	"""
 	Custom user table with a callable action button
+	:param deny_callback: Callback function for when the deny button is clicked (when is_new_users_table=True)
+	:param accept_callback: Callback function for when the accept button is clicked (when is_new_users_table=True)
+	:param details_callback: Callback function for when the details button is clicked (when is_new_users_table=False)
 	:param user_list: The list of users
-	:param button_callback: The callback function to be called when the action button is clicked
 	:param is_new_users_table: Whether to display 'VM Count' and 'Role' (False) or not (True)
-	:param button_label: The label of the button
-	:param button_type: The type of the button
 	:return:
 	"""
 	if is_new_users_table:
-		header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name', 'Action']
-		columns_width = (1, 2, 2, 2, 2, 1)
+		header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name']
+		columns_width = (1, 2, 2, 2, 2, 1, 1)
 	else:
-		header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name', 'VM Count', 'Role', 'Action']
+		header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name', 'VM Count', 'Role']
 		columns_width = (1, 2, 2, 2, 2, 1, 1, 1)
 
 	with st.container():
@@ -42,14 +44,24 @@ def user_table_with_actions(user_list: list[User], button_callback: Callable[[Us
 			cols[4].write(user.last_name)
 
 			if is_new_users_table:
-				action_column = cols[5]
+				accept_column = cols[5]
+				deny_column = cols[6]
+
+				if accept_column.button(label="Accept", type="primary", key=f'{user.id}-accept'):
+					accept_callback(user)
+
+				if deny_column.button(label="Deny", type="secondary", key=f'{user.id}-deny'):
+					deny_callback(user)
+
 			else:
-				cols[5].write(len(user.virtual_machines))
+				cols[5].markdown(len(user.virtual_machines))
 				cols[6].write(user.role)
 				action_column = cols[7]
 
-			if action_column.button(label=button_label, type=button_type, key=f'{user.id}-action'):
-				button_callback(user)
+				if action_column.button(label="Details", type="primary", key=f'{user.id}-action'):
+					details_callback(user)
+
+
 
 
 def render_sidebar_menu(role: Role | None):

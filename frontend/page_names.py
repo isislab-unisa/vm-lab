@@ -14,3 +14,4 @@ class PageNames:
 
 	manage_users = "pages/manage_users.py"				# ADMIN, MANAGER
 	waiting_list = "pages/new_users_waiting_list.py"	# ADMIN, MANAGER
+	user_details = "pages/user_details.py"				# ADMIN, MANAGER
