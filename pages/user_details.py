@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit import switch_page
 
-from backend.authentication import get_current_user_role
+from backend.authentication import get_current_user_role, edit_user_in_authenticator_object
 from backend.database import User, get_db
 from backend.role import Role
 from frontend.page_names import PageNames
@@ -57,6 +57,7 @@ if curren_role == Role.ADMIN:
 			db.refresh(user)
 			set_session_state("selected_user", user)
 			set_session_state("role-change-success", True)
+			edit_user_in_authenticator_object(user.username, user)
 			switch_page(PageNames.user_details)
 
 st.divider()

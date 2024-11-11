@@ -3,6 +3,7 @@ from typing import List, cast
 import streamlit as st
 from streamlit import switch_page
 
+from backend.authentication import edit_user_in_authenticator_object, remove_user_in_authenticator_object
 from backend.database import get_db, User
 from backend.role import Role
 from frontend.custom_components import user_table_with_actions
@@ -36,18 +37,19 @@ def user_accepted(callback_user: User):
 		user = db.query(User).filter(User.id == callback_user.id).first()
 		user.role = Role.USER.value
 		db.commit()
-
-	print("Accepted", callback_user.id)
-	switch_page(PageNames.waiting_list)
+		db.refresh(user)
+		edit_user_in_authenticator_object(user.username, user)
+		print("Accepted", callback_user.id)
+		switch_page(PageNames.waiting_list)
 
 def user_denied(callback_user: User):
 	with get_db() as db:
 		user = db.query(User).filter(User.id == callback_user.id).first()
 		db.delete(user)
 		db.commit()
-
-	print("Denied", callback_user.id)
-	switch_page(PageNames.waiting_list)
+		remove_user_in_authenticator_object(user.username)
+		print("Denied", callback_user.id)
+		switch_page(PageNames.waiting_list)
 
 user_table_with_actions(
 	is_new_users_table=True,
