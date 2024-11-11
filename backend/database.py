@@ -1,4 +1,5 @@
-import sqlalchemy.orm
+from typing import cast, List
+
 import yaml
 import bcrypt
 import streamlit as st
@@ -111,7 +112,7 @@ def get_db_users_credentials() -> dict:
     """
 	credentials = {"usernames": {}}
 	with get_db() as db:
-		users = db.query(User).all()
+		users: List[User] = cast(List[User], db.query(User).all())
 		for user in users:
 			credentials["usernames"][user.username] = user.to_credentials_dict()
 	return credentials
