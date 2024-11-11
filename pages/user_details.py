@@ -29,6 +29,8 @@ st.write(f"Email: {selected_user.email}")
 st.write(f"First Name: {selected_user.first_name}")
 st.write(f"Last Name: {selected_user.last_name}")
 
+
+
 # The segmented_controls widget can be only found in streamlit 1.40.0, so a radio button is used for the 1.39.0 version
 # https://docs.streamlit.io/develop/api-reference/widgets/st.segmented_control
 # TODO: Update streamlit
@@ -59,6 +61,8 @@ if curren_role == Role.ADMIN:
 			set_session_state("role-change-success", True)
 			edit_user_in_authenticator_object(user.username, user)
 			switch_page(PageNames.user_details)
+else:
+	st.write(f"Role: {Role.to_phrase(Role.from_str(selected_user.role))}")
 
 st.divider()
 st.subheader("Virtual Machines")

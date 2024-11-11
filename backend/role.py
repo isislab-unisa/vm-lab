@@ -35,8 +35,8 @@ class Role(Enum):
 				return Role.NEW_USER
 
 	@staticmethod
-	def to_phrase(self):
-		match self:
+	def to_phrase(role_enum):
+		match role_enum:
 			case Role.NEW_USER:
 				return 'New User'
 			case Role.USER:
