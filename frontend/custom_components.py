@@ -1,3 +1,5 @@
+from typing import Callable, Literal
+
 import streamlit as st
 
 from backend.database import User
@@ -5,9 +7,18 @@ from backend.role import Role
 from frontend.page_names import PageNames
 
 
-def user_table_with_actions(user_list: list[User], button_callback: callable, is_new_users_table: bool = False,
-							button_label: str = "Action", button_type: str = "primary"):
-
+def user_table_with_actions(user_list: list[User], button_callback: Callable[[User], None],
+							is_new_users_table: bool = False, button_label: str = "Action",
+							button_type: Literal["primary", "secondary"] = "primary"):
+	"""
+	Custom user table with a callable action button
+	:param user_list: The list of users
+	:param button_callback: The callback function to be called when the action button is clicked
+	:param is_new_users_table: Whether to display 'VM Count' and 'Role' (False) or not (True)
+	:param button_label: The label of the button
+	:param button_type: The type of the button
+	:return:
+	"""
 	if is_new_users_table:
 		header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name', 'Action']
 		columns_width = (1, 2, 2, 2, 2, 1)
@@ -17,38 +28,28 @@ def user_table_with_actions(user_list: list[User], button_callback: callable, is
 
 	with st.container():
 		# HEADER
-		header_columns = st.columns(columns_width)
-		for column, field in zip(header_columns, header_fields):
-			column.write(f'**{field}**')
+		header_cols = st.columns(columns_width)
+		for col, field in zip(header_cols, header_fields):
+			col.write(f'**{field}**')
 
 		# ROWS
 		for user in user_list:
+			cols = st.columns(columns_width)
+			cols[0].write(user.id)
+			cols[1].write(user.username)
+			cols[2].write(user.email)
+			cols[3].write(user.first_name)
+			cols[4].write(user.last_name)
+
 			if is_new_users_table:
-				col1, col2, col3, col4, col5, col6 = st.columns(columns_width)
-				col1.write(user.id)
-				col2.write(user.username)
-				col3.write(user.email)
-				col4.write(user.first_name)
-				col5.write(user.last_name)
-
-				button_column = col6.empty()
-				clicked = button_column.button(label=button_label, type=button_type, key=f'{user.id}-action')
-				if clicked:
-					button_callback(user)
+				action_column = cols[5]
 			else:
-				col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(columns_width)
-				col1.write(user.id)
-				col2.write(user.username)
-				col3.write(user.email)
-				col4.write(user.first_name)
-				col5.write(user.last_name)
-				col6.write(len(user.virtual_machines))
-				col7.write(user.role)
+				cols[5].write(len(user.virtual_machines))
+				cols[6].write(user.role)
+				action_column = cols[7]
 
-				button_column = col8.empty()
-				clicked = button_column.button(label=button_label, type=button_type, key=f'{user.id}-action')
-				if clicked:
-					button_callback(user)
+			if action_column.button(label=button_label, type=button_type, key=f'{user.id}-action'):
+				button_callback(user)
 
 
 def render_sidebar_menu(role: Role | None):
