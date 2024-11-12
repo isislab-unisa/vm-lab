@@ -1,6 +1,9 @@
-from typing import Callable, Literal, List
+from typing import Callable, List
 
+import requests
 import streamlit as st
+import streamlit.components.v1 as stv1
+from requests.exceptions import ConnectionError
 from streamlit_extras.card import card
 from streamlit_extras.grid import grid
 
@@ -103,6 +106,7 @@ def render_sidebar_menu(role: Role | None):
 
 
 def vm_cards_grid(vm_list: List[VirtualMachine], on_click: Callable[[VirtualMachine], None]):
+	"""Renders a grid with a list of Virtual Machine cards"""
 	grids = grid(3)
 
 	for vm in vm_list:
@@ -113,3 +117,33 @@ def vm_cards_grid(vm_list: List[VirtualMachine], on_click: Callable[[VirtualMach
 				text=f"({vm.id}) {vm.ip}",
 				on_click=lambda: on_click(vm)
 			)
+
+
+def ssh_terminal(hostname: str, port: str,
+				 username: str = None, password: bytes = None, ssh_key: bytes = None,
+				 wssh_url: str = "http://localhost:8888"):
+	"""Renders the ssh terminal given the credentials"""
+	try:
+		credentials = {
+			'hostname': hostname,
+			'port': port,
+		}
+
+		if ssh_key:
+			credentials["private_key"] = ssh_key # TODO: See the actual name
+		else:
+			credentials["username"] = username
+			credentials["password"] = password
+
+		response = requests.post(wssh_url, params=credentials)
+	except ConnectionError as ex:
+		st.error("Connection error.")
+		raise Exception(
+			f"{ex}.\n\n The process 'wssh' has most likely not started. If it has not been started, "
+			f"do it so with 'wssh --port=8888' in venv."
+		)
+	else:
+		if response.status_code == 200:
+			stv1.iframe(response.url, width=800, height=600)
+		else:
+			st.error("Connection error.")
