@@ -118,10 +118,21 @@ def get_db_users_credentials() -> dict:
 	return credentials
 
 
+def get_user_virtual_machines(username: str) -> List[VirtualMachine]:
+	with get_db() as db:
+		fetched_vms = db.query(VirtualMachine) \
+			.join(VirtualMachine.user) \
+			.filter(User.username == username) \
+			.all()
+
+		return cast(List[VirtualMachine], fetched_vms)
+
+
 ##################################
 #       Load Initial Users       #
 ##################################
 
+# TODO: Initialize database if it does not exist
 
 def load_initial_users():
 	"""

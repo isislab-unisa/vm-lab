@@ -1,9 +1,7 @@
 from typing import List, cast
 
-import pandas as pd
 import streamlit as st
 from streamlit import switch_page
-from streamlit.source_util import PageName
 
 from backend.database import get_db, User
 from backend.role import Role

@@ -1,8 +1,10 @@
-from typing import Callable, Literal
+from typing import Callable, Literal, List
 
 import streamlit as st
+from streamlit_extras.card import card
+from streamlit_extras.grid import grid
 
-from backend.database import User
+from backend.database import User, VirtualMachine
 from backend.role import Role
 from frontend.page_names import PageNames
 
@@ -98,3 +100,16 @@ def render_sidebar_menu(role: Role | None):
 				st.page_link(PageNames.login, label="Login")
 				st.page_link(PageNames.register, label="Register")
 				st.page_link(PageNames.forgot_credentials, label="Forgot Credentials")
+
+
+def vm_cards_grid(vm_list: List[VirtualMachine], on_click: Callable[[VirtualMachine], None]):
+	grids = grid(3)
+
+	for vm in vm_list:
+		with grids.empty():
+			card(
+				key=f"card-{vm.id}",
+				title=vm.name,
+				text=f"({vm.id}) {vm.ip}",
+				on_click=lambda: on_click(vm)
+			)
