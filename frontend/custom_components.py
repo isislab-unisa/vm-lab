@@ -1,12 +1,8 @@
-from typing import Callable, List
-
-import requests
 import streamlit as st
-import streamlit.components.v1 as stv1
-from requests.exceptions import ConnectionError
+
+from typing import Callable, List
 from streamlit_extras.card import card
 from streamlit_extras.grid import grid
-
 from backend.database import User, VirtualMachine
 from backend.role import Role
 from frontend.page_names import PageNames
@@ -114,36 +110,7 @@ def vm_cards_grid(vm_list: List[VirtualMachine], on_click: Callable[[VirtualMach
 			card(
 				key=f"card-{vm.id}",
 				title=vm.name,
-				text=f"({vm.id}) {vm.ip}",
+				text=f"({vm.id}) {vm.host}:{vm.port}",
 				on_click=lambda: on_click(vm)
 			)
 
-
-def ssh_terminal(hostname: str, port: str,
-				 username: str = None, password: bytes = None, ssh_key: bytes = None,
-				 wssh_url: str = "http://localhost:8888"):
-	"""Renders the ssh terminal given the credentials"""
-	try:
-		credentials = {
-			'hostname': hostname,
-			'port': port,
-		}
-
-		if ssh_key:
-			credentials["private_key"] = ssh_key # TODO: See the actual name
-		else:
-			credentials["username"] = username
-			credentials["password"] = password
-
-		response = requests.post(wssh_url, params=credentials)
-	except ConnectionError as ex:
-		st.error("Connection error.")
-		raise Exception(
-			f"{ex}.\n\n The process 'wssh' has most likely not started. If it has not been started, "
-			f"do it so with 'wssh --port=8888' in venv."
-		)
-	else:
-		if response.status_code == 200:
-			stv1.iframe(response.url, width=800, height=600)
-		else:
-			st.error("Connection error.")
