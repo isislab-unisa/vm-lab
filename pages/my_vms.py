@@ -12,7 +12,6 @@ page_setup(
 	title="My VMs",
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.USER],
-	print_session_state=True
 )
 
 st.title("My VMs")
@@ -81,7 +80,7 @@ def add_vm():
 		host = st.text_input("Host", placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=22)
 		username = st.text_input("Username", placeholder="Insert SSH username")
-		ssh_key = st.file_uploader("SSH Key")
+		ssh_key = st.file_uploader("SSH Key (optional)")
 		submit_button = st.form_submit_button("Save")
 
 	if submit_button:
