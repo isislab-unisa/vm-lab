@@ -4,8 +4,10 @@ import yaml
 import bcrypt
 import streamlit as st
 from contextlib import contextmanager
+
+from cryptography.fernet import Fernet
 from yaml.loader import SafeLoader
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, LargeBinary, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -22,6 +24,9 @@ DATABASE_URL = f"postgresql+psycopg2://{db_username}:{db_password}@{db_address}/
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+cipher_key = st.secrets["cipher_key"]
+cipher = Fernet(cipher_key)
 
 
 @contextmanager
@@ -53,8 +58,9 @@ class User(Base):
 	first_name = Column(String(50), nullable=False)
 	last_name = Column(String(50), nullable=False)
 
-	# Relationship one-to-many
+	# Relationships one-to-many
 	virtual_machines = relationship("VirtualMachine", back_populates="user", lazy='joined')
+	bookmarks = relationship("Bookmark", back_populates="user", lazy='joined')
 
 	@staticmethod
 	def hash_password(plain_password) -> str:
@@ -84,7 +90,7 @@ class User(Base):
 	def __str__(self):
 		return (f"User(id={self.id}, role={self.role}, username={self.username}, password={self.password}, "
 				f"email={self.email}, first_name={self.first_name}, last_name={self.last_name}, "
-				f"vm_count={len(self.virtual_machines)})")
+				f"vm_count={len(self.virtual_machines)}, bookmark_count={len(self.bookmarks)})")
 
 
 class VirtualMachine(Base):
@@ -92,16 +98,41 @@ class VirtualMachine(Base):
 	__tablename__ = 'virtual_machines'
 	id = Column(Integer, primary_key=True)
 	name = Column(String(50), nullable=False)
-	ip = Column(String(50), nullable=False)
-	bookmark = Column(Boolean, nullable=False)
+	host = Column(String(50), nullable=False)
+	port = Column(Integer, nullable=False)
+	username = Column(String(50), nullable=False)
+	ssh_key = Column(LargeBinary)
 	user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
 
 	# Parent of the one-to-many relationship
 	user = relationship("User", back_populates='virtual_machines', lazy='joined')
 
+	@staticmethod
+	def encrypt_key(key: bytes):
+		return cipher.encrypt(key)
+
+	def decrypt_key(self):
+		return cipher.decrypt(self.ssh_key)
+
 	def __str__(self):
-		return (f"VirtualMachine(id={self.id}, name={self.name}, ip={self.ip}, bookmark={self.bookmark}, "
+		return (f"VirtualMachine(id={self.id}, name={self.name}, host={self.host}, port={self.port}, "
 				f"user_id={self.user_id})")
+
+
+class Bookmark(Base):
+	"""Class representing a Virtual Machine in the database."""
+	__tablename__ = 'bookmarks'
+	id = Column(Integer, primary_key=True)
+	name = Column(String(50), nullable=False)
+	link = Column(String(255), nullable=False)
+	user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+
+	# Parent of the one-to-many relationship
+	user = relationship("User", back_populates='bookmarks', lazy='joined')
+
+	def __str__(self):
+		return (f"Bookmark(id={self.id}, name={self.name}, "
+				f"user_id={self.user_id}, link={self.ip})")
 
 
 def get_db_users_credentials() -> dict:

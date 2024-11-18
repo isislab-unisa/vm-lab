@@ -36,6 +36,8 @@ db_name = "name"
 cookie_name = "cooke_name"
 cookie_key = "key"
 cookie_expiry_days = 30
+
+cipher_key = "some Fernet-compliant key"
 ```
 
 These are used in `backend/database.py` to create the connection.
@@ -68,8 +70,21 @@ CREATE TABLE users (
 CREATE TABLE virtual_machines (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
-    ip VARCHAR(50) NOT NULL,
-    bookmark BOOL NOT NULL,
+    host VARCHAR(50) NOT NULL,
+    port INTEGER NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    ssh_key BYTEA,
+    user_id SERIAL NOT NULL, 
+    CONSTRAINT fk_user FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE CASCADE 
+);
+```
+
+```postgresql
+CREATE TABLE bookmarks (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    link VARCHAR(255) NOT NULL,
     user_id SERIAL NOT NULL, 
     CONSTRAINT fk_user FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE 
