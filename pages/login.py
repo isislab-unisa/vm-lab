@@ -6,7 +6,6 @@ from utils.session_state import get_session_state, pop_session_state
 authenticator = page_setup(
 	title="Login",
 	access_control=AccessControlType.UNREGISTERED_ONLY,
-	print_session_state=True
 )
 
 try:

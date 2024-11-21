@@ -25,35 +25,59 @@ page_setup(
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
-	print_session_state=False
 )
 
 st.header("New Users Waiting List")
 
 users = get_users()
 
-def user_accepted(callback_user: User):
-	with get_db() as db:
-		user = db.query(User).filter(User.id == callback_user.id).first()
-		user.role = Role.USER.value
-		db.commit()
-		db.refresh(user)
-		edit_user_in_authenticator_object(user.username, user)
-		print("Accepted", callback_user.id)
-		switch_page(PageNames.waiting_list)
+@st.dialog("Select role")
+def accept_clicked(callback_user: User):
+	selection = st.selectbox(
+		"Role",
+		[Role.to_phrase(Role.USER), Role.to_phrase(Role.MANAGER)],
+	)
 
-def user_denied(callback_user: User):
-	with get_db() as db:
-		user = db.query(User).filter(User.id == callback_user.id).first()
-		db.delete(user)
-		db.commit()
-		remove_user_in_authenticator_object(user.username)
-		print("Denied", callback_user.id)
-		switch_page(PageNames.waiting_list)
+	button = st.button("Add", type="primary")
+	if button:
+		selected_role = Role.from_phrase(selection).value
+		with get_db() as db:
+			user = db.query(User).filter(User.id == callback_user.id).first()
+			user.role = selected_role
+			db.commit()
+			db.refresh(user)
+			edit_user_in_authenticator_object(user.username, user)
+			print("Accepted", callback_user.id)
+			switch_page(PageNames.waiting_list)
+
+
+@st.dialog("Are you sure?")
+def denied_clicked(callback_user: User):
+	col1, col2 = st.columns(2)
+
+	with col1:
+		yes_button = st.button("Yes")
+
+		if yes_button:
+			with get_db() as db:
+				user = db.query(User).filter(User.id == callback_user.id).first()
+				db.delete(user)
+				db.commit()
+				remove_user_in_authenticator_object(user.username)
+				print("Denied", callback_user.id)
+				switch_page(PageNames.waiting_list)
+
+	with col2:
+		no_button = st.button("No", type="primary")
+
+		if no_button:
+			st.rerun()
+
+
 
 display_table_with_actions(
 	data_type="new_user",
 	data_list=users,
-	accept_new_user_callback=user_accepted,
-	deny_new_user_callback=user_denied
+	accept_new_user_callback=accept_clicked,
+	deny_new_user_callback=denied_clicked
 )

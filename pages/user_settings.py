@@ -6,7 +6,6 @@ from utils.session_state import get_session_state
 
 authenticator = page_setup(
 	title="User Settings",
-	print_session_state=True,
 	access_control=AccessControlType.LOGGED_IN_ONLY
 )
 

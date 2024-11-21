@@ -14,7 +14,6 @@ page_setup(
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
-	print_session_state=False
 )
 
 selected_user: User = get_session_state("selected_user")
@@ -31,12 +30,8 @@ st.write(f"First Name: {selected_user.first_name}")
 st.write(f"Last Name: {selected_user.last_name}")
 
 
-
-# The segmented_controls widget can be only found in streamlit 1.40.0, so a radio button is used for the 1.39.0 version
-# https://docs.streamlit.io/develop/api-reference/widgets/st.segmented_control
-# TODO: Update streamlit
 if curren_role == Role.ADMIN:
-	selection = st.radio(
+	selection = st.selectbox(
 		"Role",
 		[Role.to_phrase(Role.USER), Role.to_phrase(Role.MANAGER)],
 		index=0 if selected_user.role == Role.USER.value else 1

@@ -10,7 +10,6 @@ authenticator = page_setup(
 	accepted_roles=[Role.NEW_USER],
 	new_user_redirect_to_wait_page=False,
 	role_not_accepted_redirect=PageNames.my_vms,
-	print_session_state=True
 )
 
 st.title("You are on a waiting list")

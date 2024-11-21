@@ -26,7 +26,6 @@ page_setup(
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
-	print_session_state=False
 )
 
 st.title("Manage Users")
