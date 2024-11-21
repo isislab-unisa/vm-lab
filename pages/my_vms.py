@@ -14,11 +14,42 @@ page_setup(
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.USER],
 )
 
-st.title("My VMs")
-current_username = get_session_state("username")
 
-if current_username is None:
-	switch_page(PageNames.error)
+@st.dialog("Insert details")
+def add_vm():
+	with st.form(f"add-vm-form"):
+		name = st.text_input("VM name", placeholder="Insert name")
+		host = st.text_input("Host", placeholder="Insert IP address or domain")
+		port = st.number_input("Port", value=22, placeholder="Insert port")
+		username = st.text_input("Username", placeholder="Insert SSH username")
+		ssh_key = st.file_uploader("SSH Key (optional)")
+		submit_button = st.form_submit_button("Save")
+
+	if submit_button:
+		if not name or not host or not port or not username:
+			st.warning("Fill out all of the required fields.")
+		else:
+			try:
+				with get_db() as db:
+					new_vm = VirtualMachine(
+						name=name,
+						host=host,
+						port=port,
+						username=username,
+					)
+					user = db.query(User).filter(User.username == current_username).first()
+					new_vm.user_id = user.id
+
+					if ssh_key:
+						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
+
+					db.add(new_vm)
+					db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Created")
+				switch_page(PageNames.my_vms)
 
 
 @st.dialog("Connect")
@@ -73,42 +104,75 @@ def connect_clicked(selected_vm: VirtualMachine):
 					st.error(f"An error has occurred: **{e}**")
 
 
-@st.dialog("Insert details")
-def add_vm():
-	with st.form(f"add-vm-form"):
-		name = st.text_input("VM name", placeholder="Insert name")
-		host = st.text_input("Host", placeholder="Insert IP address or domain")
-		port = st.number_input("Port", value=22)
-		username = st.text_input("Username", placeholder="Insert SSH username")
-		ssh_key = st.file_uploader("SSH Key (optional)")
-		submit_button = st.form_submit_button("Save")
+@st.dialog("Connect")
+def details_clicked(selected_vm: VirtualMachine):
+	with st.form(f"edit-form-{selected_vm.id}"):
+		name = st.text_input("VM name", value=selected_vm.name, placeholder="Insert name")
+		host = st.text_input("Host", value=selected_vm.host, placeholder="Insert IP address or domain")
+		port = st.number_input("Port", value=selected_vm.port, placeholder="Insert port")
+		username = st.text_input("Username", value=selected_vm.username, placeholder="Insert SSH username")
+		submit_button = st.form_submit_button("Edit", type="primary")
 
 	if submit_button:
-		if not name or not host or not port or not username:
-			st.warning("Fill out all of the required fields.")
-		else:
+		with get_db() as db:
 			try:
-				with get_db() as db:
-					new_vm = VirtualMachine(
-						name=name,
-						host=host,
-						port=port,
-						username=username,
-					)
-					user = db.query(User).filter(User.username == current_username).first()
-					new_vm.user_id = user.id
-
-					if ssh_key:
-						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
-
-					db.add(new_vm)
-					db.commit()
+				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm.name = name
+				vm.host = host
+				vm.port = port
+				vm.username = username
+				db.commit()
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
 			else:
-				st.success(f"Created")
+				st.success(f"Edited")
 				switch_page(PageNames.my_vms)
 
+	# def confirm(vm_id):
+	# 	st.subheader("Are you sure?")
+	# 	yes = st.button("Yes", type="secondary")
+	# 	no = st.button("No", type="primary")
+	#
+	# 	if no:
+	# 		print("Rerun")
+	#
+	# 	if yes:
+	# 		with get_db() as db_delete:
+	# 			try:
+	# 				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == vm_id).first()
+	# 				db_delete.delete(vm_to_delete)
+	# 				db_delete.commit()
+	# 				print("Deleted")
+	# 			except Exception as e:
+	# 				st.error(f"An error has occurred: **{e}**")
+	# 			else:
+	# 				st.success(f"Deleted")
+	# 				switch_page(PageNames.my_vms)
+
+
+	st.divider()
+	delete_button = st.button("Delete")
+
+	if delete_button:
+		# confirm(selected_vm.id)
+		with get_db() as db:
+			try:
+				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				db.delete(vm_to_delete)
+				db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Deleted")
+				switch_page(PageNames.my_vms)
+
+
+
+st.title("My VMs")
+current_username = get_session_state("username")
+
+if current_username is None:
+	switch_page(PageNames.error)
 
 button = st.button("Add VM", on_click=add_vm)
 
@@ -117,7 +181,8 @@ vm_list = get_user_virtual_machines(current_username)
 display_table_with_actions(
 	data_type="vms",
 	data_list=vm_list,
-	connect_callback=connect_clicked
+	details_callback=details_clicked,
+	connect_callback=connect_clicked,
 )
 
 # vm_cards_grid(vm_list, on_click=card_clicked)
