@@ -74,6 +74,7 @@ CREATE TABLE virtual_machines (
     port INTEGER NOT NULL,
     username VARCHAR(50) NOT NULL,
     ssh_key BYTEA,
+    password VARCHAR(128),
     user_id SERIAL NOT NULL, 
     CONSTRAINT fk_user FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE 

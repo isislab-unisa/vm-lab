@@ -36,16 +36,16 @@ def display_table_with_actions(
 	match data_type:
 		case "user":
 			header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name', 'VM Count', 'Role']
-			columns_width = (1, 2, 2, 2, 2, 1, 1, 1) # Two extra columns for two buttons
+			columns_width = (1, 2, 2, 2, 2, 1, 1, 1)  # Two extra columns for two buttons
 			is_user_list = True
 		case "new_user":
 			header_fields = ['ID', 'Username', 'Email', 'First Name', 'Last Name']
-			columns_width = (1, 2, 2, 2, 2, 1, 1) # Two extra columns for two buttons
+			columns_width = (1, 2, 2, 2, 2, 1, 1)  # Two extra columns for two buttons
 			is_user_list = True
 			is_new_user_list = True
 		case "vms":
-			header_fields = ['ID', 'Name', 'Host', 'Username']
-			columns_width = (1, 2, 3, 2, 1, 1) # Two extra columns for two buttons
+			header_fields = ['ID', 'Name', 'Host', 'Username', 'Auth']
+			columns_width = (1, 2, 2, 2, 1, 1, 1)  # Two extra columns for two buttons
 		case _:
 			raise ValueError("data_type must be 'user', 'new_user' or 'vms'")
 
@@ -95,8 +95,16 @@ def display_table_with_actions(
 				row_column[1].write(item.name)
 				row_column[2].write(item.host)
 				row_column[3].write(item.username)
-				details_column = row_column[4]
-				connect_column = row_column[5]
+
+				if item.ssh_key:
+					row_column[4].write("`SSH Key`")
+				elif item.password:
+					row_column[4].write("`Password`")
+				else:
+					row_column[4].write("`None`")
+
+				details_column = row_column[5]
+				connect_column = row_column[6]
 
 				if details_column.button(label="Details", type="secondary", key=f'{item.id}-action'):
 					if details_callback:
@@ -155,4 +163,3 @@ def vm_cards_grid(vm_list: List[VirtualMachine], on_click: Callable[[VirtualMach
 				text=f"({vm.id}) {vm.host}:{vm.port}",
 				on_click=lambda: on_click(vm)
 			)
-

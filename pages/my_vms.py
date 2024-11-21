@@ -22,6 +22,7 @@ def add_vm():
 		host = st.text_input("Host", placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=22, placeholder="Insert port")
 		username = st.text_input("Username", placeholder="Insert SSH username")
+		password = st.text_input("SSH Key (optional)", type="password")
 		ssh_key = st.file_uploader("SSH Key (optional)")
 		submit_button = st.form_submit_button("Save")
 
@@ -39,6 +40,9 @@ def add_vm():
 					)
 					user = db.query(User).filter(User.username == current_username).first()
 					new_vm.user_id = user.id
+
+					if password:
+						new_vm.password = VirtualMachine.encrypt_password(password)
 
 					if ssh_key:
 						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
@@ -62,6 +66,26 @@ def connect_clicked(selected_vm: VirtualMachine):
 					port=selected_vm.port,
 					username=selected_vm.username,
 					ssh_key=selected_vm.decrypt_key()
+				)
+
+			if "url" in response_json:
+				st.success(f"Success")
+				set_session_state("selected_vm", selected_vm)
+				set_session_state("terminal_url", response_json["url"])
+				switch_page(PageNames.terminal)
+			elif "error" in response_json:
+				st.error(f"An error has occurred: **{response_json["error"]}**")
+
+		except Exception as e:
+			st.error(f"An error has occurred: **{e}**")
+	elif selected_vm.password:
+		try:
+			with st.spinner(text="Connecting..."):
+				response_json = test_connection(
+					hostname=selected_vm.host,
+					port=selected_vm.port,
+					username=selected_vm.username,
+					password=selected_vm.decrypt_password()
 				)
 
 			if "url" in response_json:

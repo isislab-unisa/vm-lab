@@ -101,6 +101,7 @@ class VirtualMachine(Base):
 	host = Column(String(50), nullable=False)
 	port = Column(Integer, nullable=False)
 	username = Column(String(50), nullable=False)
+	password = Column(String(128))
 	ssh_key = Column(LargeBinary)
 	user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
 
@@ -113,6 +114,17 @@ class VirtualMachine(Base):
 
 	def decrypt_key(self):
 		return cipher.decrypt(self.ssh_key)
+
+	@staticmethod
+	def encrypt_password(password: str):
+		return cipher\
+			.encrypt(password.encode('utf-8'))\
+			.decode('utf-8')
+
+	def decrypt_password(self):
+		return cipher\
+			.decrypt(self.password.encode('utf-8'))\
+			.decode('utf-8')
 
 	def __str__(self):
 		return (f"VirtualMachine(id={self.id}, name={self.name}, host={self.host}, port={self.port}, "
