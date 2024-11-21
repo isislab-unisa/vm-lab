@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit import switch_page
 from backend.database import VirtualMachine, get_user_virtual_machines, get_db, User
 from backend.role import Role
-from frontend.custom_components import vm_cards_grid
+from frontend.custom_components import vm_cards_grid, display_table_with_actions
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 from utils.session_state import get_session_state, set_session_state
@@ -22,7 +22,7 @@ if current_username is None:
 
 
 @st.dialog("Connect")
-def card_clicked(selected_vm: VirtualMachine):
+def connect_clicked(selected_vm: VirtualMachine):
 	if selected_vm.ssh_key:
 		try:
 			with st.spinner(text="Connecting..."):
@@ -107,9 +107,17 @@ def add_vm():
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Created")
+				switch_page(PageNames.my_vms)
 
 
 button = st.button("Add VM", on_click=add_vm)
 
 vm_list = get_user_virtual_machines(current_username)
-vm_cards_grid(vm_list, on_click=card_clicked)
+
+display_table_with_actions(
+	data_type="vms",
+	data_list=vm_list,
+	connect_callback=connect_clicked
+)
+
+# vm_cards_grid(vm_list, on_click=card_clicked)

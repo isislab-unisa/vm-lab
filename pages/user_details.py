@@ -4,7 +4,7 @@ from streamlit import switch_page
 from backend.authentication import get_current_user_role, edit_user_in_authenticator_object
 from backend.database import User, get_db, VirtualMachine, get_user_virtual_machines
 from backend.role import Role
-from frontend.custom_components import vm_cards_grid
+from frontend.custom_components import vm_cards_grid, display_table_with_actions
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 from utils.session_state import get_session_state, pop_session_state, set_session_state
@@ -70,8 +70,13 @@ st.subheader("Virtual Machines")
 
 vm_list = get_user_virtual_machines(selected_user.username)
 
-def card_clicked(selected_vm: VirtualMachine):
+def connect_clicked(selected_vm: VirtualMachine):
 	set_session_state("selected_vm", selected_vm)
 	switch_page(PageNames.terminal)
 
-vm_cards_grid(vm_list, on_click=card_clicked)
+
+display_table_with_actions(
+	data_type="vms",
+	data_list=vm_list,
+	connect_callback=connect_clicked
+)

@@ -6,7 +6,7 @@ from streamlit import switch_page
 from backend.authentication import edit_user_in_authenticator_object, remove_user_in_authenticator_object
 from backend.database import get_db, User
 from backend.role import Role
-from frontend.custom_components import user_table_with_actions
+from frontend.custom_components import display_table_with_actions
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 
@@ -51,9 +51,9 @@ def user_denied(callback_user: User):
 		print("Denied", callback_user.id)
 		switch_page(PageNames.waiting_list)
 
-user_table_with_actions(
-	is_new_users_table=True,
-	user_list=users,
-	accept_callback=user_accepted,
-	deny_callback=user_denied
+display_table_with_actions(
+	data_type="new_user",
+	data_list=users,
+	accept_new_user_callback=user_accepted,
+	deny_new_user_callback=user_denied
 )

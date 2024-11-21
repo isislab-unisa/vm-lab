@@ -5,7 +5,7 @@ from streamlit import switch_page
 
 from backend.database import get_db, User
 from backend.role import Role
-from frontend.custom_components import user_table_with_actions
+from frontend.custom_components import display_table_with_actions
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 from utils.session_state import get_session_state, set_session_state
@@ -109,7 +109,8 @@ def go_to_user_details(callback_user: User):
 	set_session_state("selected_user", callback_user)
 	switch_page(PageNames.user_details)
 
-user_table_with_actions(
-	user_list=users,
+display_table_with_actions(
+	data_type="user",
+	data_list=users,
 	details_callback=go_to_user_details
 )
