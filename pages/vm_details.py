@@ -6,7 +6,7 @@ from backend.role import Role
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 from utils.session_state import get_session_state
-from frontend.custom_forms_vms import edit_vm, delete_vm, edit_vm_password
+from frontend.custom_forms_vms import edit_vm, delete_vm, edit_vm_password, delete_password
 
 page_setup(
 	title="Edit VM",
@@ -41,5 +41,7 @@ with get_db() as db:
 	user = db.query(User).filter(User.username == current_username).first()
 	edit_vm(selected_vm)
 	edit_vm_password(selected_vm, user)
+	if selected_vm.password:
+		delete_password(selected_vm)
 	delete_vm(selected_vm)
 

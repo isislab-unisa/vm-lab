@@ -26,11 +26,21 @@ def confirm_dialog(confirm_callback: Callable = None, *args, **kwargs):
 			st.rerun()
 
 
+def confirm_toggle(confirm_callback: Callable = None, *args, **kwargs):
+	on = st.toggle("Are you sure?")
+	button = st.button("Confirm")
+
+	if button and on and confirm_callback:
+		confirm_callback(*args, **kwargs)
+
 def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM password'):
 	@st.dialog("VM Password")
-	def password_dialog():
+	def password_dialog(is_new: bool = False):
 		with st.form("change-password-form", clear_on_submit=True, border=False):
-			password = st.text_input("Current password", type="password", value=selected_vm.decrypt_password())
+			if is_new:
+				password = st.text_input("New password", type="password")
+			else:
+				password = st.text_input("Current password", type="password", value=selected_vm.decrypt_password())
 			submit = st.form_submit_button("Update password")
 
 		if submit:
@@ -50,14 +60,15 @@ def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM pas
 						st.success(f"Edited")
 						switch_page(PageNames.vm_details)
 
-	with st.form(key=key):
+
+	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.password:
 			st.subheader('No password set')
 			user_password = st.text_input("Your account's password", type="password",
 										  placeholder="Insert your account password")
 			if st.form_submit_button("Set a password", type="primary"):
 				if user.verify_password(user_password):
-					password_dialog()
+					password_dialog(True)
 				else:
 					st.error("The inserted password does not match with your password")
 		else:
@@ -69,6 +80,30 @@ def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM pas
 					password_dialog()
 				else:
 					st.error("The inserted password does not match with your password")
+
+
+
+def delete_password(selected_vm: VirtualMachine, key: str = 'Delete VM password'):
+	def delete():
+		with get_db() as db:
+			try:
+				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm.password = None
+				db.commit()
+				db.refresh(vm)
+				set_session_state("selected_vm", vm)
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Edited")
+				switch_page(PageNames.vm_details)
+
+	with st.form(key=key):
+		st.subheader("Remove Password")
+		submit = st.form_submit_button("Remove", type="primary")
+
+		if submit:
+			confirm_dialog(delete)
 
 
 
