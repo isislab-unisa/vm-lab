@@ -22,7 +22,7 @@ def add_vm():
 		host = st.text_input("Host", placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=22, placeholder="Insert port")
 		username = st.text_input("Username", placeholder="Insert SSH username")
-		password = st.text_input("SSH Key (optional)", type="password")
+		password = st.text_input("Password (optional)", type="password", placeholder="Insert password (optional)")
 		ssh_key = st.file_uploader("SSH Key (optional)")
 		submit_button = st.form_submit_button("Save")
 
@@ -166,9 +166,9 @@ def vm_details_clicked(selected_vm: VirtualMachine):
 		host = st.text_input("Host", value=selected_vm.host, placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=selected_vm.port, placeholder="Insert port")
 		username = st.text_input("Username", value=selected_vm.username, placeholder="Insert SSH username")
-		submit_button = st.form_submit_button("Edit", type="primary")
+		edit_submit_button = st.form_submit_button("Edit", type="primary")
 
-	if submit_button:
+	if edit_submit_button:
 		with get_db() as db:
 			try:
 				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
@@ -183,33 +183,10 @@ def vm_details_clicked(selected_vm: VirtualMachine):
 				st.success(f"Edited")
 				switch_page(PageNames.my_vms)
 
-	# def confirm(vm_id):
-	# 	st.subheader("Are you sure?")
-	# 	yes = st.button("Yes", type="secondary")
-	# 	no = st.button("No", type="primary")
-	#
-	# 	if no:
-	# 		print("Rerun")
-	#
-	# 	if yes:
-	# 		with get_db() as db_delete:
-	# 			try:
-	# 				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == vm_id).first()
-	# 				db_delete.delete(vm_to_delete)
-	# 				db_delete.commit()
-	# 				print("Deleted")
-	# 			except Exception as e:
-	# 				st.error(f"An error has occurred: **{e}**")
-	# 			else:
-	# 				st.success(f"Deleted")
-	# 				switch_page(PageNames.my_vms)
-
-
 	st.divider()
 	delete_button = st.button("Delete")
 
 	if delete_button:
-		# confirm(selected_vm.id)
 		with get_db() as db:
 			try:
 				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()

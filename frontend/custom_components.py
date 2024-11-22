@@ -137,6 +137,7 @@ def render_sidebar_menu(role: Role | None):
 	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
 	"""
 	with st.sidebar:
+		st.title("vm-lab")
 		match role:
 			case Role.NEW_USER:
 				st.page_link(PageNames.user_settings, label="Settings")
