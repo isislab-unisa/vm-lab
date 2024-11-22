@@ -77,11 +77,11 @@ def display_table_with_actions(
 					accept_column = row_column[5]
 					deny_column = row_column[6]
 
-					if accept_column.button(label="Accept", type="primary", key=f'{item.id}-accept'):
+					if accept_column.button(label="Accept", type="primary", key=f'new-user-{item.id}-accept'):
 						if accept_new_user_callback:
 							accept_new_user_callback(item)
 
-					if deny_column.button(label="Deny", type="secondary", key=f'{item.id}-deny'):
+					if deny_column.button(label="Deny", type="secondary", key=f'new-user-{item.id}-deny'):
 						if deny_new_user_callback:
 							deny_new_user_callback(item)
 				else:
@@ -90,7 +90,7 @@ def display_table_with_actions(
 					row_column[6].write(item.role)
 					details_column = row_column[7]
 
-					if details_column.button(label="Details", type="primary", key=f'{item.id}-action'):
+					if details_column.button(label="Details", type="primary", key=f'user-{item.id}-action'):
 						if details_callback:
 							details_callback(item)
 			elif is_vm_list:
@@ -111,11 +111,11 @@ def display_table_with_actions(
 				details_column = row_column[5]
 				connect_column = row_column[6]
 
-				if details_column.button(label="Details", type="secondary", key=f'{item.id}-action'):
+				if details_column.button(label="Details", type="secondary", key=f'vm-{item.id}-action'):
 					if details_callback:
 						details_callback(item)
 
-				if connect_column.button(label="Connect", type="primary", key=f'{item.id}-connect'):
+				if connect_column.button(label="Connect", type="primary", key=f'vm-{item.id}-connect'):
 					if connect_callback:
 						connect_callback(item)
 			else:
@@ -127,7 +127,7 @@ def display_table_with_actions(
 
 				details_column = row_column[3]
 
-				if details_column.button(label="Details", type="secondary", key=f'{item.id}-action'):
+				if details_column.button(label="Details", type="secondary", key=f'bookmark-{item.id}-action'):
 					if details_callback:
 						details_callback(item)
 

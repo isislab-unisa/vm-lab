@@ -60,12 +60,14 @@ def add_vm():
 def add_bookmark():
 	with st.form(f"add-bookmark-form"):
 		name = st.text_input("Bookmark name", placeholder="Insert name")
-		link = st.text_input("Link", placeholder="Insert link")
+		link = st.text_input("Link", placeholder="Insert link", help="Must start with `www.`")
 		submit_button = st.form_submit_button("Save")
 
 	if submit_button:
 		if not name or not link:
 			st.warning("Fill out all of the required fields.")
+		elif not link.startswith("www."):
+			st.error("Insert a valid link")
 		else:
 			try:
 				with get_db() as db:
