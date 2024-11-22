@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit import switch_page
-from backend.database import VirtualMachine, get_user_virtual_machines, get_db, User
+from backend.database import VirtualMachine, get_user_virtual_machines, get_db, User, get_user_bookmarks, Bookmark
 from backend.role import Role
 from frontend.custom_components import vm_cards_grid, display_table_with_actions
 from frontend.page_names import PageNames
@@ -15,7 +15,7 @@ page_setup(
 )
 
 
-@st.dialog("Insert details")
+@st.dialog("Add Virtual Machine")
 def add_vm():
 	with st.form(f"add-vm-form"):
 		name = st.text_input("VM name", placeholder="Insert name")
@@ -48,6 +48,35 @@ def add_vm():
 						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
 
 					db.add(new_vm)
+					db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Created")
+				switch_page(PageNames.my_vms)
+
+
+@st.dialog("Add Bookmark")
+def add_bookmark():
+	with st.form(f"add-bookmark-form"):
+		name = st.text_input("Bookmark name", placeholder="Insert name")
+		link = st.text_input("Link", placeholder="Insert link")
+		submit_button = st.form_submit_button("Save")
+
+	if submit_button:
+		if not name or not link:
+			st.warning("Fill out all of the required fields.")
+		else:
+			try:
+				with get_db() as db:
+					new_link = Bookmark(
+						name=name,
+						link=link,
+					)
+					user = db.query(User).filter(User.username == current_username).first()
+					new_link.user_id = user.id
+
+					db.add(new_link)
 					db.commit()
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
@@ -128,9 +157,9 @@ def connect_clicked(selected_vm: VirtualMachine):
 					st.error(f"An error has occurred: **{e}**")
 
 
-@st.dialog("Connect")
-def details_clicked(selected_vm: VirtualMachine):
-	with st.form(f"edit-form-{selected_vm.id}"):
+@st.dialog("Edit VM")
+def vm_details_clicked(selected_vm: VirtualMachine):
+	with st.form(f"edit-form-vm-{selected_vm.id}"):
 		name = st.text_input("VM name", value=selected_vm.name, placeholder="Insert name")
 		host = st.text_input("Host", value=selected_vm.host, placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=selected_vm.port, placeholder="Insert port")
@@ -191,6 +220,41 @@ def details_clicked(selected_vm: VirtualMachine):
 				switch_page(PageNames.my_vms)
 
 
+@st.dialog("Edit Bookmark")
+def bookmark_details_clicked(selected_bookmark: Bookmark):
+	with st.form(f"edit-form-bookmark-{selected_bookmark.id}"):
+		name = st.text_input("VM name", value=selected_bookmark.name, placeholder="Insert name")
+		link = st.text_input("Link", value=selected_bookmark.link, placeholder="Insert link")
+		submit_button = st.form_submit_button("Edit", type="primary")
+
+	if submit_button:
+		with get_db() as db:
+			try:
+				bookmark = db.query(Bookmark).filter(Bookmark.id == selected_bookmark.id).first()
+				bookmark.name = name
+				bookmark.link = link
+				db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Edited")
+				switch_page(PageNames.my_vms)
+
+	st.divider()
+	delete_button = st.button("Delete")
+
+	if delete_button:
+		with get_db() as db:
+			try:
+				bookmark_to_delete = db.query(Bookmark).filter(Bookmark.id == selected_bookmark.id).first()
+				db.delete(bookmark_to_delete)
+				db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Deleted")
+				switch_page(PageNames.my_vms)
+
 
 st.title("My VMs")
 current_username = get_session_state("username")
@@ -198,15 +262,26 @@ current_username = get_session_state("username")
 if current_username is None:
 	switch_page(PageNames.error)
 
-button = st.button("Add VM", on_click=add_vm)
+st.button("Add VM", on_click=add_vm)
 
 vm_list = get_user_virtual_machines(current_username)
 
 display_table_with_actions(
 	data_type="vms",
 	data_list=vm_list,
-	details_callback=details_clicked,
+	details_callback=vm_details_clicked,
 	connect_callback=connect_clicked,
 )
 
-# vm_cards_grid(vm_list, on_click=card_clicked)
+st.divider()
+st.title("My Bookmarks")
+
+st.button("Add Bookmark", on_click=add_bookmark)
+
+bookmark_list = get_user_bookmarks(current_username)
+
+display_table_with_actions(
+	data_type="bookmark",
+	data_list=bookmark_list,
+	details_callback=bookmark_details_clicked
+)

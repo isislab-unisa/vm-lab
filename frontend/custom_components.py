@@ -3,14 +3,14 @@ import streamlit as st
 from typing import Callable, List, Union, Literal
 from streamlit_extras.card import card
 from streamlit_extras.grid import grid
-from backend.database import User, VirtualMachine
+from backend.database import User, VirtualMachine, Bookmark
 from backend.role import Role
 from frontend.page_names import PageNames
 
 
 def display_table_with_actions(
 		data_list: list,
-		data_type: Literal["user", "new_user", "vms"],
+		data_type: Literal["user", "new_user", "vms", "bookmark"],
 		details_callback: Callable[[Union[User, VirtualMachine]], None] = None,
 		accept_new_user_callback: Callable[[User], None] = None,
 		deny_new_user_callback: Callable[[User], None] = None,
@@ -32,6 +32,7 @@ def display_table_with_actions(
 
 	is_user_list = False
 	is_new_user_list = False
+	is_vm_list = False
 
 	match data_type:
 		case "user":
@@ -46,6 +47,10 @@ def display_table_with_actions(
 		case "vms":
 			header_fields = ['ID', 'Name', 'Host', 'Username', 'Auth']
 			columns_width = (1, 2, 2, 2, 1, 1, 1)  # Two extra columns for two buttons
+			is_vm_list = True
+		case "bookmark":
+			header_fields = ['ID', 'Name', 'URL']
+			columns_width = (1, 2, 2, 1)  # One extra column for one button
 		case _:
 			raise ValueError("data_type must be 'user', 'new_user' or 'vms'")
 
@@ -88,7 +93,7 @@ def display_table_with_actions(
 					if details_column.button(label="Details", type="primary", key=f'{item.id}-action'):
 						if details_callback:
 							details_callback(item)
-			else:
+			elif is_vm_list:
 				# Virtual Machine data
 				item: VirtualMachine = item
 				row_column[0].write(item.id)
@@ -113,7 +118,18 @@ def display_table_with_actions(
 				if connect_column.button(label="Connect", type="primary", key=f'{item.id}-connect'):
 					if connect_callback:
 						connect_callback(item)
+			else:
+				# Bookmark data
+				item: Bookmark = item
+				row_column[0].write(item.id)
+				row_column[1].write(item.name)
+				row_column[2].write(item.link)
 
+				details_column = row_column[3]
+
+				if details_column.button(label="Details", type="secondary", key=f'{item.id}-action'):
+					if details_callback:
+						details_callback(item)
 
 def render_sidebar_menu(role: Role | None):
 	"""

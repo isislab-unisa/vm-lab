@@ -171,6 +171,16 @@ def get_user_virtual_machines(username: str) -> List[VirtualMachine]:
 		return cast(List[VirtualMachine], fetched_vms)
 
 
+def get_user_bookmarks(username: str) -> List[Bookmark]:
+	with get_db() as db:
+		fetched_bookmarks = db.query(Bookmark) \
+			.join(Bookmark.user) \
+			.filter(User.username == username) \
+			.all()
+
+		return cast(List[Bookmark], fetched_bookmarks)
+
+
 ##################################
 #       Load Initial Users       #
 ##################################
