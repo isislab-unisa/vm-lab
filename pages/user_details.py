@@ -22,7 +22,7 @@ curren_role: Role = get_current_user_role()
 if selected_user is None or curren_role is None:
 	switch_page(PageNames.manage_users)
 
-st.header(f"Details of `{selected_user.username}`")
+st.header(f"Details of user `{selected_user.username}`")
 
 st.write(f"ID: {selected_user.id}")
 st.write(f"Email: {selected_user.email}")

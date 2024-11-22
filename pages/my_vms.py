@@ -159,44 +159,11 @@ def connect_clicked(selected_vm: VirtualMachine):
 					st.error(f"An error has occurred: **{e}**")
 
 
-@st.dialog("Edit VM")
+# @st.dialog("Edit VM")
 def vm_details_clicked(selected_vm: VirtualMachine):
-	with st.form(f"edit-form-vm-{selected_vm.id}"):
-		name = st.text_input("VM name", value=selected_vm.name, placeholder="Insert name")
-		host = st.text_input("Host", value=selected_vm.host, placeholder="Insert IP address or domain")
-		port = st.number_input("Port", value=selected_vm.port, placeholder="Insert port")
-		username = st.text_input("Username", value=selected_vm.username, placeholder="Insert SSH username")
-		edit_submit_button = st.form_submit_button("Edit", type="primary")
-
-	if edit_submit_button:
-		with get_db() as db:
-			try:
-				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
-				vm.name = name
-				vm.host = host
-				vm.port = port
-				vm.username = username
-				db.commit()
-			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
-			else:
-				st.success(f"Edited")
-				switch_page(PageNames.my_vms)
-
-	st.divider()
-	delete_button = st.button("Delete")
-
-	if delete_button:
-		with get_db() as db:
-			try:
-				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
-				db.delete(vm_to_delete)
-				db.commit()
-			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
-			else:
-				st.success(f"Deleted")
-				switch_page(PageNames.my_vms)
+	# edit_vm form with st.dialog if needed
+	set_session_state("selected_vm", selected_vm)
+	switch_page(PageNames.vm_details)
 
 
 @st.dialog("Edit Bookmark")
