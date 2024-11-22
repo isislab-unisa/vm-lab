@@ -106,6 +106,78 @@ def delete_password(selected_vm: VirtualMachine, key: str = 'Delete VM password'
 			confirm_dialog(delete)
 
 
+def edit_vm_ssh_key(selected_vm: VirtualMachine, user: User, key='Change VM ssh key'):
+	@st.dialog("VM SSH Key")
+	def ssh_key_dialog(is_new: bool = False):
+		with st.form("change-ssh-key-form", clear_on_submit=True, border=False):
+			if not is_new:
+				st.code(selected_vm.decrypt_key().decode("utf-8"))
+
+			ssh_key = st.file_uploader("New SSH Key")
+			submit = st.form_submit_button("Update SSH Key")
+
+		if submit:
+			if not ssh_key:
+				st.error("Insert a new key")
+			else:
+				with get_db() as db:
+					try:
+						vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+						vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
+						db.commit()
+						db.refresh(vm)
+						set_session_state("selected_vm", vm)
+					except Exception as e:
+						st.error(f"An error has occurred: **{e}**")
+					else:
+						st.success(f"Edited")
+						switch_page(PageNames.vm_details)
+
+
+	with st.form(key=key, clear_on_submit=True):
+		if not selected_vm.ssh_key:
+			st.subheader('No SSH Key set')
+			user_password = st.text_input("Your account's password", type="password",
+										  placeholder="Insert your account password")
+			if st.form_submit_button("Set an SSH Key", type="primary"):
+				if user.verify_password(user_password):
+					ssh_key_dialog(True)
+				else:
+					st.error("The inserted password does not match with your password")
+		else:
+			st.subheader('SSH Key authentication present')
+			user_password = st.text_input("Your account's password", type="password",
+										  placeholder="Insert your account password")
+			if st.form_submit_button("See or update the key", type="primary"):
+				if user.verify_password(user_password):
+					ssh_key_dialog()
+				else:
+					st.error("The inserted password does not match with your password")
+
+
+
+def delete_ssh_key(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
+	def delete():
+		with get_db() as db:
+			try:
+				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm.ssh_key = None
+				db.commit()
+				db.refresh(vm)
+				set_session_state("selected_vm", vm)
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Edited")
+				switch_page(PageNames.vm_details)
+
+	with st.form(key=key):
+		st.subheader("Remove SSH Key")
+		submit = st.form_submit_button("Remove", type="primary")
+
+		if submit:
+			confirm_dialog(delete)
+
 
 def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 						   key: str = 'Edit VM information'):

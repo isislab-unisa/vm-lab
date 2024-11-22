@@ -19,6 +19,6 @@ terminal_url = get_session_state("terminal_url")
 if selected_vm is None or terminal_url is None:
 	switch_page(PageNames.my_vms)
 
-st.title(f"'{selected_vm.name}' SSH Terminal")
+st.title(f"`{selected_vm.name}` SSH Terminal")
 
 stv1.iframe(terminal_url, width=800, height=800)
