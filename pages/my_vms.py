@@ -1,12 +1,15 @@
 import streamlit as st
+
 from streamlit import switch_page
-from backend.database import VirtualMachine, get_user_virtual_machines, get_db, User, get_user_bookmarks, Bookmark
+
 from backend.role import Role
-from frontend.custom_components import vm_cards_grid, display_table_with_actions
+from backend.database import get_db
+from backend.models import VirtualMachine, User, Bookmark
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
-from utils.session_state import get_session_state, set_session_state
+from frontend.custom_components import display_table_with_actions
 from utils.terminal_connection import test_connection
+from utils.session_state import get_session_state_item, set_session_state_item
 
 page_setup(
 	title="My VMs",
@@ -17,6 +20,7 @@ page_setup(
 
 @st.dialog("Add Virtual Machine")
 def add_vm():
+	"""Dialog to add a new Virtual Machine."""
 	with st.form(f"add-vm-form"):
 		name = st.text_input("VM name", placeholder="Insert name")
 		host = st.text_input("Host", placeholder="Insert IP address or domain")
@@ -58,6 +62,7 @@ def add_vm():
 
 @st.dialog("Add Bookmark")
 def add_bookmark():
+	"""Dialog to add a new Bookmark."""
 	with st.form(f"add-bookmark-form"):
 		name = st.text_input("Bookmark name", placeholder="Insert name")
 		link = st.text_input("Link", placeholder="Insert link", help="Must start with `www.`")
@@ -89,9 +94,10 @@ def add_bookmark():
 
 @st.dialog("Connect")
 def connect_clicked(selected_vm: VirtualMachine):
+	"""Dialog to handle the connection to a Virtual Machine."""
 	if selected_vm.ssh_key:
 		try:
-			with st.spinner(text="Connecting..."):
+			with st.spinner(text="Connecting with SSH Key..."):
 				response_json = test_connection(
 					hostname=selected_vm.host,
 					port=selected_vm.port,
@@ -101,8 +107,8 @@ def connect_clicked(selected_vm: VirtualMachine):
 
 			if "url" in response_json:
 				st.success(f"Success")
-				set_session_state("selected_vm", selected_vm)
-				set_session_state("terminal_url", response_json["url"])
+				set_session_state_item("selected_vm", selected_vm)
+				set_session_state_item("terminal_url", response_json["url"])
 				switch_page(PageNames.terminal)
 			elif "error" in response_json:
 				st.error(f"An error has occurred: **{response_json["error"]}**")
@@ -111,7 +117,7 @@ def connect_clicked(selected_vm: VirtualMachine):
 			st.error(f"An error has occurred: **{e}**")
 	elif selected_vm.password:
 		try:
-			with st.spinner(text="Connecting..."):
+			with st.spinner(text="Connecting with Password..."):
 				response_json = test_connection(
 					hostname=selected_vm.host,
 					port=selected_vm.port,
@@ -121,8 +127,8 @@ def connect_clicked(selected_vm: VirtualMachine):
 
 			if "url" in response_json:
 				st.success(f"Success")
-				set_session_state("selected_vm", selected_vm)
-				set_session_state("terminal_url", response_json["url"])
+				set_session_state_item("selected_vm", selected_vm)
+				set_session_state_item("terminal_url", response_json["url"])
 				switch_page(PageNames.terminal)
 			elif "error" in response_json:
 				st.error(f"An error has occurred: **{response_json["error"]}**")
@@ -150,8 +156,8 @@ def connect_clicked(selected_vm: VirtualMachine):
 
 					if "url" in response_json:
 						st.success(f"Success")
-						set_session_state("selected_vm", selected_vm)
-						set_session_state("terminal_url", response_json["url"])
+						set_session_state_item("selected_vm", selected_vm)
+						set_session_state_item("terminal_url", response_json["url"])
 						switch_page(PageNames.terminal)
 					elif "error" in response_json:
 						st.error(f"An error has occurred: **{response_json["error"]}**")
@@ -159,15 +165,9 @@ def connect_clicked(selected_vm: VirtualMachine):
 					st.error(f"An error has occurred: **{e}**")
 
 
-# @st.dialog("Edit VM")
-def vm_details_clicked(selected_vm: VirtualMachine):
-	# edit_vm form with st.dialog if needed
-	set_session_state("selected_vm", selected_vm)
-	switch_page(PageNames.vm_details)
-
-
 @st.dialog("Edit Bookmark")
 def bookmark_details_clicked(selected_bookmark: Bookmark):
+	"""Dialog to edit a Bookmark."""
 	with st.form(f"edit-form-bookmark-{selected_bookmark.id}"):
 		name = st.text_input("VM name", value=selected_bookmark.name, placeholder="Insert name")
 		link = st.text_input("Link", value=selected_bookmark.link, placeholder="Insert link")
@@ -176,7 +176,7 @@ def bookmark_details_clicked(selected_bookmark: Bookmark):
 	if submit_button:
 		with get_db() as db:
 			try:
-				bookmark = db.query(Bookmark).filter(Bookmark.id == selected_bookmark.id).first()
+				bookmark = Bookmark.find_by(db, bookmark_id=selected_bookmark.id)
 				bookmark.name = name
 				bookmark.link = link
 				db.commit()
@@ -192,7 +192,7 @@ def bookmark_details_clicked(selected_bookmark: Bookmark):
 	if delete_button:
 		with get_db() as db:
 			try:
-				bookmark_to_delete = db.query(Bookmark).filter(Bookmark.id == selected_bookmark.id).first()
+				bookmark_to_delete = Bookmark.find_by(db, bookmark_id=selected_bookmark.id)
 				db.delete(bookmark_to_delete)
 				db.commit()
 			except Exception as e:
@@ -202,16 +202,23 @@ def bookmark_details_clicked(selected_bookmark: Bookmark):
 				switch_page(PageNames.my_vms)
 
 
+def vm_details_clicked(selected_vm: VirtualMachine):
+	"""Handle click of detail button for a Virtual Machine."""
+	set_session_state_item("selected_vm", selected_vm)
+	switch_page(PageNames.vm_details)
+
+
 st.title("My VMs")
-current_username = get_session_state("username")
+current_username = get_session_state_item("username")
 
 if current_username is None:
 	switch_page(PageNames.error)
 
+with get_db() as db_list:
+	vm_list = VirtualMachine.find_by(db_list, user_name=current_username)
+	bookmark_list = Bookmark.find_by(db_list, user_name=current_username)
+
 st.button("Add VM", on_click=add_vm)
-
-vm_list = get_user_virtual_machines(current_username)
-
 display_table_with_actions(
 	data_type="vms",
 	data_list=vm_list,
@@ -223,9 +230,6 @@ st.divider()
 st.title("My Bookmarks")
 
 st.button("Add Bookmark", on_click=add_bookmark)
-
-bookmark_list = get_user_bookmarks(current_username)
-
 display_table_with_actions(
 	data_type="bookmark",
 	data_list=bookmark_list,

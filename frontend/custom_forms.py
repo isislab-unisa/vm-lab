@@ -1,15 +1,17 @@
-# Modified code from streamlit_authenticator\views\authentication_view.py (Authenticate.register_user)
+# THIS FILE CONTAINS SOME EDITED CODE
+# FROM `streamlit_authenticator\views\authentication_view.py`
+#
+# (Authenticate.register_user)
+import streamlit as st
+
 from time import sleep
 from typing import Optional, List
-
-import streamlit as st
 from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
-from backend.authentication import create_new_user, edit_username, get_or_create_authenticator_object, edit_email, \
-	edit_password, edit_first_last_name
+from backend.authentication import create_new_user, edit_username, edit_email, edit_password, edit_first_last_name
 from frontend.page_names import PageNames
-from utils.session_state import set_session_state, get_session_state, pop_session_state
+from utils.session_state import set_session_state_item, get_session_state_item, pop_session_state_item
 
 PASSWORD_INSTRUCTIONS = """
 		**Password must be:**
@@ -30,7 +32,8 @@ USERNAME_INSTRUCTIONS = """
 def register_user(key: str = 'Register user', clear_on_submit: bool = False, domains: Optional[List[str]] = None,
 				  captcha: bool = True):
 	"""
-	Renders a form for user registration
+	Renders a form for user registration.
+
 	:param clear_on_submit: Whether to clear the inserted data in the form after submit
 	:param key: The key of the form (must be different from other forms on the same page)
 	:param domains: The accepted domains for the registration, example: `domains=["gmail.com"]`
@@ -71,13 +74,14 @@ def register_user(key: str = 'Register user', clear_on_submit: bool = False, dom
 				domains=domains
 			)
 			# Switch page if there is no error with the registration
-			set_session_state('registration-success', True)
+			set_session_state_item('registration-success', True)
 			switch_page(PageNames.login)
 
 
 def change_username(current_username: str, clear_on_submit: bool = False, key: str = 'Change username'):
 	"""
-	Renders a form for username change
+	Renders a form for username change.
+
 	:param current_username: The current username
 	:param clear_on_submit: Whether to clear the inserted data in the form after submit
 	:param key: The key of the form (must be different from other forms on the same page)
@@ -94,7 +98,7 @@ def change_username(current_username: str, clear_on_submit: bool = False, key: s
 		if submitted:
 			try:
 				edit_username(current_username, new_username)
-				set_session_state('username-change-success', True)
+				set_session_state_item('username-change-success', True)
 				sleep(0.2)  # Wait to let the login cookie deletion happen during logout
 				switch_page(PageNames.login)
 			except Exception as e:
@@ -103,7 +107,8 @@ def change_username(current_username: str, clear_on_submit: bool = False, key: s
 
 def change_email(current_email: str, clear_on_submit: bool = False, key: str = 'Change email'):
 	"""
-	Renders a form for email change
+	Renders a form for email change.
+
 	:param current_email: The current email
 	:param clear_on_submit: Whether to clear the inserted data in the form after submit
 	:param key: The key of the form (must be different from other forms on the same page)
@@ -116,15 +121,15 @@ def change_email(current_email: str, clear_on_submit: bool = False, key: str = '
 
 		submitted = st.form_submit_button('Change email', type='primary')
 
-		if get_session_state('email-change-success'):
-			pop_session_state('email-change-success')
+		if get_session_state_item('email-change-success'):
+			pop_session_state_item('email-change-success')
 			st.success(f"Email changed successfully to `{new_email}`")
 
 		if submitted:
 			try:
 				edit_email(current_email, new_email)
-				set_session_state('email', new_email)
-				set_session_state('email-change-success', True)
+				set_session_state_item('email', new_email)
+				set_session_state_item('email-change-success', True)
 				switch_page(PageNames.user_settings)
 			except Exception as e:
 				st.error(e)
@@ -133,6 +138,7 @@ def change_email(current_email: str, clear_on_submit: bool = False, key: str = '
 def change_password(current_username: str, clear_on_submit: bool = False, key: str = 'Change password'):
 	"""
 	Renders a form for password change.
+
 	:param current_username: The current username
 	:param clear_on_submit: Whether to clear the inserted data in the form after submit
 	:param key: The key of the form (must be different from other forms on the same page)
@@ -146,14 +152,14 @@ def change_password(current_username: str, clear_on_submit: bool = False, key: s
 
 		submitted = st.form_submit_button('Change password', type='primary')
 
-		if get_session_state('password-change-success'):
-			pop_session_state('password-change-success')
+		if get_session_state_item('password-change-success'):
+			pop_session_state_item('password-change-success')
 			st.success(f"Password changed successfully")
 
 		if submitted:
 			try:
 				edit_password(current_username, current_password, new_password, new_password_repeat)
-				set_session_state('password-change-success', True)
+				set_session_state_item('password-change-success', True)
 				switch_page(PageNames.user_settings)
 			except Exception as e:
 				st.error(e)
@@ -162,7 +168,8 @@ def change_password(current_username: str, clear_on_submit: bool = False, key: s
 def change_first_last_name(current_username: str, current_name_surname: str, clear_on_submit: bool = False,
 						   key: str = 'Change name surname'):
 	"""
-	Renders a form for email change
+	Renders a form for email change.
+
 	:param current_username: The current username
 	:param current_name_surname: The current name and surname from the session_state
 	:param clear_on_submit: Whether to clear the inserted data in the form after submit
@@ -177,8 +184,8 @@ def change_first_last_name(current_username: str, current_name_surname: str, cle
 
 		submitted = st.form_submit_button('Change name and surname', type='primary')
 
-		if get_session_state('name-surname-change-success'):
-			pop_session_state('name-surname-success')
+		if get_session_state_item('name-surname-change-success'):
+			pop_session_state_item('name-surname-success')
 
 			if new_first_name == "" and new_last_name == "":
 				pass
@@ -191,9 +198,10 @@ def change_first_last_name(current_username: str, current_name_surname: str, cle
 
 		if submitted:
 			try:
-				edited_first_name, edited_last_name = edit_first_last_name(current_username, new_first_name, new_last_name)
-				set_session_state('name', f'{edited_first_name} {edited_last_name}')
-				set_session_state('name-surname-change-success', True)
+				edited_first_name, edited_last_name = edit_first_last_name(current_username, new_first_name,
+																		   new_last_name)
+				set_session_state_item('name', f'{edited_first_name} {edited_last_name}')
+				set_session_state_item('name-surname-change-success', True)
 				switch_page(PageNames.user_settings)
 			except Exception as e:
 				st.error(e)

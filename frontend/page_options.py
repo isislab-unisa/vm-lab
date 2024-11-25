@@ -1,14 +1,14 @@
-from enum import Enum
-
 import streamlit as st
+
+from enum import Enum
 from typing import Literal
 from streamlit import switch_page
-from backend.authentication import is_logged_in, get_current_user_role, \
-	get_or_create_authenticator_object
+from streamlit_authenticator import Authenticate
+
 from backend.role import Role
+from backend.authentication import is_logged_in, get_current_user_role, get_or_create_authenticator_object
 from frontend.custom_components import render_sidebar_menu
 from frontend.page_names import PageNames
-from streamlit_authenticator import Authenticate
 
 
 class AccessControlType(Enum):
@@ -46,6 +46,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 	"""
 	Configures the page layout, title, and access control for the current page, including authentication
     and authorization checks, optional callbacks, and session debugging.
+
 	:param layout: Sets the page layout; either "centered" (content centered) or "wide" (wider view). Default is "wide".
 	:param title: Title of the page, displayed in the browser tab. If `None`, the title will be the file name.
 	:param access_control: Defines access control settings with `AccessControlType`.

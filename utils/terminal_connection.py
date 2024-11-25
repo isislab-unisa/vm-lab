@@ -1,8 +1,8 @@
 import io
-from typing import Dict
-
 import paramiko
 import requests
+
+from typing import Dict
 from paramiko.ssh_exception import AuthenticationException
 
 

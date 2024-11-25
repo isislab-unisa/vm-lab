@@ -1,12 +1,12 @@
-from time import sleep
 from typing import Callable
 
 import streamlit as st
 
 from streamlit import switch_page
-from backend.database import VirtualMachine, get_db, User
+from backend.database import get_db
+from backend.models import VirtualMachine, User
 from frontend.page_names import PageNames
-from utils.session_state import set_session_state
+from utils.session_state import set_session_state_item
 
 
 @st.dialog("Are you sure?")
@@ -33,6 +33,7 @@ def confirm_toggle(confirm_callback: Callable = None, *args, **kwargs):
 	if button and on and confirm_callback:
 		confirm_callback(*args, **kwargs)
 
+
 def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM password'):
 	@st.dialog("VM Password")
 	def password_dialog(is_new: bool = False):
@@ -49,17 +50,16 @@ def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM pas
 			else:
 				with get_db() as db:
 					try:
-						vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+						vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
 						vm.password = VirtualMachine.encrypt_password(password)
 						db.commit()
 						db.refresh(vm)
-						set_session_state("selected_vm", vm)
+						set_session_state_item("selected_vm", vm)
 					except Exception as e:
 						st.error(f"An error has occurred: **{e}**")
 					else:
 						st.success(f"Edited")
 						switch_page(PageNames.vm_details)
-
 
 	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.password:
@@ -82,16 +82,15 @@ def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM pas
 					st.error("The inserted password does not match with your password")
 
 
-
 def delete_password(selected_vm: VirtualMachine, key: str = 'Delete VM password'):
 	def delete():
 		with get_db() as db:
 			try:
-				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
 				vm.password = None
 				db.commit()
 				db.refresh(vm)
-				set_session_state("selected_vm", vm)
+				set_session_state_item("selected_vm", vm)
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
 			else:
@@ -122,17 +121,16 @@ def edit_vm_ssh_key(selected_vm: VirtualMachine, user: User, key='Change VM ssh 
 			else:
 				with get_db() as db:
 					try:
-						vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+						vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
 						vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
 						db.commit()
 						db.refresh(vm)
-						set_session_state("selected_vm", vm)
+						set_session_state_item("selected_vm", vm)
 					except Exception as e:
 						st.error(f"An error has occurred: **{e}**")
 					else:
 						st.success(f"Edited")
 						switch_page(PageNames.vm_details)
-
 
 	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.ssh_key:
@@ -155,16 +153,15 @@ def edit_vm_ssh_key(selected_vm: VirtualMachine, user: User, key='Change VM ssh 
 					st.error("The inserted password does not match with your password")
 
 
-
 def delete_ssh_key(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
 	def delete():
 		with get_db() as db:
 			try:
-				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
 				vm.ssh_key = None
 				db.commit()
 				db.refresh(vm)
-				set_session_state("selected_vm", vm)
+				set_session_state_item("selected_vm", vm)
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
 			else:
@@ -180,7 +177,7 @@ def delete_ssh_key(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
 
 
 def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
-						   key: str = 'Edit VM information'):
+			key: str = 'Edit VM information'):
 	with st.form(key=key, clear_on_submit=clear_on_submit):
 		st.subheader('Edit VM information')
 		name = st.text_input("VM name", value=selected_vm.name, placeholder="Insert name")
@@ -192,7 +189,7 @@ def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 	if edit_submit_button:
 		with get_db() as db:
 			try:
-				vm = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
 				vm.name = name
 				vm.host = host
 				vm.port = port
@@ -218,11 +215,7 @@ def delete_vm(selected_vm: VirtualMachine, key: str = 'Delete VM'):
 				st.success(f"Deleted")
 				switch_page(PageNames.my_vms)
 
-
 	with st.form(key=key):
 		st.subheader('Delete VM')
 		if st.form_submit_button("Delete", type="primary"):
 			confirm_dialog(lambda: delete(selected_vm.id))
-
-
-

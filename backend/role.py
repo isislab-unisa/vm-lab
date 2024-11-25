@@ -7,9 +7,13 @@ class Role(Enum):
 	USER = 'user'
 	NEW_USER = 'new_user'
 
+	def to_string(self):
+		"""Converts this role enum to its value."""
+		return self.value
+
 	@staticmethod
-	def from_str(role_str: str):
-		"""Converts a string into an equivalent role enum"""
+	def from_string(role_str: str):
+		"""Converts a string into an equivalent role enum."""
 		match role_str:
 			case Role.NEW_USER.value:
 				return Role.NEW_USER
@@ -22,8 +26,13 @@ class Role(Enum):
 			case _:
 				return None
 
+	def to_phrase(self):
+		"""Converts this role enum to a presentable phrase."""
+		return self.value.replace("_", " ").capitalize()
+
 	@staticmethod
 	def from_phrase(phrase: str):
+		"""Converts a presentable phrase into an equivalent role enum."""
 		match phrase.lower():
 			case 'admin':
 				return Role.ADMIN
@@ -34,14 +43,3 @@ class Role(Enum):
 			case _:
 				return Role.NEW_USER
 
-	@staticmethod
-	def to_phrase(role_enum):
-		match role_enum:
-			case Role.NEW_USER:
-				return 'New User'
-			case Role.USER:
-				return 'User'
-			case Role.MANAGER:
-				return 'Manager'
-			case Role.ADMIN:
-				return 'Admin'

@@ -3,10 +3,9 @@ import streamlit as st
 from frontend.custom_forms import register_user
 from frontend.page_options import page_setup, AccessControlType
 
-authenticator = page_setup(
+page_setup(
 	title="Register",
 	access_control=AccessControlType.UNREGISTERED_ONLY,
-	print_session_state=True
 )
 
 try:

@@ -4,7 +4,7 @@ from backend.role import Role
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 
-authenticator = page_setup(
+page_setup(
 	title='Waiting List',
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
 	accepted_roles=[Role.NEW_USER],

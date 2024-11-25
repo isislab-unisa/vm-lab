@@ -1,9 +1,8 @@
 import streamlit as st
 
-from typing import Callable, List, Union, Literal
-from streamlit_extras.card import card
-from streamlit_extras.grid import grid
-from backend.database import User, VirtualMachine, Bookmark
+from typing import Callable, Union, Literal
+
+from backend.models import User, VirtualMachine, Bookmark
 from backend.role import Role
 from frontend.page_names import PageNames
 
@@ -19,12 +18,11 @@ def display_table_with_actions(
 	"""
 	Display a table with dynamic behavior for Users or Virtual Machines.
 
-	:param connect_callback:
-	:param data_type:
-	:param data_list: The list of Users or Virtual Machines to display.
-	:param details_callback: Callback for "Details" button.
-	:param accept_new_user_callback: Callback for "Accept" button (only for users).
-	:param deny_new_user_callback: Callback for "Deny" button (only for users).
+	:param data_list: The list of Users or Virtual Machines to display
+	:param data_type: The type of data passed, can be: "user", "new_user", "vms" or "bookmark"
+	:param details_callback: Callback for "Details" button
+	:param accept_new_user_callback: Callback for "Accept" button (only for users)
+	:param deny_new_user_callback: Callback for "Deny" button (only for users)
 	"""
 	if not data_list:
 		st.write("No data to display.")
@@ -133,7 +131,8 @@ def display_table_with_actions(
 
 def render_sidebar_menu(role: Role | None):
 	"""
-	Renders the sidebar menu based on the user's role stored in the session state
+	Renders the sidebar menu based on the user's role stored in the session state.
+
 	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
 	"""
 	with st.sidebar:
@@ -166,17 +165,3 @@ def render_sidebar_menu(role: Role | None):
 				st.page_link(PageNames.login, label="Login")
 				st.page_link(PageNames.register, label="Register")
 				st.page_link(PageNames.forgot_credentials, label="Forgot Credentials")
-
-
-def vm_cards_grid(vm_list: List[VirtualMachine], on_click: Callable[[VirtualMachine], None]):
-	"""Renders a grid with a list of Virtual Machine cards"""
-	grids = grid(3)
-
-	for vm in vm_list:
-		with grids.empty():
-			card(
-				key=f"card-{vm.id}",
-				title=vm.name,
-				text=f"({vm.id}) {vm.host}:{vm.port}",
-				on_click=lambda: on_click(vm)
-			)

@@ -1,24 +1,14 @@
-from typing import List, cast
-
 import streamlit as st
+
 from streamlit import switch_page
 
-from backend.authentication import edit_user_in_authenticator_object, remove_user_in_authenticator_object
-from backend.database import get_db, User
 from backend.role import Role
-from frontend.custom_components import display_table_with_actions
+from backend.models import User
+from backend.database import get_db
+from backend.authentication import edit_user_in_authenticator_object, remove_user_in_authenticator_object
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
-
-
-def get_users() -> List[User]:
-	with get_db() as db:
-		fetched_users = db.query(User) \
-			.filter(User.role == Role.NEW_USER.value) \
-			.all()
-
-		return cast(List[User], fetched_users)
-
+from frontend.custom_components import display_table_with_actions
 
 page_setup(
 	title="New Users",
@@ -27,9 +17,6 @@ page_setup(
 	role_not_accepted_redirect=PageNames.my_vms,
 )
 
-st.header("New Users Waiting List")
-
-users = get_users()
 
 @st.dialog("Select role")
 def accept_clicked(callback_user: User):
@@ -42,12 +29,12 @@ def accept_clicked(callback_user: User):
 	if button:
 		selected_role = Role.from_phrase(selection).value
 		with get_db() as db:
-			user = db.query(User).filter(User.id == callback_user.id).first()
+			user = User.find_by(db, user_id=callback_user.id)
 			user.role = selected_role
 			db.commit()
 			db.refresh(user)
 			edit_user_in_authenticator_object(user.username, user)
-			print("Accepted", callback_user.id)
+			print("Accepted", user.id)
 			switch_page(PageNames.waiting_list)
 
 
@@ -60,10 +47,11 @@ def denied_clicked(callback_user: User):
 
 		if yes_button:
 			with get_db() as db:
-				user = db.query(User).filter(User.id == callback_user.id).first()
+				user = User.find_by(db, user_id=callback_user.id)
 				db.delete(user)
 				db.commit()
-				remove_user_in_authenticator_object(user.username)
+
+				remove_user_in_authenticator_object(callback_user.username)
 				print("Denied", callback_user.id)
 				switch_page(PageNames.waiting_list)
 
@@ -74,10 +62,13 @@ def denied_clicked(callback_user: User):
 			st.rerun()
 
 
+with get_db() as db_for_list:
+	user_list = User.find_by(db_for_list, user_role=Role.NEW_USER)
 
+st.header("New Users Waiting List")
 display_table_with_actions(
 	data_type="new_user",
-	data_list=users,
+	data_list=user_list,
 	accept_new_user_callback=accept_clicked,
 	deny_new_user_callback=denied_clicked
 )
