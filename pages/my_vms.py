@@ -112,6 +112,8 @@ def connect_clicked(selected_vm: VirtualMachine):
 				switch_page(PageNames.terminal)
 			elif "error" in response_json:
 				st.error(f"An error has occurred: **{response_json["error"]}**")
+			else:
+				st.error(f"An error has occurred")
 
 		except Exception as e:
 			st.error(f"An error has occurred: **{e}**")
@@ -132,6 +134,9 @@ def connect_clicked(selected_vm: VirtualMachine):
 				switch_page(PageNames.terminal)
 			elif "error" in response_json:
 				st.error(f"An error has occurred: **{response_json["error"]}**")
+			else:
+				st.error(f"An error has occurred")
+
 
 		except Exception as e:
 			st.error(f"An error has occurred: **{e}**")

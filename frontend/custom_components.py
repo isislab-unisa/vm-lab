@@ -23,6 +23,7 @@ def display_table_with_actions(
 	:param details_callback: Callback for "Details" button
 	:param accept_new_user_callback: Callback for "Accept" button (only for users)
 	:param deny_new_user_callback: Callback for "Deny" button (only for users)
+	:param connect_callback: Callback for "Connect" button (only for vms)
 	"""
 	if not data_list:
 		st.write("No data to display.")
