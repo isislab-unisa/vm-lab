@@ -8,7 +8,8 @@ from paramiko.ssh_exception import AuthenticationException
 
 def test_connection(hostname: str, port: int, username: str,
 					password: str = None, ssh_key: bytes = None,
-					terminal_url: str = "http://localhost:8888") -> Dict[str, str]:
+					terminal_url: str = "http://localhost:8888",
+					sftp_url: str = "http://localhost:8261"):
 	"""
 	Tests the SSH connection using provided credentials and returns the url to the browser terminal.
 
@@ -28,15 +29,32 @@ def test_connection(hostname: str, port: int, username: str,
 				username=username,
 				pkey=paramiko.RSAKey.from_private_key(io.StringIO(ssh_key.decode("utf-8")))
 			)
-			data = {
-				"hostname": hostname,
-				"port": port,
-				"username": username
-			}
-			files = {
-				"ssh_key": ssh_key  # Send as bytes
-			}
-			response = requests.post(f"{terminal_url}/create-session", data=data, files=files)
+
+			# If the connection is successful
+			response_ssh = requests.post(
+				url=f"{terminal_url}/create-session",
+				data={
+					"hostname": hostname,
+					"username": username,
+					"port": port,
+				},
+				files={
+					"ssh_key": ssh_key # Send as bytes
+				}
+			)
+
+			response_sftp = requests.post(
+				url=f"{sftp_url}/api/sftp/credentials/create",
+				json={
+					"name": f"{username}@{hostname}:{port}",
+					"host": hostname,
+					"username": username,
+					"port": port,
+					"key": ssh_key.decode("utf-8") # Send as text
+				}
+			)
+
+			return response_ssh.json(), response_sftp.json()
 		elif password:
 			# Test the connection with the password
 			ssh_client.connect(
@@ -45,17 +63,32 @@ def test_connection(hostname: str, port: int, username: str,
 				username=username,
 				password=password
 			)
-			data = {
-				"hostname": hostname,
-				"port": port,
-				"username": username,
-				"password": password
-			}
-			response = requests.post(f"{terminal_url}/create-session", json=data)
+
+			# If the connection is successful
+			response_ssh = requests.post(
+				url=f"{terminal_url}/create-session",
+				json={
+					"hostname": hostname,
+					"username": username,
+					"port": port,
+					"password": password,
+				},
+			)
+
+			response_sftp = requests.post(
+				url=f"{sftp_url}/api/sftp/credentials/create",
+				json={
+					"name": f"{username}@{hostname}:{port}",
+					"host": hostname,
+					"username": username,
+					"port": port,
+					"password": password,
+				},
+			)
+
+			return response_ssh.json(), response_sftp.json()
 		else:
 			raise ValueError("No password or SSH key provided.")
-
-		return response.json()
 	except AuthenticationException:
 		raise Exception("Authentication failed.")
 	except Exception as e:

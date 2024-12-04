@@ -33,7 +33,7 @@ db_password = "password"
 db_address = "localhost or ip"
 db_name = "name"
 
-cookie_name = "cooke_name"
+cookie_name = "cookie_name"
 cookie_key = "key"
 cookie_expiry_days = 30
 

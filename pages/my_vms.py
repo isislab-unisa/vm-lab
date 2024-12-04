@@ -98,20 +98,24 @@ def connect_clicked(selected_vm: VirtualMachine):
 	if selected_vm.ssh_key:
 		try:
 			with st.spinner(text="Connecting with SSH Key..."):
-				response_json = test_connection(
+				response_ssh, response_sftp = test_connection(
 					hostname=selected_vm.host,
 					port=selected_vm.port,
 					username=selected_vm.username,
 					ssh_key=selected_vm.decrypt_key()
 				)
 
-			if "url" in response_json:
+				print("Terminal response:", response_ssh)
+				print("SFTP response:", response_sftp)
+
+			if "url" in response_ssh and "id" in response_sftp:
 				st.success(f"Success")
 				set_session_state_item("selected_vm", selected_vm)
-				set_session_state_item("terminal_url", response_json["url"])
+				set_session_state_item("terminal_url", response_ssh["url"])
+				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['id']}")
 				switch_page(PageNames.terminal)
-			elif "error" in response_json:
-				st.error(f"An error has occurred: **{response_json["error"]}**")
+			elif "error" in response_ssh:
+				st.error(f"An error has occurred: **{response_ssh["error"]}**")
 			else:
 				st.error(f"An error has occurred")
 
@@ -120,12 +124,15 @@ def connect_clicked(selected_vm: VirtualMachine):
 	elif selected_vm.password:
 		try:
 			with st.spinner(text="Connecting with Password..."):
-				response_json = test_connection(
+				response_json, other = test_connection(
 					hostname=selected_vm.host,
 					port=selected_vm.port,
 					username=selected_vm.username,
 					password=selected_vm.decrypt_password()
 				)
+
+				print("Terminal response:", response_json)
+				print("SFTP response:", other)
 
 			if "url" in response_json:
 				st.success(f"Success")
@@ -152,12 +159,15 @@ def connect_clicked(selected_vm: VirtualMachine):
 			else:
 				try:
 					with st.spinner(text="Connecting..."):
-						response_json = test_connection(
+						response_json, other = test_connection(
 							hostname=selected_vm.host,
 							port=selected_vm.port,
 							username=selected_vm.username,
 							password=password
 						)
+
+						print("Terminal response:", response_json)
+						print("SFTP response:", other)
 
 					if "url" in response_json:
 						st.success(f"Success")
