@@ -10,7 +10,7 @@ from frontend.page_names import PageNames
 def display_table_with_actions(
 		data_list: list,
 		data_type: Literal["user", "new_user", "vms", "bookmark"],
-		details_callback: Callable[[Union[User, VirtualMachine]], None] = None,
+		details_callback: Callable[[Union[User, VirtualMachine, Bookmark]], None] = None,
 		accept_new_user_callback: Callable[[User], None] = None,
 		deny_new_user_callback: Callable[[User], None] = None,
 		connect_callback: Callable[[VirtualMachine], None] = None,
