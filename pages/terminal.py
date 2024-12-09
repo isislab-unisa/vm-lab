@@ -23,6 +23,10 @@ if selected_vm is None or terminal_url is None or sftp_url is None:
 
 st.title(f"`{selected_vm.name}` SSH Terminal")
 
-stv1.iframe(terminal_url, width=800, height=800)
 
-stv1.iframe(sftp_url, width=800, height=800)
+col1, col2 = st.columns(2)
+with col1:
+	stv1.iframe(terminal_url, width=500, height=600)
+
+with col2:
+	stv1.iframe(sftp_url, width=500, height=600)
