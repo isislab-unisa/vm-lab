@@ -95,54 +95,55 @@ def add_bookmark():
 @st.dialog("Connect")
 def connect_clicked(selected_vm: VirtualMachine):
 	"""Dialog to handle the connection to a Virtual Machine."""
+
+	def handle_connection(hostname, port, username, password=None, ssh_key=None):
+		"""Handles the connection logic and updates session state."""
+		try:
+			with st.spinner(text=f"Connecting with {'SSH Key' if ssh_key else 'Password'}..."):
+				response_ssh, response_sftp = test_connection(
+					hostname=hostname,
+					port=port,
+					username=username,
+					password=password,
+					ssh_key=ssh_key
+				)
+
+			if "url" in response_ssh and "key" in response_sftp:
+				st.success("Success")
+				set_session_state_item("selected_vm", selected_vm)
+				set_session_state_item("terminal_url", response_ssh["url"])
+				set_session_state_item(
+					"sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}"
+				)
+				switch_page(PageNames.terminal)
+			elif "error" in response_ssh:
+				st.error(f"An error has occurred: **{response_ssh['error']}**")
+			else:
+				st.error("An error has occurred")
+
+		except Exception as e:
+			st.error(f"An error has occurred: **{e}**")
+
 	if selected_vm.ssh_key:
-		try:
-			with st.spinner(text="Connecting with SSH Key..."):
-				response_ssh, response_sftp = test_connection(
-					hostname=selected_vm.host,
-					port=selected_vm.port,
-					username=selected_vm.username,
-					ssh_key=selected_vm.decrypt_key()
-				)
+		# Connect using SSH key
+		handle_connection(
+			hostname=selected_vm.host,
+			port=selected_vm.port,
+			username=selected_vm.username,
+			ssh_key=selected_vm.decrypt_key()
+		)
 
-			if "url" in response_ssh and "key" in response_sftp:
-				st.success(f"Success")
-				set_session_state_item("selected_vm", selected_vm)
-				set_session_state_item("terminal_url", response_ssh["url"])
-				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}")
-				switch_page(PageNames.terminal)
-			elif "error" in response_ssh:
-				st.error(f"An error has occurred: **{response_ssh["error"]}**")
-			else:
-				st.error(f"An error has occurred")
-
-		except Exception as e:
-			st.error(f"An error has occurred: **{e}**")
 	elif selected_vm.password:
-		try:
-			with st.spinner(text="Connecting with Password..."):
-				response_ssh, response_sftp = test_connection(
-					hostname=selected_vm.host,
-					port=selected_vm.port,
-					username=selected_vm.username,
-					password=selected_vm.decrypt_password()
-				)
+		# Connect using saved password
+		handle_connection(
+			hostname=selected_vm.host,
+			port=selected_vm.port,
+			username=selected_vm.username,
+			password=selected_vm.decrypt_password()
+		)
 
-			if "url" in response_ssh and "key" in response_sftp:
-				st.success(f"Success")
-				set_session_state_item("selected_vm", selected_vm)
-				set_session_state_item("terminal_url", response_ssh["url"])
-				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}")
-				switch_page(PageNames.terminal)
-			elif "error" in response_ssh:
-				st.error(f"An error has occurred: **{response_ssh["error"]}**")
-			else:
-				st.error(f"An error has occurred")
-
-
-		except Exception as e:
-			st.error(f"An error has occurred: **{e}**")
 	else:
+		# Prompt user for password
 		with st.form(f"connection-form-{selected_vm.id}"):
 			st.write(f"Enter your password for {selected_vm.name}")
 			password = st.text_input("Password", type="password", placeholder="Insert password")
@@ -152,25 +153,14 @@ def connect_clicked(selected_vm: VirtualMachine):
 			if not password:
 				st.warning("Type the password")
 			else:
-				try:
-					with st.spinner(text="Connecting..."):
-						response_ssh, response_sftp = test_connection(
-							hostname=selected_vm.host,
-							port=selected_vm.port,
-							username=selected_vm.username,
-							password=password
-						)
+				# Connect using user-provided password
+				handle_connection(
+					hostname=selected_vm.host,
+					port=selected_vm.port,
+					username=selected_vm.username,
+					password=password
+				)
 
-					if "url" in response_ssh and "key" in response_sftp:
-						st.success(f"Success")
-						set_session_state_item("selected_vm", selected_vm)
-						set_session_state_item("terminal_url", response_ssh["url"])
-						set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}")
-						switch_page(PageNames.terminal)
-					elif "error" in response_ssh:
-						st.error(f"An error has occurred: **{response_ssh["error"]}**")
-				except Exception as e:
-					st.error(f"An error has occurred: **{e}**")
 
 
 @st.dialog("Edit Bookmark")
