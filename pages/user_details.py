@@ -9,6 +9,7 @@ from backend.authentication import get_current_user_role, edit_user_in_authentic
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 from frontend.custom_components import display_table_with_actions
+from pages.my_vms import connect_clicked
 from utils.session_state import get_session_state_item, pop_session_state_item, set_session_state_item
 
 page_setup(
@@ -17,11 +18,6 @@ page_setup(
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
 )
-
-
-def connect_clicked(selected_vm: VirtualMachine):
-	set_session_state_item("selected_vm", selected_vm)
-	switch_page(PageNames.terminal)
 
 
 selected_user: User = get_session_state_item("selected_user")

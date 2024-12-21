@@ -105,11 +105,11 @@ def connect_clicked(selected_vm: VirtualMachine):
 					ssh_key=selected_vm.decrypt_key()
 				)
 
-			if "url" in response_ssh and "id" in response_sftp:
+			if "url" in response_ssh and "key" in response_sftp:
 				st.success(f"Success")
 				set_session_state_item("selected_vm", selected_vm)
 				set_session_state_item("terminal_url", response_ssh["url"])
-				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['id']}")
+				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}")
 				switch_page(PageNames.terminal)
 			elif "error" in response_ssh:
 				st.error(f"An error has occurred: **{response_ssh["error"]}**")
@@ -128,11 +128,11 @@ def connect_clicked(selected_vm: VirtualMachine):
 					password=selected_vm.decrypt_password()
 				)
 
-			if "url" in response_ssh and "id" in response_sftp:
+			if "url" in response_ssh and "key" in response_sftp:
 				st.success(f"Success")
 				set_session_state_item("selected_vm", selected_vm)
 				set_session_state_item("terminal_url", response_ssh["url"])
-				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['id']}")
+				set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}")
 				switch_page(PageNames.terminal)
 			elif "error" in response_ssh:
 				st.error(f"An error has occurred: **{response_ssh["error"]}**")
@@ -161,11 +161,11 @@ def connect_clicked(selected_vm: VirtualMachine):
 							password=password
 						)
 
-					if "url" in response_ssh and "id" in response_sftp:
+					if "url" in response_ssh and "key" in response_sftp:
 						st.success(f"Success")
 						set_session_state_item("selected_vm", selected_vm)
 						set_session_state_item("terminal_url", response_ssh["url"])
-						set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['id']}")
+						set_session_state_item("sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}")
 						switch_page(PageNames.terminal)
 					elif "error" in response_ssh:
 						st.error(f"An error has occurred: **{response_ssh["error"]}**")

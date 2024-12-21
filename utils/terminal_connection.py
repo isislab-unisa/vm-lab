@@ -23,11 +23,26 @@ def test_connection(hostname: str, port: int, username: str,
 	try:
 		if ssh_key:
 			# Test the connection with the key
+
+			def load_private_key(key_str):
+				"""
+				Automatically identifies the type of ssh key.
+				"""
+				key_file = io.StringIO(key_str)
+				for key_class in (paramiko.RSAKey, paramiko.DSSKey, paramiko.ECDSAKey, paramiko.Ed25519Key):
+					try:
+						return key_class.from_private_key(key_file)
+					except paramiko.SSHException:
+						key_file.seek(0)  # Reset the ssh key pointer position to try with another type
+				raise ValueError("Key format not valid (RSA, DSS, ECDSA, ED25519).")
+
+			private_key = load_private_key(ssh_key.decode("utf-8"))
+
 			ssh_client.connect(
 				hostname=hostname,
 				port=port,
 				username=username,
-				pkey=paramiko.RSAKey.from_private_key(io.StringIO(ssh_key.decode("utf-8")))
+				pkey=private_key
 			)
 
 			# If the connection is successful
@@ -50,7 +65,7 @@ def test_connection(hostname: str, port: int, username: str,
 					"host": hostname,
 					"username": username,
 					"port": port,
-					"key": ssh_key.decode("utf-8") # Send as text
+					"privateKey": ssh_key.decode("utf-8") # Send as text
 				}
 			)
 

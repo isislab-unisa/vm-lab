@@ -197,18 +197,18 @@ def confirm_in_page(
 		if caption:
 			st.caption(caption)
 
-		yes_button_type = "secondary"
+		confirm_button_type = "secondary"
 		if is_confirm_button_type_primary:
-			yes_button_type = "primary"
+			confirm_button_type = "primary"
 
 		cancel_button_type = "secondary"
 		if is_cancel_button_type_primary:
 			cancel_button_type = "primary"
 
-		yes_column, cancel_column = st.columns(2)
+		confirm_column, cancel_column = st.columns(2)
 
-		with yes_column:
-			if st.button(confirm_button_label, use_container_width=True, type=yes_button_type,
+		with confirm_column:
+			if st.button(confirm_button_label, use_container_width=True, type=confirm_button_type,
 					  on_click=confirm_button_callback):
 				st.rerun()
 
