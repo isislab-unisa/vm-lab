@@ -6,7 +6,8 @@ from streamlit import switch_page
 from streamlit_authenticator import Authenticate
 
 from backend.role import Role
-from backend.authentication import is_logged_in, get_current_user_role, get_or_create_authenticator_object
+from backend.authentication import is_logged_in, get_current_user_role, get_or_create_authenticator_object, \
+	get_current_user_full_name
 from frontend.custom_components import render_sidebar_menu
 from frontend.page_names import PageNames
 
@@ -65,6 +66,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 	authenticator.login(location='unrendered')  # Attempt to log in with cookie
 	logged_in = is_logged_in()
 	role = get_current_user_role()
+	name = get_current_user_full_name()
 
 	# Authorization
 	match access_control:
@@ -104,7 +106,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 		st.set_page_config(layout=layout)
 
 	# Sidebar
-	render_sidebar_menu(role)
+	render_sidebar_menu(role, name)
 
 	# Debug
 	if print_session_state:

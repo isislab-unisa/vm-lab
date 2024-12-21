@@ -1,6 +1,6 @@
 import streamlit as st
 
-from frontend.custom_forms import register_user
+from frontend.custom_forms.authentication import register_user
 from frontend.page_options import page_setup, AccessControlType
 
 page_setup(

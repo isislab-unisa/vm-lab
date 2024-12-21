@@ -1,13 +1,11 @@
-from typing import Callable
-
 import streamlit as st
-
 from streamlit import switch_page
+
 from backend.database import get_db
 from backend.models import VirtualMachine, User
 from frontend.custom_components import confirm_dialog
 from frontend.page_names import PageNames
-from utils.session_state import set_session_state_item
+from utils.session_state import set_session_state_item, pop_session_state_item
 
 
 def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM password'):
@@ -179,19 +177,23 @@ def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 
 
 def delete_vm(selected_vm: VirtualMachine, key: str = 'Delete VM'):
-	def delete(vm_id):
+	def delete():
 		with get_db() as db:
 			try:
-				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == vm_id).first()
+				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
 				db.delete(vm_to_delete)
 				db.commit()
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Deleted")
+				pop_session_state_item("selected_vm")
 				switch_page(PageNames.my_vms)
+
 
 	with st.form(key=key):
 		st.subheader('Delete VM')
-		if st.form_submit_button("Delete", type="primary"):
-			confirm_dialog(text="Are you sure you want to delete the VM?", confirm_button_callback=lambda: delete(selected_vm.id))
+		submit = st.form_submit_button("Delete", type="primary")
+
+		if submit:
+			confirm_dialog(text="Are you sure you want to delete the VM?", confirm_button_callback=delete)

@@ -6,11 +6,12 @@ from backend.role import Role
 from backend.database import get_db
 from backend.models import User, VirtualMachine
 from backend.authentication import get_current_user_role, edit_user_in_authenticator_object
+from frontend.custom_forms.vm_connections import connect_clicked
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
 from frontend.custom_components import display_table_with_actions
-from pages.my_vms import connect_clicked
 from utils.session_state import get_session_state_item, pop_session_state_item, set_session_state_item
+from utils.terminal_connection import test_connection
 
 page_setup(
 	title="User Details",

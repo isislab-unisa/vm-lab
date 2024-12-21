@@ -7,7 +7,7 @@ from backend.database import get_db
 from backend.models import VirtualMachine, User
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_forms_vms import edit_vm, delete_vm, edit_vm_password, delete_password, edit_vm_ssh_key, delete_ssh_key
+from frontend.custom_forms.vm_details import edit_vm, delete_vm, edit_vm_password, delete_password, edit_vm_ssh_key, delete_ssh_key
 from utils.session_state import get_session_state_item
 
 page_setup(

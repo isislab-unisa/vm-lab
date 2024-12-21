@@ -1,7 +1,7 @@
 import streamlit as st
 
 from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_forms import change_username, change_email, change_password, change_first_last_name
+from frontend.custom_forms.user_details import change_username, change_email, change_password, change_first_last_name
 from utils.session_state import get_session_state_item
 
 page_setup(

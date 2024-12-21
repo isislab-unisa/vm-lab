@@ -133,7 +133,7 @@ def display_table_with_actions(
 						details_callback(item)
 
 
-def render_sidebar_menu(role: Role | None):
+def render_sidebar_menu(role: Role | None, name: str | None):
 	"""
 	Renders the sidebar menu based on the user's role stored in the session state.
 
@@ -141,6 +141,7 @@ def render_sidebar_menu(role: Role | None):
 	"""
 	with st.sidebar:
 		st.title("vm-lab")
+		st.caption(name)
 		match role:
 			case Role.NEW_USER:
 				st.page_link(PageNames.user_settings, label="Settings")
