@@ -5,33 +5,9 @@ import streamlit as st
 from streamlit import switch_page
 from backend.database import get_db
 from backend.models import VirtualMachine, User
+from frontend.custom_components import confirm_dialog
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state_item
-
-
-@st.dialog("Are you sure?")
-def confirm_dialog(confirm_callback: Callable = None, *args, **kwargs):
-	col1, col2 = st.columns(2)
-
-	with col1:
-		yes_button = st.button("Yes", type="primary")
-
-		if yes_button and confirm_callback:
-			confirm_callback(*args, **kwargs)
-
-	with col2:
-		no_button = st.button("No")
-
-		if no_button:
-			st.rerun()
-
-
-def confirm_toggle(confirm_callback: Callable = None, *args, **kwargs):
-	on = st.toggle("Are you sure?")
-	button = st.button("Confirm")
-
-	if button and on and confirm_callback:
-		confirm_callback(*args, **kwargs)
 
 
 def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM password'):
@@ -102,7 +78,7 @@ def delete_password(selected_vm: VirtualMachine, key: str = 'Delete VM password'
 		submit = st.form_submit_button("Remove", type="primary")
 
 		if submit:
-			confirm_dialog(delete)
+			confirm_dialog(text="Are you sure you want to remove the password?", confirm_button_callback=delete)
 
 
 def edit_vm_ssh_key(selected_vm: VirtualMachine, user: User, key='Change VM ssh key'):
@@ -173,7 +149,7 @@ def delete_ssh_key(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
 		submit = st.form_submit_button("Remove", type="primary")
 
 		if submit:
-			confirm_dialog(delete)
+			confirm_dialog(text="Are you sure you want to remove the SSH Key?", confirm_button_callback=delete)
 
 
 def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
@@ -218,4 +194,4 @@ def delete_vm(selected_vm: VirtualMachine, key: str = 'Delete VM'):
 	with st.form(key=key):
 		st.subheader('Delete VM')
 		if st.form_submit_button("Delete", type="primary"):
-			confirm_dialog(lambda: delete(selected_vm.id))
+			confirm_dialog(text="Are you sure you want to delete the VM?", confirm_button_callback=lambda: delete(selected_vm.id))

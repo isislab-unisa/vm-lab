@@ -172,9 +172,9 @@ def render_sidebar_menu(role: Role | None):
 @st.dialog("Confirm")
 def confirm_dialog(
 		text: str = None, caption: str = None,
-		yes_button_label: str = "Yes", cancel_button_label: str = "Cancel",
-		is_yes_button_type_primary: bool = False, is_cancel_button_type_primary: bool = False,
-		yes_button_callback: Callable = None, cancel_button_callback: Callable = None
+		confirm_button_label: str = "Yes", cancel_button_label: str = "Cancel",
+		is_confirm_button_type_primary: bool = False, is_cancel_button_type_primary: bool = False,
+		confirm_button_callback: Callable = None, cancel_button_callback: Callable = None
 ):
 	"""
 	Renders a confirmation dialog with two buttons with custom behavior.
@@ -183,11 +183,11 @@ def confirm_dialog(
 
 	:param text: The description displayed on top of the dialog (not the title)
 	:param caption: The caption (muted text) displayed below the description
-	:param yes_button_label: The label for the button to confirm
+	:param confirm_button_label: The label for the button to confirm
 	:param cancel_button_label: The label for the button to cancel
-	:param is_yes_button_type_primary: Whether to render the confirm button as primary
+	:param is_confirm_button_type_primary: Whether to render the confirm button as primary
 	:param is_cancel_button_type_primary: Whether to render the cancel button as primary
-	:param yes_button_callback: The callback for the confirm button
+	:param confirm_button_callback: The callback for the confirm button
 	:param cancel_button_callback: The callback for the cancel button
 	"""
 	if text:
@@ -196,7 +196,7 @@ def confirm_dialog(
 		st.caption(caption)
 
 	yes_button_type = "secondary"
-	if is_yes_button_type_primary:
+	if is_confirm_button_type_primary:
 		yes_button_type = "primary"
 
 	cancel_button_type = "secondary"
@@ -206,9 +206,9 @@ def confirm_dialog(
 	yes_column, cancel_column = st.columns(2)
 
 	with yes_column:
-		if st.button(yes_button_label, use_container_width=True, type=yes_button_type):
-			if yes_button_callback is not None:
-				yes_button_callback()
+		if st.button(confirm_button_label, use_container_width=True, type=yes_button_type):
+			if confirm_button_callback is not None:
+				confirm_button_callback()
 			st.rerun()
 
 	with cancel_column:

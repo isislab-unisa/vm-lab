@@ -15,8 +15,7 @@ def my_printer(something):
 
 if st.button("Confirm"):
 	confirm_dialog(
-		yes_button_callback=lambda: my_printer("Yes"),
-		cancel_button_callback=lambda: my_printer("Cancel"),
+		confirm_button_callback=lambda: my_printer("Yes"),
 	)
 
 
