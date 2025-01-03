@@ -39,7 +39,7 @@ display_table_with_actions(
 st.divider()
 st.title("My Bookmarks")
 
-st.button("Add Bookmark", on_click=add_bookmark)
+st.button("Add Bookmark", on_click=lambda: add_bookmark(current_username))
 display_table_with_actions(
 	data_type="bookmark",
 	data_list=bookmark_list,

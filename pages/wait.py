@@ -13,3 +13,4 @@ page_setup(
 )
 
 st.title("You are on a waiting list")
+st.write("Return later, after your account has been approved.")

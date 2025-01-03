@@ -51,7 +51,7 @@ def add_vm(current_username):
 
 
 @st.dialog("Add Bookmark")
-def add_bookmark():
+def add_bookmark(current_username):
 	"""Dialog to add a new Bookmark."""
 	with st.form(f"add-bookmark-form"):
 		name = st.text_input("Bookmark name", placeholder="Insert name")
@@ -95,15 +95,19 @@ def connect_clicked(selected_vm: VirtualMachine):
 					port=port,
 					username=username,
 					password=password,
-					ssh_key=ssh_key
+					ssh_key=ssh_key,
+					terminal_url="http://192.168.1.101:8888",
+					sftp_url="http://192.168.1.101:8261"
 				)
 
 			if "url" in response_ssh and "key" in response_sftp:
 				st.success("Success")
 				set_session_state_item("selected_vm", selected_vm)
-				set_session_state_item("terminal_url", response_ssh["url"])
 				set_session_state_item(
-					"sftp_url", f"http://localhost:8261/?connection={response_sftp['key']}"
+					"terminal_url", f"http://192.168.1.101:8888/{response_ssh["create_session_id"]}"
+				)
+				set_session_state_item(
+					"sftp_url", f"http://192.168.1.101:8261/?connection={response_sftp['key']}"
 				)
 				switch_page(PageNames.terminal)
 			elif "error" in response_ssh:
