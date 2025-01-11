@@ -73,5 +73,6 @@ with get_db() as db_list:
 display_table_with_actions(
 	data_type="vms",
 	data_list=vm_list,
-	connect_callback=connect_clicked
+	connect_callback=connect_clicked,
+	vm_shared_check=True,
 )

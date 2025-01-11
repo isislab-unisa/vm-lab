@@ -1,5 +1,5 @@
 from typing import Type
-from sqlalchemy import Column, String, Integer, LargeBinary, ForeignKey
+from sqlalchemy import Column, String, Integer, LargeBinary, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, Session
 
 from .base_model import Base
@@ -23,6 +23,7 @@ class VirtualMachine(Base):
 	username = Column(String(50), nullable=False)
 	password = Column(String(128))
 	ssh_key = Column(LargeBinary)
+	shared = Column(Boolean, nullable=False, default=True)
 
 	################################
 	#         FOREIGN KEYS         #

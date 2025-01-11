@@ -3,6 +3,7 @@ from streamlit import switch_page
 
 from backend.database import get_db
 from backend.models import VirtualMachine, User, Bookmark
+from backend.role import Role
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state_item
 from utils.terminal_connection import test_connection
@@ -83,11 +84,24 @@ def add_bookmark(current_username):
 
 
 @st.dialog("Connect")
-def connect_clicked(selected_vm: VirtualMachine):
+def connect_clicked(selected_vm: VirtualMachine, vm_shared_check: bool = False):
 	"""Dialog to handle the connection to a Virtual Machine."""
 
 	def handle_connection(hostname, port, username, password=None, ssh_key=None):
 		"""Handles the connection logic and updates session state."""
+
+		ssh_port = "8888"
+		sftp_port = "8261"
+		server_url = "http://192.168.1.101"
+		localhost = "http://localhost"
+
+		ssh_url = f"{server_url}:{ssh_port}"
+		sftp_url = f"{server_url}:{sftp_port}"
+		use_localhost = True
+		if use_localhost:
+			ssh_url = f"{localhost}:{ssh_port}"
+			sftp_url = f"{localhost}:{sftp_port}"
+
 		try:
 			with st.spinner(text=f"Connecting with {'SSH Key' if ssh_key else 'Password'}..."):
 				response_ssh, response_sftp = test_connection(
@@ -96,18 +110,20 @@ def connect_clicked(selected_vm: VirtualMachine):
 					username=username,
 					password=password,
 					ssh_key=ssh_key,
-					terminal_url="http://192.168.1.101:8888",
-					sftp_url="http://192.168.1.101:8261"
+					terminal_url=ssh_url,
+					sftp_url=sftp_url
 				)
 
 			if "url" in response_ssh and "key" in response_sftp:
 				st.success("Success")
 				set_session_state_item("selected_vm", selected_vm)
 				set_session_state_item(
-					"terminal_url", f"http://192.168.1.101:8888/{response_ssh["create_session_id"]}"
+					"terminal_url",
+					f"{ssh_url}/{response_ssh["create_session_id"]}"
 				)
 				set_session_state_item(
-					"sftp_url", f"http://192.168.1.101:8261/?connection={response_sftp['key']}"
+					"sftp_url",
+					f"{sftp_url}/?connection={response_sftp['key']}"
 				)
 				switch_page(PageNames.terminal)
 			elif "error" in response_ssh:
@@ -117,6 +133,28 @@ def connect_clicked(selected_vm: VirtualMachine):
 
 		except Exception as e:
 			st.error(f"An error has occurred: **{e}**")
+
+	access_required = st.secrets['vm_access']
+	user_role: Role = selected_vm.user.role
+
+	if access_required == "none":
+		print("No one can access this")
+		return
+
+	if user_role == Role.ADMIN:
+		print("Admin, go ahead")
+		return
+
+	if user_role == Role.MANAGER:
+		if access_required == "admin":
+			print("Only admins can access this")
+			return
+		else:
+			print("Manager, go ahead")
+
+	if vm_shared_check and not selected_vm.shared:
+		print("This VM is not shared")
+		return
 
 	if selected_vm.ssh_key:
 		# Connect using SSH key

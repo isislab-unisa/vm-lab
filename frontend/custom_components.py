@@ -15,7 +15,8 @@ def display_table_with_actions(
 		details_callback: Callable[[Union[User, VirtualMachine, Bookmark]], None] = None,
 		accept_new_user_callback: Callable[[User], None] = None,
 		deny_new_user_callback: Callable[[User], None] = None,
-		connect_callback: Callable[[VirtualMachine], None] = None,
+		connect_callback: Callable[[VirtualMachine, bool], None] = None,
+		vm_shared_check: bool = False,
 ):
 	"""
 	Display a table with dynamic behavior for Users or Virtual Machines.
@@ -118,7 +119,7 @@ def display_table_with_actions(
 
 				if connect_column.button(label="Connect", type="primary", key=f'vm-{item.id}-connect'):
 					if connect_callback:
-						connect_callback(item)
+						connect_callback(item, vm_shared_check)
 			else:
 				# Bookmark data
 				item: Bookmark = item
