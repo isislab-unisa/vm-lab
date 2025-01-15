@@ -1,5 +1,5 @@
 # vm-lab
-[![Python Version](https://img.shields.io/badge/Python-3.12.7-blue?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3127/)
+[![Python Version](https://img.shields.io/badge/Python-3.12.8-blue?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3128/)
 
 Manage all your VMs in the browser.
 
@@ -30,7 +30,7 @@ Create a `.streamlit/secrets.toml` file and write this:
 ```toml
 db_username = "username"
 db_password = "password"
-db_address = "localhost or ip"
+db_address = "localhost" # or "127.0.0.1" or ip
 db_name = "name"
 
 cookie_name = "cookie_name"
@@ -42,12 +42,17 @@ cipher_key = "some Fernet-compliant key"
 
 These are used in `backend/database.py` to create the connection.
 
+You can generate the Fernet key in the python console:
+```python
+>> from cryptography.fernet import Fernet 
+>> Fernet.generate_key()
+```
 
 ## Database
 ```postgresql
 CREATE DATABASE "vm-lab"
     WITH
-    OWNER = postgres
+    OWNER = postgres -- or another user
     ENCODING = 'UTF8'
     LOCALE_PROVIDER = 'libc'
     CONNECTION LIMIT = -1
@@ -75,7 +80,7 @@ CREATE TABLE virtual_machines (
     username VARCHAR(50) NOT NULL,
     ssh_key BYTEA,
     password VARCHAR(128),
-    user_id SERIAL NOT NULL, 
+    user_id INTEGER NOT NULL, 
     CONSTRAINT fk_user FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE 
 );
@@ -86,7 +91,7 @@ CREATE TABLE bookmarks (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     link VARCHAR(255) NOT NULL,
-    user_id SERIAL NOT NULL, 
+    user_id INTEGER NOT NULL, 
     CONSTRAINT fk_user FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE 
 );
