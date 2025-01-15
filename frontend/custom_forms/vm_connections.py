@@ -86,8 +86,20 @@ def add_bookmark(current_username):
 def connect_clicked(selected_vm: VirtualMachine):
 	"""Dialog to handle the connection to a Virtual Machine."""
 
+	def build_connection_url(connection_type, url, connection_id):
+		"""Builds a string to use as URL for the connection with an ID."""
+		url_format = st.secrets[f"{connection_type}_url_id_format"]
+
+		return url_format\
+					.replace("$URL", url)\
+					.replace("$CONNECTION_ID", connection_id)
+
 	def handle_connection(hostname, port, username, password=None, ssh_key=None):
 		"""Handles the connection logic and updates session state."""
+
+		ssh_module_url = st.secrets["ssh_module_url"]
+		sftp_module_url = st.secrets["sftp_module_url"]
+
 		try:
 			with st.spinner(text=f"Connecting with {'SSH Key' if ssh_key else 'Password'}..."):
 				response_ssh, response_sftp = test_connection(
@@ -96,19 +108,42 @@ def connect_clicked(selected_vm: VirtualMachine):
 					username=username,
 					password=password,
 					ssh_key=ssh_key,
-					terminal_url="http://192.168.1.101:8888",
-					sftp_url="http://192.168.1.101:8261"
+					terminal_url=ssh_module_url,
+					sftp_url=sftp_module_url
 				)
 
 			if "url" in response_ssh and "key" in response_sftp:
 				st.success("Success")
 				set_session_state_item("selected_vm", selected_vm)
-				set_session_state_item(
-					"terminal_url", f"http://192.168.1.101:8888/{response_ssh["create_session_id"]}"
+
+				# Build the SSH connection URL
+				ssh_connection_url = build_connection_url(
+					"ssh",
+					ssh_module_url,
+					response_ssh["create_session_id"],
 				)
+
+				print(ssh_connection_url)
+
 				set_session_state_item(
-					"sftp_url", f"http://192.168.1.101:8261/?connection={response_sftp['key']}"
+					"terminal_url",
+					ssh_connection_url
 				)
+
+				# Build the SFTP connection URL
+				sftp_connection_url = build_connection_url(
+					"sftp",
+					sftp_module_url,
+					response_sftp["key"],
+				)
+
+				print(sftp_connection_url)
+
+				set_session_state_item(
+					"sftp_url",
+					sftp_connection_url
+				)
+
 				switch_page(PageNames.terminal)
 			elif "error" in response_ssh:
 				st.error(f"An error has occurred: **{response_ssh['error']}**")

@@ -28,19 +28,41 @@ Search everywhere:
 ## Secrets
 Create a `.streamlit/secrets.toml` file and write this:
 ```toml
+################################
+#     DATABASE CONNECTION      #
+################################
 db_username = "username"
 db_password = "password"
 db_address = "localhost" # or "127.0.0.1" or ip
-db_name = "name"
+db_name = "vm-lab"
 
-cookie_name = "cookie_name"
+################################
+#     AUTHORIZATION COOKIE     #
+################################
+cookie_name = "cookie name"
 cookie_key = "key"
 cookie_expiry_days = 30
 
-cipher_key = "some Fernet-compliant key"
-```
+################################
+#    SENSITIVE DATA CIPHER     #
+################################
+cipher_key = "some Fernet compliant key"
 
-These are used in `backend/database.py` to create the connection.
+################################
+#       SUPPORT MODULES        #
+################################
+
+# URL of the modules
+ssh_module_url = "http://localhost:8888"   # or http://ip:port
+sftp_module_url = "http://localhost:8261"  # or http://ip:port
+
+# Format to describe how to put the ID for the connection
+# Use these variables:
+# $URL -> The ssh and sftp module url written above
+# $CONNECTION_ID -> The ID obtained from the modules to connect
+ssh_url_id_format = "$URL/$CONNECTION_ID"
+sftp_url_id_format = "$URL/?connection=$CONNECTION_ID"
+```
 
 You can generate the Fernet key in the python console:
 ```python
