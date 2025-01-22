@@ -1,15 +1,35 @@
 import io
 import paramiko
 import requests
+import streamlit as st
 
-from typing import Dict
+from typing import Literal
 from paramiko.ssh_exception import AuthenticationException
 
 
+def build_module_url(connection_type: Literal["ssh", "sftp"],
+					 request_type: Literal["credentials", "connection"],
+					 connection_id = None):
+	"""Builds a string to use as URL for the connection with an ID."""
+	url_format: str = st.secrets[f'{connection_type}_{request_type}_request_format']
+
+	if connection_type == "ssh":
+		url_format = (url_format
+					  .replace("$SSH_URL", st.secrets["ssh_module_url"])
+					  .replace("$SSH_PORT", st.secrets["ssh_module_port"]))
+	else:
+		url_format = (url_format
+					  .replace("$SFTP_URL", st.secrets["sftp_module_url"])
+					  .replace("$SFTP_PORT", st.secrets["sftp_module_port"]))
+
+	if request_type == "connection" and connection_id:
+		return url_format.replace("$CONNECTION_ID", connection_id)
+	else:
+		return url_format
+
+
 def test_connection(hostname: str, port: int, username: str,
-					password: str = None, ssh_key: bytes = None,
-					terminal_url: str = "http://localhost:8888",
-					sftp_url: str = "http://localhost:8261"):
+					password: str = None, ssh_key: bytes = None):
 	"""
 	Tests the SSH connection using provided credentials and returns the url to the browser terminal.
 
@@ -45,9 +65,15 @@ def test_connection(hostname: str, port: int, username: str,
 				pkey=private_key
 			)
 
-			# If the connection is successful
+			# If the connection is successful, send the requests, otherwise an exception is raised
+
+			ssh_url = build_module_url(
+				connection_type="ssh",
+				request_type="credentials",
+			)
+
 			response_ssh = requests.post(
-				url=f"{terminal_url}/create-session",
+				url=ssh_url,
 				data={
 					"hostname": hostname,
 					"username": username,
@@ -58,8 +84,13 @@ def test_connection(hostname: str, port: int, username: str,
 				}
 			)
 
+			sftp_url = build_module_url(
+				connection_type="sftp",
+				request_type="credentials",
+			)
+
 			response_sftp = requests.post(
-				url=f"{sftp_url}/api/sftp/credentials/create",
+				url=sftp_url,
 				json={
 					"name": f"{username}@{hostname}:{port}",
 					"host": hostname,
@@ -79,9 +110,15 @@ def test_connection(hostname: str, port: int, username: str,
 				password=password
 			)
 
-			# If the connection is successful
+			# If the connection is successful, send the requests, otherwise an exception is raised
+
+			ssh_url = build_module_url(
+				connection_type="ssh",
+				request_type="credentials",
+			)
+
 			response_ssh = requests.post(
-				url=f"{terminal_url}/create-session",
+				url=ssh_url,
 				json={
 					"hostname": hostname,
 					"username": username,
@@ -90,8 +127,13 @@ def test_connection(hostname: str, port: int, username: str,
 				},
 			)
 
+			sftp_url = build_module_url(
+				connection_type="sftp",
+				request_type="credentials",
+			)
+
 			response_sftp = requests.post(
-				url=f"{sftp_url}/api/sftp/credentials/create",
+				url=sftp_url,
 				json={
 					"name": f"{username}@{hostname}:{port}",
 					"host": hostname,

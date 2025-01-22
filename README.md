@@ -52,16 +52,38 @@ cipher_key = "some Fernet compliant key"
 #       SUPPORT MODULES        #
 ################################
 
-# URL of the modules
-ssh_module_url = "http://localhost:8888"   # or http://ip:port
-sftp_module_url = "http://localhost:8261"  # or http://ip:port
+#### Details of the modules
+# SSH
+ssh_module_url = "http://localhost"
+ssh_module_port = "8888"
 
-# Format to describe how to put the ID for the connection
+# SFTP
+sftp_module_url = "http://localhost"
+sftp_module_port = "8261"
+
+#### FIRST REQUEST (CREDENTIALS) FORMAT
+# Describes the URL of the first request to send credentials
 # Use these variables:
-# $URL -> The ssh and sftp module url written above
-# $CONNECTION_ID -> The ID obtained from the modules to connect
-ssh_url_id_format = "$URL/$CONNECTION_ID"
-sftp_url_id_format = "$URL/?connection=$CONNECTION_ID"
+# $SSH_URL -> The ssh module URL
+# $SFTP_URL -> The sftp module URL
+# $SSH_PORT -> The ssh module port
+# $SFTP_PORT -> The sftp module port
+
+ssh_credentials_request_format = "$SSH_URL:$SSH_PORT/create-credentials"
+sftp_credentials_request_format = "$SFTP_URL:$SFTP_PORT/api/sftp/credentials/create"
+
+#### SECOND REQUEST (CONNECTION) FORMAT
+# Describes the URL of the second request to connect
+# Use these variables:
+# $SSH_URL -> The ssh module URL
+# $SFTP_URL -> The sftp module URL
+# $SSH_PORT -> The ssh module port
+# $SFTP_PORT -> The sftp module port
+# $CONNECTION_ID -> The ID obtained from the first request
+
+ssh_connection_request_format = "$SSH_URL:$SSH_PORT/?connection=$CONNECTION_ID"
+sftp_connection_request_format = "$SFTP_URL:$SFTP_PORT/?connection=$CONNECTION_ID"
+
 ```
 
 You can generate the Fernet key in the python console:

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Activate the virtual environment and run streamlit Streamlit
+# Activate the virtual environment and run streamlit
 
 if [ -d ".venv" ]; then
   source .venv/bin/activate

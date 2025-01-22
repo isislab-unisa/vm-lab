@@ -1,3 +1,5 @@
+from typing import Literal
+
 import streamlit as st
 from streamlit import switch_page
 
@@ -5,7 +7,7 @@ from backend.database import get_db
 from backend.models import VirtualMachine, User, Bookmark
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state_item
-from utils.terminal_connection import test_connection
+from utils.terminal_connection import test_connection, build_module_url
 
 
 @st.dialog("Add Virtual Machine")
@@ -86,19 +88,12 @@ def add_bookmark(current_username):
 def connect_clicked(selected_vm: VirtualMachine):
 	"""Dialog to handle the connection to a Virtual Machine."""
 
-	def build_connection_url(connection_type, url, connection_id):
-		"""Builds a string to use as URL for the connection with an ID."""
-		url_format = st.secrets[f"{connection_type}_url_id_format"]
-
-		return url_format\
-					.replace("$URL", url)\
-					.replace("$CONNECTION_ID", connection_id)
+	def was_request_successful(req) -> bool:
+		"""Verifies if a request to a module was successful."""
+		return "success" in req and req["success"]
 
 	def handle_connection(hostname, port, username, password=None, ssh_key=None):
 		"""Handles the connection logic and updates session state."""
-
-		ssh_module_url = st.secrets["ssh_module_url"]
-		sftp_module_url = st.secrets["sftp_module_url"]
 
 		try:
 			with st.spinner(text=f"Connecting with {'SSH Key' if ssh_key else 'Password'}..."):
@@ -107,46 +102,44 @@ def connect_clicked(selected_vm: VirtualMachine):
 					port=port,
 					username=username,
 					password=password,
-					ssh_key=ssh_key,
-					terminal_url=ssh_module_url,
-					sftp_url=sftp_module_url
+					ssh_key=ssh_key
 				)
 
-			if "url" in response_ssh and "key" in response_sftp:
+			if was_request_successful(response_ssh) and was_request_successful(response_sftp):
 				st.success("Success")
 				set_session_state_item("selected_vm", selected_vm)
 
-				# Build the SSH connection URL
-				ssh_connection_url = build_connection_url(
-					"ssh",
-					ssh_module_url,
-					response_ssh["create_session_id"],
+				ssh_connection_url = build_module_url(
+					connection_type="ssh",
+					request_type="connection",
+					connection_id=response_ssh["connection_uuid"]
 				)
 
 				print(ssh_connection_url)
 
 				set_session_state_item(
-					"terminal_url",
+					"terminal_page_ssh_connection_url",
 					ssh_connection_url
 				)
 
-				# Build the SFTP connection URL
-				sftp_connection_url = build_connection_url(
-					"sftp",
-					sftp_module_url,
-					response_sftp["key"],
+				sftp_connection_url = build_module_url(
+					connection_type="sftp",
+					request_type="connection",
+					connection_id=response_sftp["connection_uuid"]
 				)
 
 				print(sftp_connection_url)
 
 				set_session_state_item(
-					"sftp_url",
+					"terminal_page_sftp_connection_url",
 					sftp_connection_url
 				)
 
 				switch_page(PageNames.terminal)
-			elif "error" in response_ssh:
-				st.error(f"An error has occurred: **{response_ssh['error']}**")
+			elif "error" in response_ssh and "error" in response_sftp:
+				ssh_error = response_ssh["error"]
+				sftp_error = response_sftp["error"]
+				st.error(f"An error has occurred:\n\nSSH Error: **{ssh_error}**\nSFTP Error: **{sftp_error}**")
 			else:
 				st.error("An error has occurred")
 
@@ -161,7 +154,6 @@ def connect_clicked(selected_vm: VirtualMachine):
 			username=selected_vm.username,
 			ssh_key=selected_vm.decrypt_key()
 		)
-
 	elif selected_vm.password:
 		# Connect using saved password
 		handle_connection(
@@ -170,7 +162,6 @@ def connect_clicked(selected_vm: VirtualMachine):
 			username=selected_vm.username,
 			password=selected_vm.decrypt_password()
 		)
-
 	else:
 		# Prompt user for password
 		with st.form(f"connection-form-{selected_vm.id}"):

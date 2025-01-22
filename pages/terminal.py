@@ -15,8 +15,8 @@ page_setup(
 )
 
 selected_vm = get_session_state_item("selected_vm")
-terminal_url = get_session_state_item("terminal_url")
-sftp_url = get_session_state_item("sftp_url")
+terminal_url = get_session_state_item("terminal_page_ssh_connection_url")
+sftp_url = get_session_state_item("terminal_page_sftp_connection_url")
 
 if selected_vm is None or terminal_url is None or sftp_url is None:
 	switch_page(PageNames.my_vms)

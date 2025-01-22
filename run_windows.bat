@@ -1,5 +1,5 @@
 @echo off
-REM Activate the virtual environment and run streamlit Streamlit
+REM Activate the virtual environment and run streamlit
 
 if exist ".venv\" (
     call .venv\Scripts\activate
