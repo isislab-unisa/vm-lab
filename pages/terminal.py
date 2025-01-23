@@ -15,18 +15,13 @@ page_setup(
 )
 
 selected_vm = get_session_state_item("selected_vm")
-terminal_url = get_session_state_item("terminal_page_ssh_connection_url")
+ssh_url = get_session_state_item("terminal_page_ssh_connection_url")
 sftp_url = get_session_state_item("terminal_page_sftp_connection_url")
 
-if selected_vm is None or terminal_url is None or sftp_url is None:
+if selected_vm is None or ssh_url is None or sftp_url is None:
 	switch_page(PageNames.my_vms)
 
 st.title(f"`{selected_vm.name}` SSH Terminal")
 
-
-col1, col2 = st.columns(2)
-with col1:
-	stv1.iframe(terminal_url, width=500, height=600)
-
-with col2:
-	stv1.iframe(sftp_url, width=500, height=600)
+stv1.iframe(ssh_url, width=800, height=700)
+stv1.iframe(sftp_url, width=800, height=700)
