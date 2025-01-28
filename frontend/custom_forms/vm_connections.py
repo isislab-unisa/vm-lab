@@ -53,7 +53,7 @@ def vm_add_clicked(current_username: str):
 			else:
 				st.success(f"Created")
 				st.cache_data.clear()  # Refresh my_vms table
-				switch_page(PageNames.my_vms)
+				st.rerun()
 
 
 @st.dialog("Connect to VM")
@@ -245,8 +245,10 @@ def vm_delete_clicked(data_row):
 
 
 @st.dialog("Edit Bookmark")
-def bookmark_details_clicked(selected_bookmark: Bookmark):
+def bookmark_edit_clicked(data_row):
 	"""Dialog to edit a Bookmark."""
+	selected_bookmark: Bookmark = data_row["original_object"]
+
 	with st.form(f"edit-form-bookmark-{selected_bookmark.id}"):
 		name = st.text_input("VM name", value=selected_bookmark.name, placeholder="Insert name")
 		link = st.text_input("Link", value=selected_bookmark.link, placeholder="Insert link")
@@ -262,28 +264,13 @@ def bookmark_details_clicked(selected_bookmark: Bookmark):
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
 			else:
-				st.success(f"Edited")
-				switch_page(PageNames.my_vms)
-
-	st.divider()
-	delete_button = st.button("Delete")
-
-	if delete_button:
-		with get_db() as db:
-			try:
-				bookmark_to_delete = Bookmark.find_by(db, bookmark_id=selected_bookmark.id)
-				db.delete(bookmark_to_delete)
-				db.commit()
-			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
-			else:
-				st.success(f"Deleted")
-				switch_page(PageNames.my_vms)
+				st.cache_data.clear()  # Refresh table
+				st.rerun()
 
 
 
 @st.dialog("Add Bookmark")
-def add_bookmark_clicked(current_username: str):
+def bookmark_add_clicked(current_username: str):
 	"""Dialog to add a new Bookmark."""
 	with st.form(f"add-bookmark-form"):
 		name = st.text_input("Bookmark name", placeholder="Insert name")
@@ -310,5 +297,26 @@ def add_bookmark_clicked(current_username: str):
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
 			else:
-				st.success(f"Created")
-				switch_page(PageNames.my_vms)
+				st.cache_data.clear()  # Refresh table
+				st.rerun()
+
+
+def bookmark_delete_clicked(data_row):
+	"""Handle click of the delete button for a Bookmark."""
+	selected_bookmark: Bookmark = data_row["original_object"]
+
+	def deletion_process():
+		with get_db() as db:
+			try:
+				db.delete(selected_bookmark)
+				db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.cache_data.clear()  # Refresh table
+				st.rerun()
+
+	confirm_dialog(
+		text=f"Are you sure you want to delete `{selected_bookmark.name}`?",
+		confirm_button_callback=deletion_process
+	)

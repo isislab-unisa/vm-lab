@@ -256,7 +256,7 @@ def confirm_dialog(
 	)
 
 
-def interactive_data_table(data: list[dict],
+def interactive_data_table(key: str, data: list[dict],
 						   column_settings: dict, button_settings: dict,
 						   popover_settings: dict = None, filters_expanded: bool = False,
 						   refresh_data_callback: Callable = None, clear_filters_button: bool = True,
@@ -265,6 +265,7 @@ def interactive_data_table(data: list[dict],
 	Full documentation here:
 	https://github.com/isislab-unisa/vm-lab/wiki/Component-%E2%80%90-Interactive-Data-Table
 
+	:param key: The unique key to give to this table's elements.
 	:param data: The data to display in the table.
     :param refresh_data_callback: A function to call when the Refresh button in the filters is pressed.
 	:param column_settings: Describes how should the columns be.
@@ -300,23 +301,31 @@ def interactive_data_table(data: list[dict],
 
 		# Refresh/Clear buttons
 		with filters_buttons_col1:
-			if refresh_data_callback is not None and st.button(":material/Refresh: Refresh Data", use_container_width=True):
+			if refresh_data_callback is not None and st.button(
+					":material/Refresh: Refresh Data",
+					use_container_width=True,
+					key=f"{key}-refresh-data-button",
+			):
 				st.cache_data.clear()
 				filtered_data = refresh_data_callback()
 
 		with filters_buttons_col2:
-			if clear_filters_button and st.button(":material/Clear_All: Clear Filters", use_container_width=True):
+			if clear_filters_button and st.button(
+					":material/Clear_All: Clear Filters",
+					use_container_width=True,
+					key=f"{key}-clear-filters-button",
+			):
 				# Clear the inputs
-				st.session_state[f"{title}-search_selectbox"] = display_names[0]
-				st.session_state[f"{title}-search_query"] = ""
+				st.session_state[f"{key}-search_selectbox"] = display_names[0]
+				st.session_state[f"{key}-search_query"] = ""
 
 		# Search Bars
 		search_column = st.selectbox("Select column to search",
 									 display_names,
-									 key=f"{title}-search_selectbox")
+									 key=f"{key}-search_selectbox")
 		search_query = st.text_input("Search",
 									 "",
-									 key=f"{title}-search_query")
+									 key=f"{key}-search_query")
 
 		# Search in the entire data list
 		if search_query:
@@ -356,12 +365,12 @@ def interactive_data_table(data: list[dict],
 				popover_text = popover_settings.get("text", "Open")
 				popover_icon = popover_settings.get("icon", None)
 				with st.popover(popover_text, icon=popover_icon):
-					render_buttons(button_settings, data_index, data_row, title, True)
+					render_buttons(button_settings, data_index, data_row, key, True)
 			else:
-				render_buttons(button_settings, data_index, data_row, title, False)
+				render_buttons(button_settings, data_index, data_row, key, False)
 
 
-def render_buttons(button_settings, data_index, data_row, title, use_width):
+def render_buttons(button_settings, data_index, data_row, key, use_width):
 	all_disabled_buttons = data_row.get("buttons_disabled", None)
 	for button_label, button_configuration in button_settings.items():
 		button_type = "primary" if button_configuration.get("primary", False) else "secondary"
@@ -381,7 +390,7 @@ def render_buttons(button_settings, data_index, data_row, title, use_width):
 		else:
 			button_label_to_show = f"{button_icon} {button_label}"  # Show icon and label
 
-		if st.button(key=f"{title}_{button_label}_{data_index}",
+		if st.button(key=f"{key}_button_{button_label}_{data_index}",
 					 label=button_label_to_show,
 					 type=button_type,
 					 disabled=button_disabled,
