@@ -8,7 +8,7 @@ from backend.models import User
 from backend.database import get_db
 from frontend.page_names import PageNames
 from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_components import display_table_with_actions
+from frontend.custom_components import display_table_with_actions, interactive_data_table
 from utils.session_state import get_session_state_item, set_session_state_item
 
 page_setup(
@@ -18,6 +18,9 @@ page_setup(
 	role_not_accepted_redirect=PageNames.my_vms,
 )
 
+current_username = get_session_state_item("username")
+if current_username is None:
+	switch_page(PageNames.error)
 
 def get_valid_users(avoid_username: str) -> List[User]:
 	"""Not valid users are: Admins, New Users and the User requesting this function."""
@@ -31,20 +34,65 @@ def get_valid_users(avoid_username: str) -> List[User]:
 		return cast(List[User], fetched_users)
 
 
-def go_to_user_details(callback_user: User):
+@st.cache_data
+def get_user_data_from_db():
+	users = get_valid_users(current_username)
+	result = []
+	for user in users:
+		user_dict = {
+			"original_object": user,
+			"username": user.username,
+			"first_name": user.first_name,
+			"last_name": user.last_name,
+			"email": user.email,
+			"role": user.role,
+		}
+		result.append(user_dict)
+
+	return result
+
+
+def go_to_user_details(data_row):
+	callback_user: User = data_row["original_object"]
 	set_session_state_item("selected_user", callback_user)
 	switch_page(PageNames.user_details)
 
 
-current_username = get_session_state_item("username")
-if current_username is None:
-	switch_page(PageNames.error)
-
-users = get_valid_users(current_username)
-
 st.title("Manage Users")
-display_table_with_actions(
-	data_type="user",
-	data_list=users,
-	details_callback=go_to_user_details
+
+interactive_data_table(
+	key="data_table_users",
+	data=get_user_data_from_db(),
+	refresh_data_callback=get_user_data_from_db,
+	column_settings={
+		"Username": {
+			"column_width": 1,
+			"data_name": "username"
+		},
+		"First Name": {
+			"column_width": 1,
+			"data_name": "first_name"
+		},
+		"Last Name": {
+			"column_width": 1,
+			"data_name": "last_name"
+		},
+		"Email": {
+			"column_width": 1,
+			"data_name": "email"
+		},
+		"Role": {
+			"column_width": 1,
+			"data_name": "role"
+		}
+	},
+	button_settings={
+		"View": {
+			"primary": True,
+			"callback": go_to_user_details,
+			"icon": ":material/arrow_forward:",
+		},
+	},
+	action_header_name=None,
+	filters_expanded=True
 )
