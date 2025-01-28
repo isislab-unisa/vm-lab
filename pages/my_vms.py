@@ -41,7 +41,7 @@ def get_vm_data_from_db():
 		vm_dict = {
 			"original_object": vm, # Hidden object from the db ready to use
 			"name": vm.name,
-			"host_complete": f":red[{vm.host}] : :blue[{vm.port}]",
+			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
 			"username": vm.username,
 			"auth": auth_type,
 		}

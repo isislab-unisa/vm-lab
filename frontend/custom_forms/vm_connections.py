@@ -52,6 +52,7 @@ def vm_add_clicked(current_username: str):
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Created")
+				st.cache_data.clear()  # Refresh my_vms table
 				switch_page(PageNames.my_vms)
 
 
@@ -70,7 +71,7 @@ def vm_connect_clicked(data_row):
 			hostname, port, username,
 			password=None, ssh_key=None):
 		"""Handles the connection logic and updates session state."""
-		with st.status(f"Connecting to `{username}@{hostname}:{port}`...", expanded=True) as connection_status:
+		with st.status(f"Connecting to `{username}@{hostname}:{port}`", expanded=True) as connection_status:
 			# Test the connection to the remote
 			st.write("Connecting to remote server...")
 			try:
@@ -85,8 +86,13 @@ def vm_connect_clicked(data_row):
 				connection_status.update(label="Error!", state="error", expanded=True)
 				st.error("**An error has occurred while connecting to the remote server:** Authentication failed.")
 				return
+			except TimeoutError:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.error("**An error has occurred while connecting to the remote server:** Could not connect to the remote server.")
+				return
 			except Exception as e:
 				connection_status.update(label="Error!", state="error", expanded=True)
+				st.success(type(e))
 				st.exception(e)
 				return
 
