@@ -1,17 +1,20 @@
-from typing import Literal
+import time
 
+import requests
 import streamlit as st
+from paramiko.ssh_exception import AuthenticationException
 from streamlit import switch_page
 
 from backend.database import get_db
 from backend.models import VirtualMachine, User, Bookmark
+from frontend.custom_components import confirm_dialog
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state_item
-from utils.terminal_connection import test_connection, build_module_url
+from utils.terminal_connection import send_credentials_to_external_module, build_module_url, test_connection_with_paramiko
 
 
 @st.dialog("Add Virtual Machine")
-def add_vm(current_username):
+def vm_add_clicked(current_username: str):
 	"""Dialog to add a new Virtual Machine."""
 	with st.form(f"add-vm-form"):
 		name = st.text_input("VM name", placeholder="Insert name")
@@ -52,52 +55,47 @@ def add_vm(current_username):
 				switch_page(PageNames.my_vms)
 
 
-@st.dialog("Add Bookmark")
-def add_bookmark(current_username):
-	"""Dialog to add a new Bookmark."""
-	with st.form(f"add-bookmark-form"):
-		name = st.text_input("Bookmark name", placeholder="Insert name")
-		link = st.text_input("Link", placeholder="Insert link", help="Must start with `www.`")
-		submit_button = st.form_submit_button("Save")
-
-	if submit_button:
-		if not name or not link:
-			st.warning("Fill out all of the required fields.")
-		elif not link.startswith("www."):
-			st.error("Insert a valid link")
-		else:
-			try:
-				with get_db() as db:
-					new_link = Bookmark(
-						name=name,
-						link=link,
-					)
-					user = db.query(User).filter(User.username == current_username).first()
-					new_link.user_id = user.id
-
-					db.add(new_link)
-					db.commit()
-			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
-			else:
-				st.success(f"Created")
-				switch_page(PageNames.my_vms)
-
-
-@st.dialog("Connect")
-def connect_clicked(selected_vm: VirtualMachine):
+@st.dialog("Connect to VM")
+def vm_connect_clicked(data_row):
 	"""Dialog to handle the connection to a Virtual Machine."""
+	selected_vm: VirtualMachine = data_row["original_object"]
+
 
 	def was_request_successful(req) -> bool:
 		"""Verifies if a request to a module was successful."""
 		return "success" in req and req["success"]
 
-	def handle_connection(hostname, port, username, password=None, ssh_key=None):
-		"""Handles the connection logic and updates session state."""
 
-		try:
-			with st.spinner(text=f"Connecting with {'SSH Key' if ssh_key else 'Password'}..."):
-				response_ssh, response_sftp = test_connection(
+	def handle_connection(
+			hostname, port, username,
+			password=None, ssh_key=None):
+		"""Handles the connection logic and updates session state."""
+		with st.status(f"Connecting to `{username}@{hostname}:{port}`...", expanded=True) as connection_status:
+			# Test the connection to the remote
+			st.write("Connecting to remote server...")
+			try:
+				test_connection_with_paramiko(
+					hostname=hostname,
+					port=port,
+					username=username,
+					password=password,
+					ssh_key=ssh_key
+				)
+			except AuthenticationException:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.error("**An error has occurred while connecting to the remote server:** Authentication failed.")
+				return
+			except Exception as e:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.exception(e)
+				return
+
+			st.caption("Success!")
+			# Send the credentials to the SSH module
+			st.write("Requesting SSH terminal...")
+			try:
+				response_ssh = send_credentials_to_external_module(
+					module_type="ssh",
 					hostname=hostname,
 					port=port,
 					username=username,
@@ -105,46 +103,75 @@ def connect_clicked(selected_vm: VirtualMachine):
 					ssh_key=ssh_key
 				)
 
-			if was_request_successful(response_ssh) and was_request_successful(response_sftp):
-				st.success("Success")
-				set_session_state_item("selected_vm", selected_vm)
+				if not was_request_successful(response_ssh):
+					connection_status.update(label="Error!", state="error", expanded=True)
+					st.error(f"**An error has occurred while requesting the SSH terminal:** {response_ssh['error']}")
+					return
+			except requests.exceptions.ConnectionError as e:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.error(f"**An error has occurred while requesting the SSH terminal:** Could not reach SSH module.")
+				return
+			except Exception as e:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.exception(e)
+				return
 
-				ssh_connection_url = build_module_url(
-					connection_type="ssh",
-					request_type="connection",
-					connection_id=response_ssh["connection_uuid"]
+			st.caption("Success!")
+			# Send the credentials to the SFTP module
+			st.write("Requesting SFTP file explorer...")
+			try:
+				response_sftp = send_credentials_to_external_module(
+					module_type="sftp",
+					hostname=hostname,
+					port=port,
+					username=username,
+					password=password,
+					ssh_key=ssh_key
 				)
 
-				print(ssh_connection_url)
+				if not was_request_successful(response_sftp):
+					connection_status.update(label="Error!", state="error", expanded=True)
+					st.error(
+						f"**An error has occurred while requesting the SFTP file explorer:** {response_sftp['error']}")
+					return
+			except requests.exceptions.ConnectionError as e:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.error(f"**An error has occurred while requesting the SFTP file explorer:** Could not reach SFTP module.")
+				return
+			except Exception as e:
+				connection_status.update(label="Error!", state="error", expanded=True)
+				st.exception(e)
+				return
 
-				set_session_state_item(
-					"terminal_page_ssh_connection_url",
-					ssh_connection_url
-				)
+			st.caption("Success!")
+			connection_status.update(label="Connection successful! Redirecting to page...", state="complete", expanded=True)
+			time.sleep(1)
 
-				sftp_connection_url = build_module_url(
-					connection_type="sftp",
-					request_type="connection",
-					connection_id=response_sftp["connection_uuid"]
-				)
+			set_session_state_item("selected_vm", selected_vm)
 
-				print(sftp_connection_url)
+			ssh_connection_url = build_module_url(
+				connection_type="ssh",
+				request_type="connection",
+				connection_id=response_ssh["connection_uuid"]
+			)
+			set_session_state_item(
+				"terminal_page_ssh_connection_url",
+				ssh_connection_url
+			)
 
-				set_session_state_item(
-					"terminal_page_sftp_connection_url",
-					sftp_connection_url
-				)
+			sftp_connection_url = build_module_url(
+				connection_type="sftp",
+				request_type="connection",
+				connection_id=response_sftp["connection_uuid"]
+			)
+			set_session_state_item(
+				"terminal_page_sftp_connection_url",
+				sftp_connection_url
+			)
 
-				switch_page(PageNames.terminal)
-			elif "error" in response_ssh and "error" in response_sftp:
-				ssh_error = response_ssh["error"]
-				sftp_error = response_sftp["error"]
-				st.error(f"An error has occurred:\n\nSSH Error: **{ssh_error}**\nSFTP Error: **{sftp_error}**")
-			else:
-				st.error("An error has occurred")
+			st.cache_data.clear()  # Refresh my_vms table
+			switch_page(PageNames.terminal)
 
-		except Exception as e:
-			st.error(f"An error has occurred: **{e}**")
 
 	if selected_vm.ssh_key:
 		# Connect using SSH key
@@ -166,20 +193,42 @@ def connect_clicked(selected_vm: VirtualMachine):
 		# Prompt user for password
 		with st.form(f"connection-form-{selected_vm.id}"):
 			st.write(f"Enter your password for {selected_vm.name}")
-			password = st.text_input("Password", type="password", placeholder="Insert password")
+			password_input = st.text_input("Password", type="password", placeholder="Insert password")
 			submit_button = st.form_submit_button("Connect")
 
 		if submit_button:
-			if not password:
-				st.warning("Type the password")
+			if not password_input:
+				st.warning("Type the password.")
 			else:
 				# Connect using user-provided password
 				handle_connection(
 					hostname=selected_vm.host,
 					port=selected_vm.port,
 					username=selected_vm.username,
-					password=password
+					password=password_input
 				)
+
+
+def vm_edit_clicked(data_row):
+	"""Handle click of the edit button for a Virtual Machine."""
+	selected_vm: VirtualMachine = data_row["original_object"]
+	st.cache_data.clear()  # Refresh my_vms table
+	set_session_state_item("selected_vm", selected_vm)
+	switch_page(PageNames.vm_details)
+
+
+def vm_delete_clicked(data_row):
+	"""Handle click of the delete button for a Virtual Machine."""
+	selected_vm: VirtualMachine = data_row["original_object"]
+
+	def deletion_process():
+		print("Deleting VM...")
+		st.cache_data.clear() # Refresh my_vms table
+
+	confirm_dialog(
+		text=f"Are you sure you want to delete `{selected_vm.name}`?",
+		confirm_button_callback=deletion_process
+	)
 
 
 @st.dialog("Edit Bookmark")
@@ -219,7 +268,34 @@ def bookmark_details_clicked(selected_bookmark: Bookmark):
 				switch_page(PageNames.my_vms)
 
 
-def vm_details_clicked(selected_vm: VirtualMachine):
-	"""Handle click of detail button for a Virtual Machine."""
-	set_session_state_item("selected_vm", selected_vm)
-	switch_page(PageNames.vm_details)
+
+@st.dialog("Add Bookmark")
+def add_bookmark_clicked(current_username: str):
+	"""Dialog to add a new Bookmark."""
+	with st.form(f"add-bookmark-form"):
+		name = st.text_input("Bookmark name", placeholder="Insert name")
+		link = st.text_input("Link", placeholder="Insert link", help="Must start with `www.`")
+		submit_button = st.form_submit_button("Save")
+
+	if submit_button:
+		if not name or not link:
+			st.warning("Fill out all of the required fields.")
+		elif not link.startswith("www."):
+			st.error("Insert a valid link")
+		else:
+			try:
+				with get_db() as db:
+					new_link = Bookmark(
+						name=name,
+						link=link,
+					)
+					user = db.query(User).filter(User.username == current_username).first()
+					new_link.user_id = user.id
+
+					db.add(new_link)
+					db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.success(f"Created")
+				switch_page(PageNames.my_vms)

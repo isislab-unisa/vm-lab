@@ -258,18 +258,22 @@ def confirm_dialog(
 
 def interactive_data_table(data: list[dict],
 						   column_settings: dict, button_settings: dict,
+						   popover_settings: dict = None, filters_expanded: bool = False,
 						   refresh_data_callback: Callable = None, clear_filters_button: bool = True,
-						   title: str = None):
+						   title: str | None = None, action_header_name: str | None = "Actions"):
 	"""
 	Full documentation here:
 	https://github.com/isislab-unisa/vm-lab/wiki/Component-%E2%80%90-Interactive-Data-Table
 
 	:param data: The data to display in the table.
     :param refresh_data_callback: A function to call when the Refresh button in the filters is pressed.
-	:param column_settings: It defines how should the columns be.
-	:param button_settings: It defines what buttons should be included for each row.
-	:param title: The title (in markdown) to display above the table.
+	:param column_settings: Describes how should the columns be.
+	:param button_settings: Describes what buttons should be included for each row.
+	:param popover_settings: If defined, shows a popover button containing all the buttons.
+	:param filters_expanded: Whether the filters are expanded or not.
 	:param clear_filters_button: Whether to display the "Clear Filters" button in the filters' menu.
+	:param title: The title (in markdown) to display above the table.
+	:param action_header_name: The string to show in the header of the buttons' header.
 	:raises ValueError: If `data_name` is not defined in a `column_settings` entry.
 	"""
 
@@ -291,7 +295,7 @@ def interactive_data_table(data: list[dict],
 	filtered_data = data
 
 	# Filters
-	with st.expander("Filters"):
+	with st.expander("Filters", expanded=filters_expanded):
 		filters_buttons_col1, filters_buttons_col2 = st.columns(2)
 
 		# Refresh/Clear buttons
@@ -331,7 +335,8 @@ def interactive_data_table(data: list[dict],
 	for index, name in enumerate(display_names):
 		columns_header[index].write(f"**{name}**")
 
-	columns_header[-1].write("**Actions**")
+	if action_header_name is not None:
+		columns_header[-1].write(f"**{action_header_name}**")
 
 	# Write all the Rows
 	for data_index, data_row in enumerate(filtered_data):
@@ -347,27 +352,41 @@ def interactive_data_table(data: list[dict],
 
 		# Action Buttons Column
 		with columns_row[-1]:
-			for button_label, button_configuration in button_settings.items():
-				button_type = "primary" if button_configuration.get("primary", False) else "secondary"
-				button_disabled = data_row["buttons_disabled"].get(button_label, False)
+			if popover_settings is not None:
+				popover_text = popover_settings.get("text", "Open")
+				popover_icon = popover_settings.get("icon", None)
+				with st.popover(popover_text, icon=popover_icon):
+					render_buttons(button_settings, data_index, data_row, title, True)
+			else:
+				render_buttons(button_settings, data_index, data_row, title, False)
 
-				button_icon = button_configuration.get("icon", "")
-				show_only_icon = button_configuration.get("show_only_icon", False)
 
-				button_help = button_configuration.get("help", None)
+def render_buttons(button_settings, data_index, data_row, title, use_width):
+	all_disabled_buttons = data_row.get("buttons_disabled", None)
+	for button_label, button_configuration in button_settings.items():
+		button_type = "primary" if button_configuration.get("primary", False) else "secondary"
+		if all_disabled_buttons is None:
+			button_disabled = False
+		else:
+			button_disabled = all_disabled_buttons.get(button_label, False)
 
-				if show_only_icon and button_icon != "":
-					button_label_to_show = button_icon # Show only the icon
-				elif show_only_icon and button_icon == "":
-					button_label_to_show = button_label # There is no icon to show, so show only the label
-				else:
-					button_label_to_show = f"{button_icon} {button_label}" # Show icon and label
+		button_icon = button_configuration.get("icon", None)
+		show_only_icon = button_configuration.get("show_only_icon", False)
+		button_help = button_configuration.get("help", None)
 
-				if st.button(key=f"{title}_{button_label}_{data_index}",
-							 label=button_label_to_show,
-							 type=button_type,
-							 disabled=button_disabled,
-							 help=button_help):
-					button_callback = button_configuration.get("callback", None)
-					if not button_disabled and button_callback is not None:
-						button_callback(data_row=data_row)
+		if show_only_icon and button_icon is not None:
+			button_label_to_show = button_icon  # Show only the icon
+		elif show_only_icon and button_icon is None:
+			button_label_to_show = button_label  # There is no icon to show, so show only the label
+		else:
+			button_label_to_show = f"{button_icon} {button_label}"  # Show icon and label
+
+		if st.button(key=f"{title}_{button_label}_{data_index}",
+					 label=button_label_to_show,
+					 type=button_type,
+					 disabled=button_disabled,
+					 help=button_help,
+					 use_container_width=use_width):
+			button_callback = button_configuration.get("callback", None)
+			if not button_disabled and button_callback is not None:
+				button_callback(data_row=data_row)
