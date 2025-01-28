@@ -140,29 +140,31 @@ def render_sidebar_menu(role: Role | None, name: str | None):
 	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
 	"""
 	with st.sidebar:
-		st.title("vm-lab")
-		st.caption(name)
+		st.title("VM Lab")
+		if name:
+			st.caption(name)
+
 		match role:
 			case Role.NEW_USER:
 				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case Role.USER:
-				st.page_link(PageNames.my_vms, label="My VMs")
+				st.page_link(PageNames.my_vms, label="My Dashboard")
 				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case Role.MANAGER:
-				st.page_link(PageNames.my_vms, label="My VMs")
+				st.page_link(PageNames.my_vms, label="My Dashboard")
 				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.waiting_list, label="New Users")
+				st.page_link(PageNames.waiting_list, label="Waiting List")
 				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
 			case Role.ADMIN:
-				st.page_link(PageNames.my_vms, label="My VMs")
+				st.page_link(PageNames.my_vms, label="My Dashboard")
 				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.waiting_list, label="New Users")
+				st.page_link(PageNames.waiting_list, label="Waiting List")
 				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
