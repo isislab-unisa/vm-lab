@@ -9,7 +9,7 @@ from backend.database import get_db
 from backend.models import VirtualMachine, User, Bookmark
 from frontend.custom_components import confirm_dialog
 from frontend.page_names import PageNames
-from utils.session_state import set_session_state_item
+from utils.session_state import set_session_state_item, pop_session_state_item
 from utils.terminal_connection import send_credentials_to_external_module, build_module_url, test_connection_with_paramiko
 
 
@@ -228,8 +228,15 @@ def vm_delete_clicked(data_row):
 	selected_vm: VirtualMachine = data_row["original_object"]
 
 	def deletion_process():
-		print("Deleting VM...")
-		st.cache_data.clear() # Refresh my_vms table
+		with get_db() as db:
+			try:
+				db.delete(selected_vm)
+				db.commit()
+			except Exception as e:
+				st.error(f"An error has occurred: **{e}**")
+			else:
+				st.cache_data.clear()  # Refresh my_vms table
+				st.rerun()
 
 	confirm_dialog(
 		text=f"Are you sure you want to delete `{selected_vm.name}`?",

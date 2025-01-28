@@ -44,6 +44,9 @@ def get_vm_data_from_db():
 			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
 			"username": vm.username,
 			"auth": auth_type,
+			"buttons_disabled": {
+
+			}
 		}
 		result.append(vm_dict)
 
