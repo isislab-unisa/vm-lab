@@ -18,6 +18,7 @@ def display_table_with_actions(
 		connect_callback: Callable[[VirtualMachine], None] = None,
 ):
 	"""
+	** DEPRECATED **
 	Display a table with dynamic behavior for Users or Virtual Machines.
 
 	:param data_list: The list of Users or Virtual Machines to display
@@ -273,15 +274,15 @@ def interactive_data_table(key: str, data: list[dict],
 	:param popover_settings: If defined, shows a popover button containing all the buttons.
 	:param filters_expanded: Whether the filters are expanded or not.
 	:param clear_filters_button: Whether to display the "Clear Filters" button in the filters' menu.
-	:param title: The title (in markdown) to display above the table.
+	:param title: The title to display above the table.
 	:param action_header_name: The string to show in the header of the buttons' header.
 	:raises ValueError: If `data_name` is not defined in a `column_settings` entry.
 	"""
 
 	# Write the title
 	if title is not None:
-		st.write(f"{title}")
-		st.write("---")
+		st.title(title)
+		st.divider()
 
 	# List with column names
 	display_names = list(column_settings.keys())
@@ -342,10 +343,11 @@ def interactive_data_table(key: str, data: list[dict],
 	columns_header = st.columns(widths + [1])
 
 	for index, name in enumerate(display_names):
-		columns_header[index].write(f"**{name}**")
+		#columns_header[index].markdown(f'<div style="text-align: center"><b>{name}</b></div>', unsafe_allow_html=True)
+		columns_header[index].markdown(f"<u>**{name}**</u>", unsafe_allow_html=True)
 
 	if action_header_name is not None:
-		columns_header[-1].write(f"**{action_header_name}**")
+		columns_header[-1].wrimarkdownte(f"<u>**{action_header_name}**</u>", unsafe_allow_html=True)
 
 	if len(filtered_data) == 0:
 		with st.container():

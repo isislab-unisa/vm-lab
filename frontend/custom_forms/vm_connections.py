@@ -16,14 +16,16 @@ from utils.terminal_connection import send_credentials_to_external_module, build
 @st.dialog("Add Virtual Machine")
 def vm_add_clicked(current_username: str):
 	"""Dialog to add a new Virtual Machine."""
-	with st.form(f"add-vm-form"):
+	with st.form(f"add-vm-form", border=False):
 		name = st.text_input("VM name", placeholder="Insert name")
 		host = st.text_input("Host", placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=22, placeholder="Insert port")
 		username = st.text_input("Username", placeholder="Insert SSH username")
+		shared = st.toggle("This Virtual Machine can be accessed by managers or admins of the system", value=True)
 		password = st.text_input("Password (optional)", type="password", placeholder="Insert password (optional)")
 		ssh_key = st.file_uploader("SSH Key (optional)")
-		submit_button = st.form_submit_button("Save")
+		st.divider()
+		submit_button = st.form_submit_button("Save", use_container_width=True)
 
 	if submit_button:
 		if not name or not host or not port or not username:
@@ -36,8 +38,13 @@ def vm_add_clicked(current_username: str):
 						host=host,
 						port=port,
 						username=username,
+						shared=shared,
 					)
-					user = db.query(User).filter(User.username == current_username).first()
+					user = User.find_by_user_name(db, current_username)
+
+					if user is None:
+						raise Exception("User not found")
+
 					new_vm.user_id = user.id
 
 					if password:
@@ -60,6 +67,10 @@ def vm_add_clicked(current_username: str):
 def vm_connect_clicked(data_row):
 	"""Dialog to handle the connection to a Virtual Machine."""
 	selected_vm: VirtualMachine = data_row["original_object"]
+	requesting_user_id: int = data_row["current_user_id"]
+
+	if selected_vm.user_id != requesting_user_id and not selected_vm.shared:
+		raise Exception("This VM is not shared by the user")
 
 
 	def was_request_successful(req) -> bool:

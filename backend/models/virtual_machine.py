@@ -2,7 +2,7 @@ from __future__ import annotations
 # https://stackoverflow.com/a/55344418
 
 from typing import Type, cast, List
-from sqlalchemy import Column, String, Integer, LargeBinary, ForeignKey
+from sqlalchemy import Column, String, Integer, LargeBinary, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, Session
 
 from .base_model import Base
@@ -25,6 +25,7 @@ class VirtualMachine(Base):
 	username = Column(String(50), nullable=False)
 	password = Column(String(128))
 	ssh_key = Column(LargeBinary)
+	shared = Column(Boolean, nullable=False, default=True)
 
 	################################
 	#         FOREIGN KEYS         #
@@ -74,17 +75,24 @@ class VirtualMachine(Base):
 
 	@staticmethod
 	def find_all(db: Session,
+				 shared: bool = None,
 				 exclude_user_id: int = None,
 				 exclude_user_name: str = None
 				 ) -> list[VirtualMachine]:
 		"""
-		Find all virtual machines in the database, eventually excluding those belonging to a specific user.
+		Find all virtual machines in the database. Two optional types of filters can be activated at the same time:
+		- Exclusion of vms that belong to a specific user (using the id or the username)
+		- Filtering based on the 'shared' flag.
 		:param db: The database session obtained with get_db()
+		:param shared: Shows only virtual machines marked as shared or not if this parameter is set
 		:param exclude_user_id: The id of the user to exclude
 		:param exclude_user_name: The name of the user to exclude
 		:return A list of virtual machines
 		"""
 		query = db.query(VirtualMachine)
+
+		if shared is not None:
+			query = query.filter(VirtualMachine.shared == shared)
 
 		if exclude_user_id is not None:
 			query = query.filter(VirtualMachine.user_id != exclude_user_id)
@@ -110,14 +118,21 @@ class VirtualMachine(Base):
 
 
 	@staticmethod
-	def find_by_user_id(db: Session, user_id: int) -> list[VirtualMachine]:
+	def find_by_user_id(db: Session, user_id: int, shared: bool = None) -> list[VirtualMachine]:
 		"""
 		Find all virtual machines in the database owned by a user with a specific id.
+		Can optionally filter in or out vms that are shared.
 		:param db: The database session obtained with get_db()
 		:param user_id: The id of the user
+		:param shared: Whether the vm is shared
 		:return: A list of virtual machines owned by a user
 		"""
-		query_result: list[Type[VirtualMachine]] = (db.query(VirtualMachine)
+		query = db.query(VirtualMachine)
+
+		if shared is not None:
+			query = query.filter(VirtualMachine.shared == shared)
+
+		query_result: list[Type[VirtualMachine]] = (query
 				.filter(VirtualMachine.user_id == user_id)
 				.all())
 
@@ -125,15 +140,21 @@ class VirtualMachine(Base):
 
 
 	@staticmethod
-	def find_by_user_name(db: Session, user_name: str) -> list[VirtualMachine]:
+	def find_by_user_name(db: Session, user_name: str, shared: bool = None) -> list[VirtualMachine]:
 		"""
 		Find all virtual machines in the database owned by a user with a specific name.
+		Can optionally filter in or out vms that are shared.
 		:param db: The database session obtained with get_db()
 		:param user_name: The username of the user
+		:param shared: Whether the vm is shared
 		:return: A list of virtual machines owned by a user
 		"""
+		query = db.query(VirtualMachine)
 
-		query_result: list[Type[VirtualMachine]] = (db.query(VirtualMachine)
+		if shared is not None:
+			query = query.filter(VirtualMachine.shared == shared)
+
+		query_result: list[Type[VirtualMachine]] = (query
 				.join(VirtualMachine.user)
 				.filter(User.username == user_name)
 				.all())
@@ -151,5 +172,6 @@ class VirtualMachine(Base):
 				f"name={self.name}, "
 				f"host={self.host}, "
 				f"port={self.port}, "
+				f"shared={self.shared}, "
 				f"user_id={self.user_id}"
 				f")")

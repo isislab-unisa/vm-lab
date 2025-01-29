@@ -170,6 +170,7 @@ def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 		host = st.text_input("Host", value=selected_vm.host, placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=selected_vm.port, placeholder="Insert port")
 		username = st.text_input("Username", value=selected_vm.username, placeholder="Insert SSH username")
+		shared = st.toggle("This Virtual Machine can be accessed by managers or admins of the system", value=selected_vm.shared)
 		edit_submit_button = st.form_submit_button("Edit", type="primary")
 
 	if edit_submit_button:
@@ -183,6 +184,7 @@ def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 				vm.host = host
 				vm.port = port
 				vm.username = username
+				vm.shared = shared
 				db.commit()
 			except Exception as e:
 				st.error(f"An error has occurred: **{e}**")
@@ -195,7 +197,11 @@ def delete_vm(selected_vm: VirtualMachine, key: str = 'Delete VM'):
 	def delete():
 		with get_db() as db:
 			try:
-				vm_to_delete = db.query(VirtualMachine).filter(VirtualMachine.id == selected_vm.id).first()
+				vm_to_delete = VirtualMachine.find_by_id(db, selected_vm.id)
+
+				if vm_to_delete is None:
+					raise Exception("VM not found")
+
 				db.delete(vm_to_delete)
 				db.commit()
 			except Exception as e:

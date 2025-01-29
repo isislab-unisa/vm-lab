@@ -31,21 +31,24 @@ def get_vm_data_from_db():
 	with get_db() as db_vm_list:
 		print("Accessing db for vms...")
 		vm_list = VirtualMachine.find_by_user_name(db_vm_list, current_username)
+		current_user = User.find_by_user_name(db_vm_list, current_username)
 
 	result = []
 	for vm in vm_list:
 		if vm.ssh_key:
-			auth_type = "`SSH Key`"
+			auth_type = ":material/key: SSH Key"
 		elif vm.password:
-			auth_type = "`Password`"
+			auth_type = ":material/password: Password"
 		else:
-			auth_type = "`None`"
+			auth_type = ":material/do_not_disturb_on: None"
 
 		vm_dict = {
 			"original_object": vm, # Hidden object from the db ready to use
+			"current_user_id": current_user.id, # Hidden id
 			"name": vm.name,
 			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
 			"username": vm.username,
+			"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
 			"auth": auth_type,
 			"buttons_disabled": {
 
@@ -60,22 +63,23 @@ def get_vm_data_from_db():
 def get_vm_data_from_db_for_all_users():
 	with get_db() as db_vm_list:
 		print("Accessing db for vms...")
-		vm_list = VirtualMachine.find_all(db_vm_list, exclude_user_name=current_username)
+		vm_list = VirtualMachine.find_all(db_vm_list, shared=True, exclude_user_name=current_username)
 
 	result = []
 	for vm in vm_list:
 		if vm.ssh_key:
-			auth_type = "`SSH Key`"
+			auth_type = ":material/key: SSH Key"
 		elif vm.password:
-			auth_type = "`Password`"
+			auth_type = ":material/password: Password"
 		else:
-			auth_type = "`None`"
+			auth_type = ":material/do_not_disturb_on: None"
 
 		vm_dict = {
 			"original_object": vm, # Hidden object from the db ready to use
 			"name": vm.name,
 			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
 			"username": vm.username,
+			"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
 			"auth": auth_type,
 			"owner": vm.user.__dict__["username"],
 			"buttons_disabled": {
@@ -123,6 +127,10 @@ interactive_data_table(
 		"Username": {
 			"column_width": 1,
 			"data_name": "username"
+		},
+		"Is Shared": {
+			"column_width": 1,
+			"data_name": "shared"
 		},
 		"Auth": {
 			"column_width": 1,
@@ -191,7 +199,16 @@ interactive_data_table(
 	filters_expanded=False
 )
 
-if current_role == Role.ADMIN or current_role == Role.MANAGER:
+minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
+show_users_vms = False
+
+if minimum_permissions == "manager" and (current_role == Role.ADMIN or current_role == Role.MANAGER):
+	show_users_vms = True
+elif minimum_permissions == "admin" and (current_role == Role.ADMIN):
+	show_users_vms = True
+
+
+if show_users_vms:
 	st.divider()
 	st.title(":green[:material/tv_signin:] Other Users' VMs")
 
@@ -217,6 +234,10 @@ if current_role == Role.ADMIN or current_role == Role.MANAGER:
 			"Username": {
 				"column_width": 1,
 				"data_name": "username"
+			},
+			"Is Shared": {
+				"column_width": 1,
+				"data_name": "shared"
 			},
 			"Auth": {
 				"column_width": 1,

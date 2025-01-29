@@ -7,5 +7,5 @@ authenticator = page_setup(
     access_control=AccessControlType.LOGGED_IN_ONLY,
 )
 
-st.cache_data.clear() # Clear cache to refresh table data
+st.cache_data.clear()  # Clear cache to refresh table data
 authenticator.logout(location="unrendered")
