@@ -347,6 +347,11 @@ def interactive_data_table(key: str, data: list[dict],
 	if action_header_name is not None:
 		columns_header[-1].write(f"**{action_header_name}**")
 
+	if len(filtered_data) == 0:
+		with st.container():
+			st.caption("No data")
+		return
+
 	# Write all the Rows
 	for data_index, data_row in enumerate(filtered_data):
 		columns_row = st.columns(widths + [1])

@@ -9,6 +9,7 @@ authenticator = page_setup(
 )
 
 try:
+	st.cache_data.clear() # Clear cache to refresh table data
 	authenticator.login()
 except Exception as e:
 	st.error(e)

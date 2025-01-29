@@ -30,7 +30,7 @@ if current_username is None or current_role is None:
 def get_vm_data_from_db():
 	with get_db() as db_vm_list:
 		print("Accessing db for vms...")
-		vm_list = VirtualMachine.find_by(db_vm_list, user_name=current_username)
+		vm_list = VirtualMachine.find_by_user_name(db_vm_list, current_username)
 
 	result = []
 	for vm in vm_list:
@@ -60,12 +60,7 @@ def get_vm_data_from_db():
 def get_vm_data_from_db_for_all_users():
 	with get_db() as db_vm_list:
 		print("Accessing db for vms...")
-		current_user_id = User.find_by(db_vm_list, user_name=current_username).id
-		all_vms = VirtualMachine.find_all(db_vm_list)
-		vm_list = []
-		for vm in all_vms:
-			if vm.user_id != current_user_id:
-				vm_list.append(vm)
+		vm_list = VirtualMachine.find_all(db_vm_list, exclude_user_name=current_username)
 
 	result = []
 	for vm in vm_list:
@@ -96,7 +91,7 @@ def get_vm_data_from_db_for_all_users():
 def get_bookmark_data_from_db():
 	with get_db() as db_bookmark_list:
 		print("Accessing db for bookmarks...")
-		bookmark_list = Bookmark.find_by(db_bookmark_list, user_name=current_username)
+		bookmark_list = Bookmark.find_by_user_name(db_bookmark_list, current_username)
 
 	result = []
 	for bookmark in bookmark_list:
@@ -109,7 +104,7 @@ def get_bookmark_data_from_db():
 
 	return result
 
-st.title("My VMs")
+st.title(":blue[:material/tv:] My VMs")
 st.button("Add VM", type="primary", icon=":material/add:", on_click=lambda: vm_add_clicked(current_username))
 
 interactive_data_table(
@@ -159,7 +154,7 @@ interactive_data_table(
 )
 
 st.divider()
-st.title("My Bookmarks")
+st.title(":orange[:material/bookmark:] My Bookmarks")
 
 st.button("Add Bookmark", type="primary", icon=":material/add:", on_click=lambda: bookmark_add_clicked(current_username))
 
@@ -198,9 +193,9 @@ interactive_data_table(
 
 if current_role == Role.ADMIN or current_role == Role.MANAGER:
 	st.divider()
-	st.title("Other Users' VMs")
+	st.title(":green[:material/tv_signin:] Other Users' VMs")
 
-	st.button("Create and Assign a new VM", icon=":material/assignment_add:", type="primary", on_click=lambda: print("test"))
+	st.button("Add and Assign a new VM", icon=":material/assignment_add:", type="primary", on_click=lambda: print("test"))
 
 	interactive_data_table(
 		key="data_table_usersvms",

@@ -53,7 +53,7 @@ if curren_role == Role.ADMIN:
 	if button:
 		print("Change Role")
 		with get_db() as db:
-			user = User.find_by(db, user_id=selected_user.id)
+			user = User.find_by_id(db, selected_user.id)
 			user.role = Role.from_phrase(selection).value
 			db.commit()
 			db.refresh(user)
@@ -71,7 +71,7 @@ st.subheader("Virtual Machines")
 @st.cache_data
 def get_user_vm_from_db():
 	with get_db() as db_list:
-		vm_list = VirtualMachine.find_by(db_list, user_name=selected_user.username)
+		vm_list = VirtualMachine.find_by_user_name(db_list, selected_user.username)
 
 	result = []
 	for vm in vm_list:

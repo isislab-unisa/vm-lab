@@ -1,11 +1,13 @@
-from typing import Type
+from __future__ import annotations
+# https://stackoverflow.com/a/55344418
+
+from typing import Type, cast, List
 from sqlalchemy import Column, String, Integer, LargeBinary, ForeignKey
 from sqlalchemy.orm import relationship, Session
 
 from .base_model import Base
 from backend.fernet_encryption import cipher
 from backend.models import User
-from utils.other import count_non_none_variables
 
 
 class VirtualMachine(Base):
@@ -71,56 +73,73 @@ class VirtualMachine(Base):
 	##############################
 
 	@staticmethod
-	def find_all(db: Session):
-		"""Returns a list with all virtual machines in the database."""
-		return db.query(VirtualMachine).all()
-
-	@staticmethod
-	def find_by(db: Session,
-				vm_id: int = None,
-				user_id: int = None,
-				user_name: str = None):
+	def find_all(db: Session,
+				 exclude_user_id: int = None,
+				 exclude_user_name: str = None
+				 ) -> list[VirtualMachine]:
 		"""
-		Shortcut method for simple queries. Only one parameter can be passed.
-
-		For more complex queries, use `db.query` from sqlalchemy.
-
-		:param db: The connection to the database
-		:param vm_id: ID of the vm to find, returns a `VirtualMachine` or `None`
-		:param user_id: ID of a user to find its virtual machines, returns a list of `VirtualMachine`
-		:param user_name: Username of a user to find its virtual machines, returns a list of `VirtualMachine`
+		Find all virtual machines in the database, eventually excluding those belonging to a specific user.
+		:param db: The database session obtained with get_db()
+		:param exclude_user_id: The id of the user to exclude
+		:param exclude_user_name: The name of the user to exclude
+		:return A list of virtual machines
 		"""
-		count = count_non_none_variables([vm_id, user_id, user_name])
-
-		if count != 1:
-			raise ValueError(
-				f"The find_by function must have exactly one search parameter. "
-				f"Passed {count} parameters."
-			)
-
 		query = db.query(VirtualMachine)
 
-		if vm_id:
-			search_result: VirtualMachine = query \
-				.filter(VirtualMachine.id == vm_id) \
-				.first()
-			return search_result
+		if exclude_user_id is not None:
+			query = query.filter(VirtualMachine.user_id != exclude_user_id)
+		elif exclude_user_name is not None:
+			query = query.join(User).filter(User.username != exclude_user_name)
 
-		elif user_id:
-			search_result: list[Type[VirtualMachine]] = query \
-				.filter(VirtualMachine.user_id == user_id) \
-				.all()
-			return search_result
+		query_result: list[Type[VirtualMachine]] = query.all()
 
-		elif user_name:
-			search_result: list[Type[VirtualMachine]] = query \
-				.join(VirtualMachine.user) \
-				.filter(User.username == user_name) \
-				.all()
-			return search_result
+		return cast(List[VirtualMachine], query_result)
 
-		else:
-			return None
+
+	@staticmethod
+	def find_by_id(db: Session, vm_id: int) -> VirtualMachine | None:
+		"""
+		Find a virtual machine by its id.
+		:param db: The database session obtained with get_db()
+		:param vm_id: The id of the virtual machine
+		:return A virtual machine if it has been found, otherwise `None`
+		"""
+		return (db.query(VirtualMachine)
+				.filter(VirtualMachine.id == vm_id)
+				.first())
+
+
+	@staticmethod
+	def find_by_user_id(db: Session, user_id: int) -> list[VirtualMachine]:
+		"""
+		Find all virtual machines in the database owned by a user with a specific id.
+		:param db: The database session obtained with get_db()
+		:param user_id: The id of the user
+		:return: A list of virtual machines owned by a user
+		"""
+		query_result: list[Type[VirtualMachine]] = (db.query(VirtualMachine)
+				.filter(VirtualMachine.user_id == user_id)
+				.all())
+
+		return cast(List[VirtualMachine], query_result)
+
+
+	@staticmethod
+	def find_by_user_name(db: Session, user_name: str) -> list[VirtualMachine]:
+		"""
+		Find all virtual machines in the database owned by a user with a specific name.
+		:param db: The database session obtained with get_db()
+		:param user_name: The username of the user
+		:return: A list of virtual machines owned by a user
+		"""
+
+		query_result: list[Type[VirtualMachine]] = (db.query(VirtualMachine)
+				.join(VirtualMachine.user)
+				.filter(User.username == user_name)
+				.all())
+
+		return cast(List[VirtualMachine], query_result)
+
 
 	################################
 	#        OTHER METHODS         #

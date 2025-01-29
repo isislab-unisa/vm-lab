@@ -257,7 +257,7 @@ def bookmark_edit_clicked(data_row):
 	if submit_button:
 		with get_db() as db:
 			try:
-				bookmark = Bookmark.find_by(db, bookmark_id=selected_bookmark.id)
+				bookmark = Bookmark.find_by_id(db, selected_bookmark.id)
 				bookmark.name = name
 				bookmark.link = link
 				db.commit()

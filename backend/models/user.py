@@ -1,12 +1,13 @@
-import bcrypt
+from __future__ import annotations
+# https://stackoverflow.com/a/55344418
 
-from typing import Type
+import bcrypt
+from typing import Type, List, cast
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship, Session
 
 from .base_model import Base
 from backend.role import Role
-from utils.other import count_non_none_variables
 
 
 class User(Base):
@@ -47,6 +48,7 @@ class User(Base):
 			.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt()) \
 			.decode('utf-8')
 
+
 	def verify_password(self, plain_password) -> bool:
 		"""
 		Verifies a plain text password against the hashed one.
@@ -60,64 +62,97 @@ class User(Base):
 	##############################
 
 	@staticmethod
-	def find_all(db: Session):
-		"""Returns a list with all users in the database."""
-		return db.query(User).all()
-
-	@staticmethod
-	def find_by(db: Session,
-				user_id: int = None,
-				user_name: str = None,
-				user_email: str = None,
-				user_role: Role = None):
+	def find_all(db: Session,
+				 exclude_user_id: int = None,
+				 exclude_user_name: str = None,
+				 exclude_user_role: Role = None
+				 ) -> list[User]:
 		"""
-		Shortcut method for simple queries. Only one parameter can be passed.
-
-		For more complex queries, use `db.query` from sqlalchemy.
-
-		:param db: The connection to the database
-		:param user_id: ID of the user to find, returns a `User` or `None`
-		:param user_name: Username of the user to find, returns a `User` or `None`
-		:param user_email: Email of the user to find, returns a `User` or `None`
-		:param user_role: Role of the user to find, returns a list of `User`
+		Find all users in the database, eventually excluding one of them or an entire role.
+		:param db: The database session obtained with get_db()
+		:param exclude_user_id: The id of the user to exclude
+		:param exclude_user_name: The name of the user to exclude
+		:param exclude_user_role: The role of the user to exclude
+		:return A list of users
 		"""
-		count = count_non_none_variables([user_id, user_name, user_email, user_role])
-
-		if count != 1:
-			raise ValueError(
-				f"The find_by function must have exactly one search parameter. "
-				f"Passed {count} parameters."
-			)
-
 		query = db.query(User)
 
-		if user_id:
-			search_result: User = query \
-				.filter(User.id == user_id) \
-				.first()
-			return search_result
+		if exclude_user_id is not None:
+			query = query.filter(User.id != exclude_user_id)
+		elif exclude_user_name is not None:
+			query = query.filter(User.username != exclude_user_name)
+		elif exclude_user_role is not None:
+			query = query.filter(User.role != exclude_user_role.to_string())
 
-		elif user_name:
-			search_result: User = query \
-				.filter(User.username == user_name) \
-				.first()
-			return search_result
+		query_result: list[Type[User]] = query.all()
+		return cast(List[User], query_result)
 
-		elif user_email:
-			search_result: User = query \
-				.filter(User.email == user_email) \
-				.first()
-			return search_result
 
-		elif user_role:
-			role: str = user_role.to_string()
-			search_result: list[Type[User]] = query \
-				.filter(User.role == role) \
-				.all()
-			return search_result
+	@staticmethod
+	def find_by_id(db: Session, user_id: int) -> User | None:
+		"""
+		Find a user by its id.
+		:param db: The database session obtained with get_db()
+		:param user_id: The id of the user
+		:return A user if it has been found, otherwise `None`
+		"""
+		return (db.query(User)
+				.filter(User.id == user_id)
+				.first())
 
-		else:
-			return None
+
+	@staticmethod
+	def find_by_user_name(db: Session, user_name: str) -> User | None:
+		"""
+		Find a user by its username.
+		:param db: The database session obtained with get_db()
+		:param user_name: Username of the user
+		:return: A user if it has been found, otherwise `None`
+		"""
+		return (db.query(User)
+				.filter(User.username == user_name)
+				.first())
+
+
+	@staticmethod
+	def find_by_email(db: Session, email: str) -> User | None:
+		"""
+		Find a user by its email.
+		:param db: The database session obtained with get_db()
+		:param email: Email of the user
+		:return: A user if it has been found, otherwise `None`
+		"""
+		return (db.query(User)
+				.filter(User.email == email)
+				.first())
+
+
+	@staticmethod
+	def find_by_role(db: Session, role: Role,
+					 exclude_user_id: int = None,
+					 exclude_user_name: str = None,
+					 ) -> list[User]:
+		"""
+		Find all users in the database with a specific role, eventually excluding one of them.
+		:param db: The database session obtained with get_db()
+		:param role: The role to search for
+		:param exclude_user_id: The id of the user to exclude
+		:param exclude_user_name: The name of the user to exclude
+		:return A list of users
+		"""
+		query = db.query(User)
+
+		if exclude_user_id is not None:
+			query = query.filter(User.id != exclude_user_id)
+		elif exclude_user_name is not None:
+			query = query.filter(User.username != exclude_user_name)
+
+		query_result: list[Type[User]] = (query
+				.filter(User.role == role.to_string())
+				.all())
+
+		return cast(List[User], query_result)
+
 
 	################################
 	#        OTHER METHODS         #
