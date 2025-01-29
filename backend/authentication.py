@@ -236,7 +236,7 @@ def edit_username(old_username: str, new_username: str):
 		raise UpdateError('Username is not valid')
 
 	with get_db() as db:
-		user = User.find_by(db, user_name=old_username)
+		user = User.find_by_user_name(db, old_username)
 
 		if user is None:
 			raise UpdateError(f'User with username {old_username} does not exist')
@@ -286,7 +286,7 @@ def edit_email(old_email: str, new_email: str):
 		raise RegisterError('Email is not valid')
 
 	with get_db() as db:
-		user = User.find_by(db, user_email=old_email)
+		user = User.find_by_email(db, old_email)
 
 		if user is None:
 			raise UpdateError(f'User with email {old_email} does not exist')
@@ -336,7 +336,7 @@ def edit_password(username: str, current_password: str, new_password: str, new_p
 		raise RegisterError('Password does not meet criteria')
 
 	with get_db() as db:
-		user = User.find_by(db, user_name=username)
+		user = User.find_by_user_name(db, username)
 
 		if user is None:
 			raise UpdateError(f'User with username {username} does not exist')
@@ -387,7 +387,7 @@ def edit_first_last_name(username: str, new_first_name: str, new_last_name: str)
 		raise RegisterError('Last name is not valid')
 
 	with get_db() as db:
-		user = User.find_by(db, user_name=username)
+		user = User.find_by_user_name(db, username)
 
 		if user is None:
 			raise UpdateError(f'User with username {username} does not exist')

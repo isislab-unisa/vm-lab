@@ -25,7 +25,7 @@ if selected_vm is None or current_username is None:
 st.header(f"Edit VM `{selected_vm.name}`")
 
 with get_db() as db:
-	user = User.find_by(db, user_name=current_username)
+	user = User.find_by_user_name(db, current_username)
 
 	edit_vm(selected_vm)
 

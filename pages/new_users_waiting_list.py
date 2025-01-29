@@ -29,7 +29,7 @@ def accept_clicked(callback_user: User):
 	if button:
 		selected_role = Role.from_phrase(selection).value
 		with get_db() as db:
-			user = User.find_by(db, user_id=callback_user.id)
+			user = User.find_by_id(db, callback_user.id)
 			user.role = selected_role
 			db.commit()
 			db.refresh(user)
@@ -47,7 +47,7 @@ def denied_clicked(callback_user: User):
 
 		if yes_button:
 			with get_db() as db:
-				user = User.find_by(db, user_id=callback_user.id)
+				user = User.find_by_id(db, callback_user.id)
 				db.delete(user)
 				db.commit()
 
@@ -63,7 +63,7 @@ def denied_clicked(callback_user: User):
 
 
 with get_db() as db_for_list:
-	user_list = User.find_by(db_for_list, user_role=Role.NEW_USER)
+	user_list = User.find_by_role(db_for_list, Role.NEW_USER)
 
 st.header("New Users Waiting List")
 display_table_with_actions(

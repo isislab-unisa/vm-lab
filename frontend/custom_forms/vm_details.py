@@ -24,7 +24,10 @@ def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM pas
 			else:
 				with get_db() as db:
 					try:
-						vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
+						vm = VirtualMachine.find_by_id(db, selected_vm.id)
+						if vm is None:
+							raise Exception("VM not found")
+
 						vm.password = VirtualMachine.encrypt_password(password)
 						db.commit()
 						db.refresh(vm)
@@ -60,7 +63,10 @@ def delete_password(selected_vm: VirtualMachine, key: str = 'Delete VM password'
 	def delete():
 		with get_db() as db:
 			try:
-				vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
+				vm = VirtualMachine.find_by_id(db, selected_vm.id)
+				if vm is None:
+					raise Exception("VM not found")
+
 				vm.password = None
 				db.commit()
 				db.refresh(vm)
@@ -95,7 +101,10 @@ def edit_vm_ssh_key(selected_vm: VirtualMachine, user: User, key='Change VM ssh 
 			else:
 				with get_db() as db:
 					try:
-						vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
+						vm = VirtualMachine.find_by_id(db, selected_vm.id)
+						if vm is None:
+							raise Exception("VM not found")
+
 						vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
 						db.commit()
 						db.refresh(vm)
@@ -131,7 +140,10 @@ def delete_ssh_key(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
 	def delete():
 		with get_db() as db:
 			try:
-				vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
+				vm = VirtualMachine.find_by_id(db, selected_vm.id)
+				if vm is None:
+					raise Exception("VM not found")
+
 				vm.ssh_key = None
 				db.commit()
 				db.refresh(vm)
@@ -163,7 +175,10 @@ def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 	if edit_submit_button:
 		with get_db() as db:
 			try:
-				vm = VirtualMachine.find_by(db, vm_id=selected_vm.id)
+				vm = VirtualMachine.find_by_id(db, selected_vm.id)
+				if vm is None:
+					raise Exception("VM not found")
+
 				vm.name = name
 				vm.host = host
 				vm.port = port
