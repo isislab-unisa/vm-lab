@@ -37,8 +37,8 @@ st.write(f"Last Name: {selected_user.last_name}")
 if curren_role == Role.ADMIN:
 	selection = st.selectbox(
 		"Role",
-		[Role.to_phrase(Role.USER), Role.to_phrase(Role.MANAGER)],
-		index=0 if selected_user.role == Role.USER.value else 1
+		[Role.to_phrase(Role.SIDEKICK), Role.to_phrase(Role.MANAGER)],
+		index=0 if selected_user.role == Role.SIDEKICK.value else 1
 	)
 
 	if Role.from_phrase(selection).value == selected_user.role:

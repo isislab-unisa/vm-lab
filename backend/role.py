@@ -4,7 +4,7 @@ from enum import Enum
 class Role(Enum):
 	ADMIN = 'admin'
 	MANAGER = 'manager'
-	USER = 'user'
+	SIDEKICK = 'sidekick'
 	NEW_USER = 'new_user'
 
 	def to_string(self):
@@ -17,8 +17,8 @@ class Role(Enum):
 		match role_str:
 			case Role.NEW_USER.value:
 				return Role.NEW_USER
-			case Role.USER.value:
-				return Role.USER
+			case Role.SIDEKICK.value:
+				return Role.SIDEKICK
 			case Role.MANAGER.value:
 				return Role.MANAGER
 			case Role.ADMIN.value:
@@ -34,12 +34,12 @@ class Role(Enum):
 	def from_phrase(phrase: str):
 		"""Converts a presentable phrase into an equivalent role enum."""
 		match phrase.lower():
-			case 'admin':
+			case Role.ADMIN.value:
 				return Role.ADMIN
-			case 'manager':
+			case Role.MANAGER.value:
 				return Role.MANAGER
-			case 'user':
-				return Role.USER
+			case Role.SIDEKICK.value:
+				return Role.SIDEKICK
 			case _:
 				return Role.NEW_USER
 

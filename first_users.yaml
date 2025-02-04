@@ -18,7 +18,7 @@ first_users:
       first_name: Maria
       last_name: Garcia
       password: ghi
-      role: user
+      role: sidekick
 
     - username: kteo
       email: kteo@gmail.com
@@ -32,7 +32,7 @@ first_users:
       first_name: David
       last_name: Peters
       password: pqr
-      role: user
+      role: sidekick
 
     - username: slong
       email: slong@gmail.com
@@ -53,4 +53,4 @@ first_users:
       first_name: Jasmine
       last_name: Lee
       password: yz1
-      role: user
+      role: sidekick

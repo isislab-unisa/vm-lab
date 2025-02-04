@@ -13,7 +13,7 @@ from utils.session_state import get_session_state_item
 page_setup(
 	title="Edit VM",
 	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
-	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.USER],
+	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
 
 selected_vm: VirtualMachine = get_session_state_item("selected_vm")

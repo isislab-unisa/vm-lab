@@ -22,7 +22,7 @@ page_setup(
 def accept_clicked(callback_user: User):
 	selection = st.selectbox(
 		"Role",
-		[Role.to_phrase(Role.USER), Role.to_phrase(Role.MANAGER)],
+		[Role.to_phrase(Role.SIDEKICK), Role.to_phrase(Role.MANAGER)],
 	)
 
 	button = st.button("Add", type="primary")

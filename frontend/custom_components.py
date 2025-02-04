@@ -150,7 +150,7 @@ def render_sidebar_menu(role: Role | None, name: str | None):
 				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
 
-			case Role.USER:
+			case Role.SIDEKICK:
 				st.page_link(PageNames.my_vms, label="My Dashboard")
 				st.page_link(PageNames.user_settings, label="Settings")
 				st.page_link(PageNames.logout, label="Logout")
