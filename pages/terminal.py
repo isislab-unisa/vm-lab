@@ -5,12 +5,12 @@ from streamlit import switch_page
 
 from backend.role import Role
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
+from frontend.page_options import page_setup
 from utils.session_state import get_session_state_item
 
 page_setup(
 	title="Terminal",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
+	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
 

@@ -2,11 +2,7 @@ import streamlit as st
 
 from typing import Callable, Union, Literal
 
-from plotly.validators.pointcloud.marker import border
-
 from backend.models import User, VirtualMachine, Bookmark
-from backend.role import Role
-from frontend.page_names import PageNames
 
 
 def display_table_with_actions(
@@ -132,47 +128,6 @@ def display_table_with_actions(
 				if details_column.button(label="Details", type="secondary", key=f'bookmark-{item.id}-action'):
 					if details_callback:
 						details_callback(item)
-
-
-def render_sidebar_menu(role: Role | None, name: str | None):
-	"""
-	Renders the sidebar menu based on the user's role stored in the session state.
-
-	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
-	"""
-	with st.sidebar:
-		st.title("VM Lab")
-		if name:
-			st.caption(name)
-
-		match role:
-			case Role.NEW_USER:
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case Role.SIDEKICK:
-				st.page_link(PageNames.my_vms, label="My Dashboard")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case Role.MANAGER:
-				st.page_link(PageNames.my_vms, label="My Dashboard")
-				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.waiting_list, label="Waiting List")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case Role.ADMIN:
-				st.page_link(PageNames.my_vms, label="My Dashboard")
-				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.waiting_list, label="Waiting List")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
-
-			case _:  # Not logged in
-				st.page_link(PageNames.login, label="Login")
-				st.page_link(PageNames.register, label="Register")
-				st.page_link(PageNames.forgot_credentials, label="Forgot Credentials")
 
 
 def confirm_in_page(

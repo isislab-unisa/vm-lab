@@ -7,18 +7,19 @@ from backend.role import Role
 from backend.models import User
 from backend.database import get_db
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
+from frontend.page_options import page_setup
 from frontend.custom_components import display_table_with_actions, interactive_data_table
 from utils.session_state import get_session_state_item, set_session_state_item
 
-page_setup(
+psd = page_setup(
 	title="Manage Users",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
+	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
 )
 
-current_username = get_session_state_item("username")
+current_username = psd.user_name
+
 if current_username is None:
 	switch_page(PageNames.error)
 

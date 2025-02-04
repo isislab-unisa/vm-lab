@@ -17,7 +17,7 @@ class Role(Enum):
 		return Role(phrase.lower().replace(" ", "_"))
 
 
-def check_priority(current_role: Role, minimum_role_required: Role) -> bool:
+def role_has_enough_priority(current_role: Role, minimum_role_required: Role) -> bool:
 	"""
 	Checks whether a role has a sufficient priority level to meet a minimum role requirement.
 	Where the admin has the highest priority level, while a new user has the lowest priority level.
@@ -43,7 +43,7 @@ def check_priority(current_role: Role, minimum_role_required: Role) -> bool:
 	return current_priority <= minimum_priority
 
 
-def check_white_list(current_role: Role, white_list: list[Role]) -> bool:
+def role_in_white_list(current_role: Role, white_list: list[Role]) -> bool:
 	"""
 	Checks whether a role is present in a list of authorized roles.
 	:param current_role: The current role

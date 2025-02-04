@@ -1,28 +1,26 @@
 import streamlit as st
-
 from streamlit import switch_page
 
-from backend.role import Role
+from backend.authentication import edit_user_in_authenticator_object
 from backend.database import get_db
 from backend.models import User, VirtualMachine
-from backend.authentication import get_current_user_role, edit_user_in_authenticator_object
+from backend.role import Role
+from frontend.custom_components import interactive_data_table
 from frontend.custom_forms.vm_connections import vm_connect_clicked, vm_edit_clicked, vm_delete_clicked
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_components import display_table_with_actions, interactive_data_table
+from frontend.page_options import page_setup
 from utils.session_state import get_session_state_item, pop_session_state_item, set_session_state_item
-from utils.terminal_connection import send_credentials_to_external_module
 
-page_setup(
+psd = page_setup(
 	title="User Details",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
+	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
 )
 
 
 selected_user: User = get_session_state_item("selected_user")
-curren_role: Role = get_current_user_role()
+curren_role = psd.user_role
 
 if selected_user is None or curren_role is None:
 	switch_page(PageNames.manage_users)

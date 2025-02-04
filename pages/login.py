@@ -1,16 +1,16 @@
 import streamlit as st
 
-from frontend.page_options import page_setup, AccessControlType
+from frontend.page_options import page_setup
 from utils.session_state import get_session_state_item, pop_session_state_item
 
-authenticator = page_setup(
+psd = page_setup(
 	title="Login",
-	access_control=AccessControlType.UNREGISTERED_ONLY,
+	access_control="unregistered_only",
 )
 
 try:
 	st.cache_data.clear() # Clear cache to refresh table data
-	authenticator.login()
+	psd.authenticator.login()
 except Exception as e:
 	st.error(e)
 else:

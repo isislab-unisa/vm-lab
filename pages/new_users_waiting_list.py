@@ -7,12 +7,12 @@ from backend.models import User
 from backend.database import get_db
 from backend.authentication import edit_user_in_authenticator_object, remove_user_in_authenticator_object
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
+from frontend.page_options import page_setup
 from frontend.custom_components import display_table_with_actions
 
 page_setup(
 	title="New Users",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
+	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
 	role_not_accepted_redirect=PageNames.my_vms,
 )

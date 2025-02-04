@@ -1,26 +1,24 @@
 import streamlit as st
 from streamlit import switch_page
 
-from backend.authentication import get_current_user_role
 from backend.database import get_db
 from backend.models import VirtualMachine, Bookmark, User
 from backend.role import Role
-from frontend.custom_components import interactive_data_table, confirm_dialog
+from frontend.custom_components import interactive_data_table
 from frontend.custom_forms.vm_connections import vm_add_clicked, vm_connect_clicked, vm_delete_clicked, vm_edit_clicked, \
 	bookmark_add_clicked, bookmark_delete_clicked, bookmark_edit_clicked
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
-from utils.session_state import get_session_state_item
+from frontend.page_options import page_setup
 
-page_setup(
+psd = page_setup(
 	title="My VMs",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
+	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
 
 
-current_username = get_session_state_item("username")
-current_role = get_current_user_role()
+current_username = psd.user_name
+current_role = psd.user_role
 
 if current_username is None or current_role is None:
 	switch_page(PageNames.error)
