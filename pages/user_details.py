@@ -62,7 +62,7 @@ if curren_role == Role.ADMIN:
 			edit_user_in_authenticator_object(user.username, user)
 			switch_page(PageNames.user_details)
 else:
-	st.write(f"Role: {Role.to_phrase(Role.from_string(selected_user.role))}")
+	st.write(f"Role: {Role.to_phrase(Role(selected_user.role))}")
 
 st.divider()
 st.subheader("Virtual Machines")

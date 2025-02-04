@@ -104,7 +104,7 @@ def remove_user_in_authenticator_object(username: str) -> Authenticate:
 def get_current_user_role() -> Role | None:
 	"""Retrieves the role of the user if it is logged-in, otherwise it will return `None`."""
 	role_str = get_session_state_item('roles')
-	return Role.from_string(role_str)
+	return Role(role_str)
 
 
 def get_current_user_full_name() -> str | None:

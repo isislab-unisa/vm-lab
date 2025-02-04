@@ -82,7 +82,7 @@ class User(Base):
 		elif exclude_user_name is not None:
 			query = query.filter(User.username != exclude_user_name)
 		elif exclude_user_role is not None:
-			query = query.filter(User.role != exclude_user_role.to_string())
+			query = query.filter(User.role != exclude_user_role.value)
 
 		query_result: list[Type[User]] = query.all()
 		return cast(List[User], query_result)
@@ -148,7 +148,7 @@ class User(Base):
 			query = query.filter(User.username != exclude_user_name)
 
 		query_result: list[Type[User]] = (query
-				.filter(User.role == role.to_string())
+				.filter(User.role == role.value)
 				.all())
 
 		return cast(List[User], query_result)
