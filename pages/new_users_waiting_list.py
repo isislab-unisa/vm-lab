@@ -14,7 +14,7 @@ page_setup(
 	title="New Users",
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
-	role_not_accepted_redirect=PageNames.my_vms,
+	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD,
 )
 
 
@@ -35,7 +35,7 @@ def accept_clicked(callback_user: User):
 			db.refresh(user)
 			edit_user_in_authenticator_object(user.username, user)
 			print("Accepted", user.id)
-			switch_page(PageNames.waiting_list)
+			switch_page(PageNames.MANAGE_WAITING_LIST)
 
 
 @st.dialog("Are you sure?")
@@ -53,7 +53,7 @@ def denied_clicked(callback_user: User):
 
 				remove_user_in_authenticator_object(callback_user.username)
 				print("Denied", callback_user.id)
-				switch_page(PageNames.waiting_list)
+				switch_page(PageNames.MANAGE_WAITING_LIST)
 
 	with col2:
 		no_button = st.button("No", type="primary")

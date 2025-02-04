@@ -1,18 +1,20 @@
 class PageNames:
-	error = "pages/error.py"							# all
+	"""This is not an enum to reduce the amount of `.value`s to write"""
+	ERROR = "pages/error.py"							# all
+	YOU_ARE_IN_WAITING_LIST = "pages/wait.py"								# NEW_USER
 
-	register = "pages/register.py"						# unregistered
-	forgot_credentials = "pages/forgot_credentials.py"	# unregistered
-	login = "pages/login.py"							# unregistered
+	REGISTER = "pages/register.py"						# unregistered
+	LOGIN = "pages/login.py"							# unregistered
+	LOGOUT = "pages/logout.py"							# registered
+	FORGOT_CREDENTIALS = "pages/forgot_credentials.py"	# unregistered
 
-	logout = "pages/logout.py"							# registered
-	user_settings = "pages/user_settings.py"			# registered
+	MAIN_DASHBOARD = "pages/my_vms.py"							# ADMIN, MANAGER, USER
 
-	wait = "pages/wait.py"								# NEW_USER
-	my_vms = "pages/my_vms.py"							# ADMIN, MANAGER, USER
-	vm_details = "pages/vm_details.py"					# ADMIN, MANAGER, USER
-	terminal = "pages/terminal.py"						# ADMIN, MANAGER, USER
+	USER_SETTINGS = "pages/user_settings.py"			# registered
+	VM_CONNECTION = "pages/terminal.py"						# ADMIN, MANAGER, USER
 
-	manage_users = "pages/manage_users.py"				# ADMIN, MANAGER
-	waiting_list = "pages/new_users_waiting_list.py"	# ADMIN, MANAGER
-	user_details = "pages/user_details.py"				# ADMIN, MANAGER
+	MANAGE_USER_LIST = "pages/manage_users.py"				# ADMIN, MANAGER
+	MANAGE_WAITING_LIST = "pages/new_users_waiting_list.py"	# ADMIN, MANAGER
+
+	DETAILS_VM = "pages/vm_details.py"  # ADMIN, MANAGER, USER
+	DETAILS_USER = "pages/user_details.py"				# ADMIN, MANAGER

@@ -21,7 +21,7 @@ current_username = psd.user_name
 current_role = psd.user_role
 
 if current_username is None or current_role is None:
-	switch_page(PageNames.error)
+	switch_page(PageNames.ERROR)
 
 
 @st.cache_data

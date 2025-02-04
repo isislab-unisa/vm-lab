@@ -73,4 +73,4 @@ def register_user(key: str = 'Register user', clear_on_submit: bool = False, dom
 			)
 			# Switch page if there is no error with the registration
 			set_session_state_item('registration-success', True)
-			switch_page(PageNames.login)
+			switch_page(PageNames.LOGIN)

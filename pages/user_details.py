@@ -15,7 +15,7 @@ psd = page_setup(
 	title="User Details",
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
-	role_not_accepted_redirect=PageNames.my_vms,
+	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD,
 )
 
 
@@ -23,7 +23,7 @@ selected_user: User = get_session_state_item("selected_user")
 curren_role = psd.user_role
 
 if selected_user is None or curren_role is None:
-	switch_page(PageNames.manage_users)
+	switch_page(PageNames.MANAGE_USER_LIST)
 
 st.header(f"Details of user `{selected_user.username}`")
 st.write(f"ID: {selected_user.id}")
@@ -58,7 +58,7 @@ if curren_role == Role.ADMIN:
 			set_session_state_item("selected_user", user)
 			set_session_state_item("role-change-success", True)
 			edit_user_in_authenticator_object(user.username, user)
-			switch_page(PageNames.user_details)
+			switch_page(PageNames.DETAILS_USER)
 else:
 	st.write(f"Role: {Role.to_phrase(Role(selected_user.role))}")
 

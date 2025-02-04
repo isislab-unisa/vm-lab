@@ -36,7 +36,7 @@ def edit_vm_password(selected_vm: VirtualMachine, user: User, key='Change VM pas
 						st.error(f"An error has occurred: **{e}**")
 					else:
 						st.success(f"Edited")
-						switch_page(PageNames.vm_details)
+						switch_page(PageNames.DETAILS_VM)
 
 	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.password:
@@ -75,7 +75,7 @@ def delete_password(selected_vm: VirtualMachine, key: str = 'Delete VM password'
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Edited")
-				switch_page(PageNames.vm_details)
+				switch_page(PageNames.DETAILS_VM)
 
 	with st.form(key=key):
 		st.subheader("Remove Password")
@@ -113,7 +113,7 @@ def edit_vm_ssh_key(selected_vm: VirtualMachine, user: User, key='Change VM ssh 
 						st.error(f"An error has occurred: **{e}**")
 					else:
 						st.success(f"Edited")
-						switch_page(PageNames.vm_details)
+						switch_page(PageNames.DETAILS_VM)
 
 	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.ssh_key:
@@ -152,7 +152,7 @@ def delete_ssh_key(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Edited")
-				switch_page(PageNames.vm_details)
+				switch_page(PageNames.DETAILS_VM)
 
 	with st.form(key=key):
 		st.subheader("Remove SSH Key")
@@ -190,7 +190,7 @@ def edit_vm(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Edited")
-				switch_page(PageNames.my_vms)
+				switch_page(PageNames.MAIN_DASHBOARD)
 
 
 def delete_vm(selected_vm: VirtualMachine, key: str = 'Delete VM'):
@@ -209,7 +209,7 @@ def delete_vm(selected_vm: VirtualMachine, key: str = 'Delete VM'):
 			else:
 				st.success(f"Deleted")
 				pop_session_state_item("selected_vm")
-				switch_page(PageNames.my_vms)
+				switch_page(PageNames.MAIN_DASHBOARD)
 
 
 	with st.form(key=key):

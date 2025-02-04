@@ -56,9 +56,9 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 			   accepted_roles: list[Role] = None,
 			   callback=None,
 			   print_session_state: bool = False,
-			   logged_in_not_accepted_redirect: str = PageNames.my_vms,
-			   unregistered_not_accepted_in_redirect: str = PageNames.login,
-			   role_not_accepted_redirect: str = PageNames.error,
+			   logged_in_not_accepted_redirect: str = PageNames.MAIN_DASHBOARD,
+			   unregistered_not_accepted_in_redirect: str = PageNames.LOGIN,
+			   role_not_accepted_redirect: str = PageNames.ERROR,
 			   new_user_redirect_to_wait_page: bool = True
 			   ) -> PageSessionData:
 	"""
@@ -112,7 +112,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 
 			if not role_in_white_list(user_role, accepted_roles):
 				if user_role == Role.NEW_USER and new_user_redirect_to_wait_page:
-					switch_page(PageNames.wait)
+					switch_page(PageNames.YOU_ARE_IN_WAITING_LIST)
 				else:
 					switch_page(role_not_accepted_redirect)
 
@@ -161,29 +161,29 @@ def render_sidebar_menu(role: Role | None, full_name: str | None):
 
 		match role:
 			case Role.NEW_USER:
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
+				st.page_link(PageNames.USER_SETTINGS, label="Settings")
+				st.page_link(PageNames.LOGOUT, label="Logout")
 
 			case Role.SIDEKICK:
-				st.page_link(PageNames.my_vms, label="My Dashboard")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
+				st.page_link(PageNames.MAIN_DASHBOARD, label="My Dashboard")
+				st.page_link(PageNames.USER_SETTINGS, label="Settings")
+				st.page_link(PageNames.LOGOUT, label="Logout")
 
 			case Role.MANAGER:
-				st.page_link(PageNames.my_vms, label="My Dashboard")
-				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.waiting_list, label="Waiting List")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
+				st.page_link(PageNames.MAIN_DASHBOARD, label="My Dashboard")
+				st.page_link(PageNames.MANAGE_USER_LIST, label="Manage Users")
+				st.page_link(PageNames.MANAGE_WAITING_LIST, label="Waiting List")
+				st.page_link(PageNames.USER_SETTINGS, label="Settings")
+				st.page_link(PageNames.LOGOUT, label="Logout")
 
 			case Role.ADMIN:
-				st.page_link(PageNames.my_vms, label="My Dashboard")
-				st.page_link(PageNames.manage_users, label="Manage Users")
-				st.page_link(PageNames.waiting_list, label="Waiting List")
-				st.page_link(PageNames.user_settings, label="Settings")
-				st.page_link(PageNames.logout, label="Logout")
+				st.page_link(PageNames.MAIN_DASHBOARD, label="My Dashboard")
+				st.page_link(PageNames.MANAGE_USER_LIST, label="Manage Users")
+				st.page_link(PageNames.MANAGE_WAITING_LIST, label="Waiting List")
+				st.page_link(PageNames.USER_SETTINGS, label="Settings")
+				st.page_link(PageNames.LOGOUT, label="Logout")
 
 			case _:  # Not logged in
-				st.page_link(PageNames.login, label="Login")
-				st.page_link(PageNames.register, label="Register")
-				st.page_link(PageNames.forgot_credentials, label="Forgot Credentials")
+				st.page_link(PageNames.LOGIN, label="Login")
+				st.page_link(PageNames.REGISTER, label="Register")
+				st.page_link(PageNames.FORGOT_CREDENTIALS, label="Forgot Credentials")

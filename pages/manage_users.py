@@ -15,13 +15,13 @@ psd = page_setup(
 	title="Manage Users",
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
-	role_not_accepted_redirect=PageNames.my_vms,
+	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD,
 )
 
 current_username = psd.user_name
 
 if current_username is None:
-	switch_page(PageNames.error)
+	switch_page(PageNames.ERROR)
 
 def get_valid_users(avoid_username: str) -> List[User]:
 	"""Not valid users are: Admins, New Users and the User requesting this function."""
@@ -56,7 +56,7 @@ def get_user_data_from_db():
 def go_to_user_details(data_row):
 	callback_user: User = data_row["original_object"]
 	set_session_state_item("selected_user", callback_user)
-	switch_page(PageNames.user_details)
+	switch_page(PageNames.DETAILS_USER)
 
 
 st.title("Manage Users")

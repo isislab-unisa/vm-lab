@@ -187,7 +187,7 @@ def vm_connect_clicked(data_row):
 			)
 
 			st.cache_data.clear()  # Refresh my_vms table
-			switch_page(PageNames.terminal)
+			switch_page(PageNames.VM_CONNECTION)
 
 
 	if selected_vm.ssh_key:
@@ -231,7 +231,7 @@ def vm_edit_clicked(data_row):
 	selected_vm: VirtualMachine = data_row["original_object"]
 	st.cache_data.clear()  # Refresh my_vms table
 	set_session_state_item("selected_vm", selected_vm)
-	switch_page(PageNames.vm_details)
+	switch_page(PageNames.DETAILS_VM)
 
 
 def vm_delete_clicked(data_row):

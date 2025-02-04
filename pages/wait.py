@@ -9,7 +9,7 @@ page_setup(
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.NEW_USER],
 	new_user_redirect_to_wait_page=False,
-	role_not_accepted_redirect=PageNames.my_vms,
+	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD,
 )
 
 st.title("You are on a waiting list")

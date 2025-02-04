@@ -19,7 +19,7 @@ ssh_url = get_session_state_item("terminal_page_ssh_connection_url")
 sftp_url = get_session_state_item("terminal_page_sftp_connection_url")
 
 if selected_vm is None or ssh_url is None or sftp_url is None:
-	switch_page(PageNames.my_vms)
+	switch_page(PageNames.MAIN_DASHBOARD)
 
 st.title(f"`{selected_vm.name}` SSH Terminal")
 

@@ -20,7 +20,7 @@ selected_vm: VirtualMachine = get_session_state_item("selected_vm")
 current_username: str = psd.user_name
 
 if selected_vm is None or current_username is None:
-	switch_page(PageNames.my_vms)
+	switch_page(PageNames.MAIN_DASHBOARD)
 
 st.header(f"Edit VM `{selected_vm.name}`")
 

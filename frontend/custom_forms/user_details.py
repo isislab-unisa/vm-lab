@@ -31,7 +31,7 @@ def change_username(current_username: str, clear_on_submit: bool = False, key: s
 				edit_username(current_username, new_username)
 				set_session_state_item('username-change-success', True)
 				sleep(0.2)  # Wait to let the login cookie deletion happen during logout
-				switch_page(PageNames.login)
+				switch_page(PageNames.LOGIN)
 			except Exception as e:
 				st.error(e)
 
@@ -61,7 +61,7 @@ def change_email(current_email: str, clear_on_submit: bool = False, key: str = '
 				edit_email(current_email, new_email)
 				set_session_state_item('email', new_email)
 				set_session_state_item('email-change-success', True)
-				switch_page(PageNames.user_settings)
+				switch_page(PageNames.USER_SETTINGS)
 			except Exception as e:
 				st.error(e)
 
@@ -91,7 +91,7 @@ def change_password(current_username: str, clear_on_submit: bool = False, key: s
 			try:
 				edit_password(current_username, current_password, new_password, new_password_repeat)
 				set_session_state_item('password-change-success', True)
-				switch_page(PageNames.user_settings)
+				switch_page(PageNames.USER_SETTINGS)
 			except Exception as e:
 				st.error(e)
 
@@ -133,6 +133,6 @@ def change_first_last_name(current_username: str, current_name_surname: str, cle
 																		   new_last_name)
 				set_session_state_item('name', f'{edited_first_name} {edited_last_name}')
 				set_session_state_item('name-surname-change-success', True)
-				switch_page(PageNames.user_settings)
+				switch_page(PageNames.USER_SETTINGS)
 			except Exception as e:
 				st.error(e)
