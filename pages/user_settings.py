@@ -1,7 +1,7 @@
 import streamlit as st
 
-from frontend.custom_forms.user_details import change_username, change_email, change_password, change_first_last_name
-from frontend.page_options import page_setup
+from frontend.custom_forms.user_forms import change_username, change_email, change_password, change_first_last_name
+from frontend.page_setup import page_setup
 
 psd = page_setup(
 	title="User Settings",

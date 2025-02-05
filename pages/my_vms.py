@@ -1,21 +1,26 @@
+from typing import Literal
+
 import streamlit as st
 from streamlit import switch_page
 
 from backend.database import get_db
 from backend.models import VirtualMachine, Bookmark, User
 from backend.role import Role
-from frontend.custom_components import interactive_data_table
-from frontend.custom_forms.vm_connections import vm_add_clicked, vm_connect_clicked, vm_delete_clicked, vm_edit_clicked, \
-	bookmark_add_clicked, bookmark_delete_clicked, bookmark_edit_clicked
+from frontend.components.interactive_data_table import interactive_data_table
+from frontend.click_handlers.vm import vm_connect_clicked
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup
+from frontend.page_setup import page_setup
+
+
+################################
+#            SETUP             #
+################################
 
 psd = page_setup(
 	title="My VMs",
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
-
 
 current_username = psd.user_name
 current_role = psd.user_role
@@ -24,75 +29,72 @@ if current_username is None or current_role is None:
 	switch_page(PageNames.ERROR)
 
 
-@st.cache_data
-def get_vm_data_from_db():
-	with get_db() as db_vm_list:
-		print("Accessing db for vms...")
-		vm_list = VirtualMachine.find_by_user_name(db_vm_list, current_username)
-		current_user = User.find_by_user_name(db_vm_list, current_username)
 
-	result = []
-	for vm in vm_list:
-		if vm.ssh_key:
-			auth_type = ":material/key: SSH Key"
-		elif vm.password:
-			auth_type = ":material/password: Password"
-		else:
-			auth_type = ":material/do_not_disturb_on: None"
-
-		vm_dict = {
-			"original_object": vm, # Hidden object from the db ready to use
-			"current_user_id": current_user.id, # Hidden id
-			"name": vm.name,
-			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
-			"username": vm.username,
-			"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
-			"auth": auth_type,
-			"buttons_disabled": {
-
-			}
-		}
-		result.append(vm_dict)
-
-	return result
-
+################################
+#     REFRESH DB FUNCTIONS     #
+################################
 
 @st.cache_data
-def get_vm_data_from_db_for_all_users():
-	with get_db() as db_vm_list:
-		print("Accessing db for vms...")
-		vm_list = VirtualMachine.find_all(db_vm_list, shared=True, exclude_user_name=current_username)
+def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
+	"""
+	Fetch VM data from the database.
 
-	result = []
-	for vm in vm_list:
-		if vm.ssh_key:
-			auth_type = ":material/key: SSH Key"
-		elif vm.password:
-			auth_type = ":material/password: Password"
-		else:
-			auth_type = ":material/do_not_disturb_on: None"
+	:param scope: Whether to get the VMs for the current user ("this_user") or all users except for the current user ("all_users").
+	:return: List of dictionaries with VM info.
+	"""
+	try:
+		with get_db() as db:
+			if scope == "this_user":
+				vm_list = VirtualMachine.find_by_user_name(db, current_username)
+			elif scope == "all_users":
+				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=current_username)
+			else:
+				raise ValueError("Invalid scope. Use 'user' or 'all'.")
 
-		vm_dict = {
-			"original_object": vm, # Hidden object from the db ready to use
-			"name": vm.name,
-			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
-			"username": vm.username,
-			"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
-			"auth": auth_type,
-			"owner": vm.user.__dict__["username"],
-			"buttons_disabled": {
+		result = []
+		for vm in vm_list:
+			result.append(build_vm_dict(vm))
 
-			}
+		return result
+	except Exception as e:
+		st.error(f"An error has occurred: **{e}**")
 
-		}
-		result.append(vm_dict)
 
-	return result
+def build_vm_dict(vm: VirtualMachine):
+	"""Build a correct dictionary with the VM info to display in the table."""
+	if vm.ssh_key:
+		auth_type = ":material/key: SSH Key"
+	elif vm.password:
+		auth_type = ":material/password: Password"
+	else:
+		auth_type = ":material/do_not_disturb_on: None"
+
+	try:
+		owner = vm.user.username
+	except KeyError:
+		raise KeyError(f"Could not find the owner of the VM `{vm.name}`.")
+
+	vm_dict = {
+		# Hidden
+		"original_object": vm,
+		"requesting_user": current_username,
+		# Shown in columns
+		"name": vm.name,
+		"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
+		"username": vm.username,
+		"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
+		"auth": auth_type,
+		"owner": owner,
+		# Button disabled settings
+		"buttons_disabled": {}
+	}
+
+	return vm_dict
+
 
 @st.cache_data
 def get_bookmark_data_from_db():
 	with get_db() as db_bookmark_list:
-		print("Accessing db for bookmarks...")
 		bookmark_list = Bookmark.find_by_user_name(db_bookmark_list, current_username)
 
 	result = []
@@ -101,18 +103,31 @@ def get_bookmark_data_from_db():
 			"original_object": bookmark,
 			"name": bookmark.name,
 			"url": bookmark.link,
+			"buttons_disabled": {}
 		}
 		result.append(bookmark_dict)
 
 	return result
 
+
+################################
+#   CLICK HANDLER FUNCTIONS    #
+################################
+
+
+
+
 st.title(":blue[:material/tv:] My VMs")
-st.button("Add VM", type="primary", icon=":material/add:", on_click=lambda: vm_add_clicked(current_username))
+st.button("Add VM",
+		  type="primary",
+		  icon=":material/add:",
+		  on_click=lambda: add_vm_dialog_form(current_username)
+)
 
 interactive_data_table(
 	key="data_table_myvms",
-	data=get_vm_data_from_db(),
-	refresh_data_callback=get_vm_data_from_db,
+	data=get_vm_data_from_db("user"),
+	refresh_data_callback=lambda: get_vm_data_from_db("user"),
 	column_settings={
 		"Name": {
 			"column_width": 1,
@@ -214,8 +229,8 @@ if show_users_vms:
 
 	interactive_data_table(
 		key="data_table_usersvms",
-		data=get_vm_data_from_db_for_all_users(),
-		refresh_data_callback=get_vm_data_from_db_for_all_users,
+		data=get_vm_data_from_db("all"),
+		refresh_data_callback=lambda: get_vm_data_from_db("all"),
 		column_settings={
 			"Name": {
 				"column_width": 1,

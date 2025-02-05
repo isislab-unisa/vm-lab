@@ -4,7 +4,7 @@ from time import sleep
 from streamlit import switch_page
 
 from backend.authentication import edit_username, edit_email, edit_password, edit_first_last_name
-from frontend.custom_forms.authentication import PASSWORD_INSTRUCTIONS, USERNAME_INSTRUCTIONS
+from frontend.custom_forms.authentication_forms import PASSWORD_INSTRUCTIONS, USERNAME_INSTRUCTIONS
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state_item, get_session_state_item, pop_session_state_item
 

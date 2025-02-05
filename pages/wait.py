@@ -2,7 +2,7 @@ import streamlit as st
 
 from backend.role import Role
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup
+from frontend.page_setup import page_setup
 
 page_setup(
 	title='Waiting List',

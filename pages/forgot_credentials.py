@@ -1,4 +1,9 @@
-from frontend.page_options import page_setup
+from frontend.page_setup import page_setup
+
+
+################################
+#            SETUP             #
+################################
 
 page_setup(
 	title="Forgot Credentials",

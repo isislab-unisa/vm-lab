@@ -2,10 +2,7 @@ import io
 import paramiko
 import requests
 import streamlit as st
-
 from typing import Literal
-from paramiko.ssh_exception import AuthenticationException
-
 
 def build_module_url(connection_type: Literal["ssh", "sftp"],
 					 request_type: Literal["credentials", "connection"],

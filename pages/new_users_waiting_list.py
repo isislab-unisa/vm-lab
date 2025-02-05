@@ -7,7 +7,7 @@ from backend.models import User
 from backend.database import get_db
 from backend.authentication import edit_user_in_authenticator_object, remove_user_in_authenticator_object
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup
+from frontend.page_setup import page_setup
 from frontend.custom_components import display_table_with_actions
 
 page_setup(

@@ -1,14 +1,15 @@
 from typing import Literal
 
 import streamlit as st
+from sqlalchemy.orm import Session
 from streamlit import switch_page
 from streamlit_authenticator import Authenticate
 
 from backend.authentication import is_logged_in, get_current_user_role, get_or_create_authenticator_object, \
 	get_current_user_full_name, get_current_user_name, get_current_user_email
-from backend.database import get_db
 from backend.models import User
 from backend.role import Role, role_in_white_list
+from frontend.components.sidebar_menu import sidebar_menu
 from frontend.page_names import PageNames
 
 
@@ -33,15 +34,14 @@ class PageSessionData:
 		self.user_full_name = user_full_name
 		self.user_email = user_email
 
-	def get_user(self):
+	def get_user(self, db: Session):
 		"""Obtain the object of the current user or `None` if it wasn't found."""
-		with get_db() as db:
-			if self.user_name:
-				return User.find_by_user_name(db, self.user_name)
-			elif self.user_email:
-				return User.find_by_email(db, self.user_email)
-			else:
-				return None
+		if self.user_name:
+			return User.find_by_user_name(db, self.user_name)
+		elif self.user_email:
+			return User.find_by_email(db, self.user_email)
+		else:
+			return None
 
 
 
@@ -131,7 +131,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 		st.set_page_config(layout=layout)
 
 	# Sidebar
-	render_sidebar_menu(user_role, user_full_name)
+	sidebar_menu(user_role, user_full_name)
 
 	# Debug
 	if print_session_state:
@@ -147,43 +147,3 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 	)
 
 
-def render_sidebar_menu(role: Role | None, full_name: str | None):
-	"""
-	Renders the sidebar menu based on the user's role stored in the session state.
-
-	https://docs.streamlit.io/develop/tutorials/multipage/st.page_link-nav
-	"""
-	with st.sidebar:
-		st.title("VM Lab")
-
-		if full_name:
-			st.caption(f"{full_name} - {role.to_phrase()}")
-
-		match role:
-			case Role.NEW_USER:
-				st.page_link(PageNames.USER_SETTINGS, label="Settings")
-				st.page_link(PageNames.LOGOUT, label="Logout")
-
-			case Role.SIDEKICK:
-				st.page_link(PageNames.MAIN_DASHBOARD, label="My Dashboard")
-				st.page_link(PageNames.USER_SETTINGS, label="Settings")
-				st.page_link(PageNames.LOGOUT, label="Logout")
-
-			case Role.MANAGER:
-				st.page_link(PageNames.MAIN_DASHBOARD, label="My Dashboard")
-				st.page_link(PageNames.MANAGE_USER_LIST, label="Manage Users")
-				st.page_link(PageNames.MANAGE_WAITING_LIST, label="Waiting List")
-				st.page_link(PageNames.USER_SETTINGS, label="Settings")
-				st.page_link(PageNames.LOGOUT, label="Logout")
-
-			case Role.ADMIN:
-				st.page_link(PageNames.MAIN_DASHBOARD, label="My Dashboard")
-				st.page_link(PageNames.MANAGE_USER_LIST, label="Manage Users")
-				st.page_link(PageNames.MANAGE_WAITING_LIST, label="Waiting List")
-				st.page_link(PageNames.USER_SETTINGS, label="Settings")
-				st.page_link(PageNames.LOGOUT, label="Logout")
-
-			case _:  # Not logged in
-				st.page_link(PageNames.LOGIN, label="Login")
-				st.page_link(PageNames.REGISTER, label="Register")
-				st.page_link(PageNames.FORGOT_CREDENTIALS, label="Forgot Credentials")

@@ -1,20 +1,75 @@
+class PageEntry:
+	def __init__(self, file_name, label):
+		self.file_name = file_name
+		self.label = label
+
+	def __str__(self):
+		return self.file_name
+
+	def __call__(self):
+		return self.file_name
+
+
 class PageNames:
-	"""This is not an enum to reduce the amount of `.value`s to write"""
-	ERROR = "pages/error.py"							# all
-	YOU_ARE_IN_WAITING_LIST = "pages/wait.py"								# NEW_USER
+	"""
+	Class that holds all the pages file names and labels for the application.
 
-	REGISTER = "pages/register.py"						# unregistered
-	LOGIN = "pages/login.py"							# unregistered
-	LOGOUT = "pages/logout.py"							# registered
-	FORGOT_CREDENTIALS = "pages/forgot_credentials.py"	# unregistered
+	- To get the file name, call the page as a function (e.g. `PageNames.ERROR()`) or use the `file_name` attribute.
+	- To get the label, use the `label` attribute.
+	"""
+	ERROR = PageEntry(
+		"pages/error.py",
+		"Error"
+	)
+	YOU_ARE_IN_WAITING_LIST = PageEntry(
+		"pages/wait.py",
+		"Waiting List"
+	)
 
-	MAIN_DASHBOARD = "pages/my_vms.py"							# ADMIN, MANAGER, USER
+	REGISTER = PageEntry(
+		"pages/register.py",
+		"Register"
+	)
+	LOGIN = PageEntry(
+		"pages/login.py",
+		"Login"
+	)
+	LOGOUT = PageEntry(
+		"pages/logout.py",
+		"Logout"
+	)
+	FORGOT_CREDENTIALS = PageEntry(
+		"pages/forgot_credentials.py",
+		"Forgot Credentials"
+	)
 
-	USER_SETTINGS = "pages/user_settings.py"			# registered
-	VM_CONNECTION = "pages/terminal.py"						# ADMIN, MANAGER, USER
+	MAIN_DASHBOARD = PageEntry(
+		"pages/my_vms.py",
+		"My Dashboard")
 
-	MANAGE_USER_LIST = "pages/manage_users.py"				# ADMIN, MANAGER
-	MANAGE_WAITING_LIST = "pages/new_users_waiting_list.py"	# ADMIN, MANAGER
+	USER_SETTINGS = PageEntry(
+		"pages/user_settings.py",
+		"Settings"
+	)
+	VM_CONNECTION = PageEntry(
+		"pages/terminal.py",
+		"VM Connection"
+	)
 
-	DETAILS_VM = "pages/vm_details.py"  # ADMIN, MANAGER, USER
-	DETAILS_USER = "pages/user_details.py"				# ADMIN, MANAGER
+	MANAGE_USER_LIST = PageEntry(
+		"pages/manage_users.py",
+		"Manage Users"
+	)
+	MANAGE_WAITING_LIST = PageEntry(
+		"pages/new_users_waiting_list.py",
+		"Manage Waiting List"
+	)
+
+	DETAILS_VM = PageEntry(
+		"pages/vm_details.py",
+		"VM Details"
+	)
+	DETAILS_USER = PageEntry(
+		"pages/user_details.py",
+		"User Details"
+	)

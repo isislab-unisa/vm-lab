@@ -5,10 +5,10 @@ from backend.authentication import edit_user_in_authenticator_object
 from backend.database import get_db
 from backend.models import User, VirtualMachine
 from backend.role import Role
-from frontend.custom_components import interactive_data_table
+from frontend.components.interactive_data_table import interactive_data_table
 from frontend.custom_forms.vm_connections import vm_connect_clicked, vm_edit_clicked, vm_delete_clicked
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup
+from frontend.page_setup import page_setup
 from utils.session_state import get_session_state_item, pop_session_state_item, set_session_state_item
 
 psd = page_setup(

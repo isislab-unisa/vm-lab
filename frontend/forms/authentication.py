@@ -27,8 +27,10 @@ USERNAME_INSTRUCTIONS = """
 		"""
 
 
-def register_user(key: str = 'Register user', clear_on_submit: bool = False, domains: Optional[List[str]] = None,
-				  captcha: bool = True):
+def register_user_form(key: str = 'Register user',
+					   clear_on_submit: bool = False,
+					   domains: Optional[List[str]] = None,
+					   captcha: bool = True):
 	"""
 	Renders a form for user registration.
 
