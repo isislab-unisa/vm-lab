@@ -1,13 +1,13 @@
 import streamlit as st
 
-from frontend.page_setup import page_setup
+from frontend import page_setup, PageNames
 
 ################################
 #            SETUP             #
 ################################
 
 page_setup(
-	title="Error",
+	title=PageNames.ERROR.label,
 	access_control="free_access",
 )
 

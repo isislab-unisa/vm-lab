@@ -104,7 +104,10 @@ def remove_user_in_authenticator_object(username: str) -> Authenticate:
 def get_current_user_role() -> Role | None:
 	"""Retrieves the role of the user if it is logged-in, otherwise it will return `None`."""
 	role_str = get_session_state_item('roles')
-	return Role(role_str)
+	if role_str:
+		return Role(role_str)
+	else:
+		return None
 
 
 def get_current_user_full_name() -> str | None:
@@ -428,3 +431,27 @@ def edit_first_last_name(username: str, new_first_name: str, new_last_name: str)
 		except Exception as e:
 			print(e)
 			raise UpdateError('Unknown error')
+
+
+def edit_role(username: str, new_role: Role):
+	"""
+	Edits the role of a user in the database.
+
+	:param username: The username of the user to be edited
+	:param new_role: The new role of the user to be edited
+	:raises UpdateError If the data is not correct
+	"""
+	with get_db() as db:
+		user = User.find_by_user_name(db, username)
+
+		if user is None:
+			raise UpdateError(f'User with username {username} does not exist')
+
+		user.role = new_role.value
+
+		# All data is correct
+		# Push changes to database
+		db.commit()
+		db.refresh(user)
+
+		edit_user_in_authenticator_object(username, user)

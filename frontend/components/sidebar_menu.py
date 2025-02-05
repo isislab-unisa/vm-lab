@@ -23,7 +23,7 @@ def sidebar_menu(role: Role | None, full_name: str | None):
 					label=PageNames.USER_SETTINGS.label
 				)
 				st.page_link(
-					page=PageNames.USER_SETTINGS.file_name,
+					page=PageNames.LOGOUT.file_name,
 					label=PageNames.LOGOUT.label
 				)
 

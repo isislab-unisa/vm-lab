@@ -56,9 +56,9 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 			   accepted_roles: list[Role] = None,
 			   callback=None,
 			   print_session_state: bool = False,
-			   logged_in_not_accepted_redirect: str = PageNames.MAIN_DASHBOARD,
-			   unregistered_not_accepted_in_redirect: str = PageNames.LOGIN,
-			   role_not_accepted_redirect: str = PageNames.ERROR,
+			   logged_in_not_accepted_redirect: str = PageNames.MAIN_DASHBOARD.file_name,
+			   unregistered_not_accepted_in_redirect: str = PageNames.LOGIN.file_name,
+			   role_not_accepted_redirect: str = PageNames.ERROR.file_name,
 			   new_user_redirect_to_wait_page: bool = True
 			   ) -> PageSessionData:
 	"""
@@ -112,7 +112,7 @@ def page_setup(layout: Literal["centered", "wide"] = "wide",
 
 			if not role_in_white_list(user_role, accepted_roles):
 				if user_role == Role.NEW_USER and new_user_redirect_to_wait_page:
-					switch_page(PageNames.YOU_ARE_IN_WAITING_LIST)
+					switch_page(PageNames.YOU_ARE_IN_WAITING_LIST())
 				else:
 					switch_page(role_not_accepted_redirect)
 

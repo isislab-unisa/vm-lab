@@ -10,7 +10,7 @@ from backend.models import VirtualMachine
 from exceptions import ModuleResponseError, VmNotSharedError
 from frontend.components import confirm_dialog, error_toast, error_message
 from frontend import PageNames
-from frontend.forms.vm import add_vm_form
+from frontend.forms.vm import add_vm_form, vm_delete_form
 from utils.session_state import set_session_state_item
 from utils.terminal_connection import test_connection_with_paramiko, send_credentials_to_external_module, \
 	build_module_url
@@ -30,25 +30,7 @@ def vm_edit_clicked(data_row):
 
 def vm_delete_clicked(data_row):
 	selected_vm: VirtualMachine = data_row["original_object"]
-
-	def vm_deletion_process():
-		with get_db() as db:
-			try:
-				delete_from_db(db, selected_vm)
-			except Exception as e:
-				error_toast(
-					unknown_exception=e,
-					when=f"while trying to delete the VM `{selected_vm.name}`",
-					cause=str(e)
-				)
-			else:
-				st.cache_data.clear()  # Refresh my_vms table
-				st.rerun()
-
-	confirm_dialog(
-		text=f"Are you sure you want to delete `{selected_vm.name}`?",
-		confirm_button_callback=vm_deletion_process
-	)
+	return vm_delete_form(selected_vm)
 
 
 @st.dialog("Connecting to VM")

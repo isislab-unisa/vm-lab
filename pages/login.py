@@ -1,6 +1,8 @@
 import streamlit as st
 
-from frontend.page_setup import page_setup
+from frontend import page_setup, PageNames
+from frontend.components import error_message
+
 from utils.session_state import get_session_state_item, pop_session_state_item
 
 
@@ -9,7 +11,7 @@ from utils.session_state import get_session_state_item, pop_session_state_item
 ################################
 
 psd = page_setup(
-	title="Login",
+	title=PageNames.LOGIN.label,
 	access_control="unregistered_only",
 )
 
@@ -22,7 +24,7 @@ try:
 	st.cache_data.clear() # Clear cache to refresh table data
 	psd.authenticator.login()
 except Exception as e:
-	st.error(e)
+	error_message(unknown_exception=e)
 else:
 	if get_session_state_item('registration-success'):
 		# Redirected here when the registration is successful

@@ -1,8 +1,10 @@
 import streamlit as st
 from streamlit import switch_page
 
-from backend.database import get_db, add_to_db
+from backend.database import get_db, add_to_db, delete_from_db
 from backend.models import VirtualMachine, User
+from exceptions import NotFoundInDatabaseError
+from frontend.components import error_message, error_toast
 from frontend.components.confirm import confirm_dialog
 from frontend.page_names import PageNames
 from utils.session_state import set_session_state_item, pop_session_state_item
@@ -41,7 +43,7 @@ def add_vm_form(current_username: str):
 					user = User.find_by_user_name(db, current_username)
 
 					if user is None:
-						raise Exception("User not found")
+						raise NotFoundInDatabaseError("User")
 
 					new_vm.user_id = user.id
 
@@ -52,15 +54,17 @@ def add_vm_form(current_username: str):
 						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
 
 					add_to_db(db, new_vm)
+			except NotFoundInDatabaseError as e:
+				error_message(cause=str(e), when="while creating a new VM")
 			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
+				error_message(unknown_exception=e, when="while creating a new VM")
 			else:
 				st.success(f"Created")
 				st.cache_data.clear()  # Refresh my_vms table
 				st.rerun()
 
 
-def edit_vm_form(selected_vm: VirtualMachine, clear_on_submit: bool = False,
+def vm_edit_form(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 				 key: str = 'Edit VM information'):
 	with st.form(key=key, clear_on_submit=clear_on_submit):
 		st.subheader('Edit VM information')
@@ -88,41 +92,38 @@ def edit_vm_form(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Edited")
-				switch_page(PageNames.MAIN_DASHBOARD)
+				st.cache_data.clear() # Refresh table data
+				switch_page(PageNames.MAIN_DASHBOARD())
 
 
-def delete_vm_form(selected_vm: VirtualMachine, key: str = 'Delete VM'):
-	def delete():
+def vm_delete_form(selected_vm: VirtualMachine):
+	def vm_deletion_process():
 		with get_db() as db:
 			try:
-				vm_to_delete = VirtualMachine.find_by_id(db, selected_vm.id)
-
-				if vm_to_delete is None:
-					raise Exception("VM not found")
-
-				db.delete(vm_to_delete)
-				db.commit()
+				delete_from_db(db, selected_vm)
 			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
+				error_toast(
+					unknown_exception=e,
+					when=f"while trying to delete the VM `{selected_vm.name}`",
+					cause=str(e)
+				)
 			else:
 				st.success(f"Deleted")
 				pop_session_state_item("selected_vm")
-				switch_page(PageNames.MAIN_DASHBOARD)
+				st.cache_data.clear()  # Refresh table data
+				switch_page(PageNames.MAIN_DASHBOARD())
 
-
-	with st.form(key=key):
-		st.subheader('Delete VM')
-		submit = st.form_submit_button("Delete", type="primary")
-
-		if submit:
-			confirm_dialog(text="Are you sure you want to delete the VM?", confirm_button_callback=delete)
+	confirm_dialog(
+		text=f"Are you sure you want to delete `{selected_vm.name}`?",
+		confirm_button_callback=vm_deletion_process
+	)
 
 
 ################################
 #  ADD, EDIT, DELETE PASSWORD  #
 ################################
 
-def edit_vm_password_form(selected_vm: VirtualMachine, user: User, key='Change VM password'):
+def vm_password_edit_form(selected_vm: VirtualMachine, user: User, key='Change VM password'):
 	@st.dialog("VM Password")
 	def password_dialog(is_new: bool = False):
 		with st.form("change-password-form", clear_on_submit=True, border=False):
@@ -150,7 +151,7 @@ def edit_vm_password_form(selected_vm: VirtualMachine, user: User, key='Change V
 						st.error(f"An error has occurred: **{e}**")
 					else:
 						st.success(f"Edited")
-						switch_page(PageNames.DETAILS_VM)
+						switch_page(PageNames.DETAILS_VM())
 
 	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.password:
@@ -173,7 +174,7 @@ def edit_vm_password_form(selected_vm: VirtualMachine, user: User, key='Change V
 					st.error("The inserted password does not match with your password")
 
 
-def delete_vm_password_form(selected_vm: VirtualMachine, key: str = 'Delete VM password'):
+def vm_password_delete_form(selected_vm: VirtualMachine, key: str = 'Delete VM password'):
 	def delete():
 		with get_db() as db:
 			try:
@@ -189,7 +190,7 @@ def delete_vm_password_form(selected_vm: VirtualMachine, key: str = 'Delete VM p
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Edited")
-				switch_page(PageNames.DETAILS_VM)
+				switch_page(PageNames.DETAILS_VM())
 
 	with st.form(key=key):
 		st.subheader("Remove Password")
@@ -203,7 +204,7 @@ def delete_vm_password_form(selected_vm: VirtualMachine, key: str = 'Delete VM p
 #    ADD, EDIT, DELETE KEY     #
 ################################
 
-def edit_vm_ssh_key_form(selected_vm: VirtualMachine, user: User, key='Change VM ssh key'):
+def vm_ssh_key_edit_form(selected_vm: VirtualMachine, user: User, key='Change VM ssh key'):
 	@st.dialog("VM SSH Key")
 	def ssh_key_dialog(is_new: bool = False):
 		with st.form("change-ssh-key-form", clear_on_submit=True, border=False):
@@ -231,7 +232,7 @@ def edit_vm_ssh_key_form(selected_vm: VirtualMachine, user: User, key='Change VM
 						st.error(f"An error has occurred: **{e}**")
 					else:
 						st.success(f"Edited")
-						switch_page(PageNames.DETAILS_VM)
+						switch_page(PageNames.DETAILS_VM())
 
 	with st.form(key=key, clear_on_submit=True):
 		if not selected_vm.ssh_key:
@@ -254,7 +255,7 @@ def edit_vm_ssh_key_form(selected_vm: VirtualMachine, user: User, key='Change VM
 					st.error("The inserted password does not match with your password")
 
 
-def delete_ssh_key_form(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
+def ssh_key_delete_form(selected_vm: VirtualMachine, key: str = 'Delete VM SSH Key'):
 	def delete():
 		with get_db() as db:
 			try:
@@ -270,7 +271,7 @@ def delete_ssh_key_form(selected_vm: VirtualMachine, key: str = 'Delete VM SSH K
 				st.error(f"An error has occurred: **{e}**")
 			else:
 				st.success(f"Edited")
-				switch_page(PageNames.DETAILS_VM)
+				switch_page(PageNames.DETAILS_VM())
 
 	with st.form(key=key):
 		st.subheader("Remove SSH Key")

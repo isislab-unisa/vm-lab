@@ -3,13 +3,19 @@ import streamlit.components.v1 as stv1
 
 from streamlit import switch_page
 
-from backend.role import Role
-from frontend.page_names import PageNames
-from frontend.page_setup import page_setup
+from backend import Role
+
+from frontend import PageNames, page_setup
+
 from utils.session_state import get_session_state_item
 
+
+################################
+#            SETUP             #
+################################
+
 page_setup(
-	title="Terminal",
+	title=PageNames.VM_CONNECTION.label,
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
@@ -19,9 +25,13 @@ ssh_url = get_session_state_item("terminal_page_ssh_connection_url")
 sftp_url = get_session_state_item("terminal_page_sftp_connection_url")
 
 if selected_vm is None or ssh_url is None or sftp_url is None:
-	switch_page(PageNames.MAIN_DASHBOARD)
+	switch_page(PageNames.MAIN_DASHBOARD())
 
-st.title(f"`{selected_vm.name}` SSH Terminal")
+################################
+#             PAGE             #
+################################
+
+st.title(f"{PageNames.VM_CONNECTION.label} `{selected_vm.name}`")
 
 stv1.iframe(ssh_url, width=800, height=700)
 stv1.iframe(sftp_url, width=800, height=700)

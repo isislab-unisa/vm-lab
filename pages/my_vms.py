@@ -1,23 +1,22 @@
-from typing import Literal
-
 import streamlit as st
+from typing import Literal
 from streamlit import switch_page
 
 from backend.database import get_db
-from backend.models import VirtualMachine, Bookmark, User
-from backend.role import Role
-from frontend.components.interactive_data_table import interactive_data_table
-from frontend.click_handlers.vm import vm_connect_clicked
-from frontend.page_names import PageNames
-from frontend.page_setup import page_setup
+from backend.models import VirtualMachine, Bookmark
+from backend.role import Role, role_has_enough_priority
 
+from frontend import PageNames, page_setup
+from frontend.components import interactive_data_table, error_message
+from frontend.click_handlers.vm import vm_connect_clicked, vm_add_clicked, vm_edit_clicked, vm_delete_clicked
+from frontend.click_handlers.bookmark import bookmark_add_clicked, bookmark_edit_clicked, bookmark_delete_clicked
 
 ################################
 #            SETUP             #
 ################################
 
 psd = page_setup(
-	title="My VMs",
+	title="My Dashboard",
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
@@ -26,8 +25,7 @@ current_username = psd.user_name
 current_role = psd.user_role
 
 if current_username is None or current_role is None:
-	switch_page(PageNames.ERROR)
-
+	switch_page(PageNames.ERROR())
 
 
 ################################
@@ -42,25 +40,29 @@ def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
 	:param scope: Whether to get the VMs for the current user ("this_user") or all users except for the current user ("all_users").
 	:return: List of dictionaries with VM info.
 	"""
+	requesting_user_name = current_username
+
 	try:
 		with get_db() as db:
 			if scope == "this_user":
-				vm_list = VirtualMachine.find_by_user_name(db, current_username)
+				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name)
 			elif scope == "all_users":
-				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=current_username)
+				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=requesting_user_name)
 			else:
 				raise ValueError("Invalid scope. Use 'user' or 'all'.")
 
 		result = []
 		for vm in vm_list:
-			result.append(build_vm_dict(vm))
+			result.append(build_vm_dict(vm, requesting_user_name))
 
 		return result
+	except ValueError as e:
+		error_message(cause=str(e))
 	except Exception as e:
-		st.error(f"An error has occurred: **{e}**")
+		error_message(unknown_exception=e)
 
 
-def build_vm_dict(vm: VirtualMachine):
+def build_vm_dict(vm: VirtualMachine, requesting_user_name: str):
 	"""Build a correct dictionary with the VM info to display in the table."""
 	if vm.ssh_key:
 		auth_type = ":material/key: SSH Key"
@@ -77,7 +79,7 @@ def build_vm_dict(vm: VirtualMachine):
 	vm_dict = {
 		# Hidden
 		"original_object": vm,
-		"requesting_user": current_username,
+		"requesting_user": requesting_user_name,
 		# Shown in columns
 		"name": vm.name,
 		"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
@@ -100,9 +102,12 @@ def get_bookmark_data_from_db():
 	result = []
 	for bookmark in bookmark_list:
 		bookmark_dict = {
+			# Hidden
 			"original_object": bookmark,
+			# Shown in columns
 			"name": bookmark.name,
 			"url": bookmark.link,
+			# Button disabled settings
 			"buttons_disabled": {}
 		}
 		result.append(bookmark_dict)
@@ -111,23 +116,21 @@ def get_bookmark_data_from_db():
 
 
 ################################
-#   CLICK HANDLER FUNCTIONS    #
+#             PAGE             #
 ################################
 
-
-
-
 st.title(":blue[:material/tv:] My VMs")
-st.button("Add VM",
-		  type="primary",
-		  icon=":material/add:",
-		  on_click=lambda: add_vm_dialog_form(current_username)
+st.button(
+	"Add VM",
+	type="primary",
+	icon=":material/add:",
+	on_click=lambda: vm_add_clicked(current_username)
 )
 
 interactive_data_table(
-	key="data_table_myvms",
-	data=get_vm_data_from_db("user"),
-	refresh_data_callback=lambda: get_vm_data_from_db("user"),
+	key="data_table_this_user_vms",
+	data=get_vm_data_from_db("this_user"),
+	refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
 	column_settings={
 		"Name": {
 			"column_width": 1,
@@ -177,10 +180,15 @@ interactive_data_table(
 st.divider()
 st.title(":orange[:material/bookmark:] My Bookmarks")
 
-st.button("Add Bookmark", type="primary", icon=":material/add:", on_click=lambda: bookmark_add_clicked(current_username))
+st.button(
+	"Add Bookmark",
+	type="primary",
+	icon=":material/add:",
+	on_click=lambda: bookmark_add_clicked(current_username)
+)
 
 interactive_data_table(
-	key="data_table_mybookmarks",
+	key="data_table_bookmarks",
 	data=get_bookmark_data_from_db(),
 	refresh_data_callback=get_bookmark_data_from_db,
 	column_settings={
@@ -213,24 +221,21 @@ interactive_data_table(
 )
 
 minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
-show_users_vms = False
-
-if minimum_permissions == "manager" and (current_role == Role.ADMIN or current_role == Role.MANAGER):
-	show_users_vms = True
-elif minimum_permissions == "admin" and (current_role == Role.ADMIN):
-	show_users_vms = True
-
-
-if show_users_vms:
+if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions)):
 	st.divider()
 	st.title(":green[:material/tv_signin:] Other Users' VMs")
 
-	st.button("Add and Assign a new VM", icon=":material/assignment_add:", type="primary", on_click=lambda: print("test"))
+	st.button(
+		"Assign a new VM",
+		icon=":material/assignment_add:",
+		type="primary",
+		on_click=lambda: print("Yet to implement...")  # TODO: Implement this
+	)
 
 	interactive_data_table(
-		key="data_table_usersvms",
-		data=get_vm_data_from_db("all"),
-		refresh_data_callback=lambda: get_vm_data_from_db("all"),
+		key="data_table_all_users_vms",
+		data=get_vm_data_from_db("all_users"),
+		refresh_data_callback=lambda: get_vm_data_from_db("all_users"),
 		column_settings={
 			"Name": {
 				"column_width": 1,

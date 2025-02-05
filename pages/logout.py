@@ -1,14 +1,13 @@
 import streamlit as st
 
-from frontend.page_setup import page_setup
-
+from frontend import page_setup, PageNames
 
 ################################
 #            SETUP             #
 ################################
 
 psd = page_setup(
-    title="Logout",
+    title=PageNames.LOGOUT.label,
     access_control="logged_in_only",
 )
 

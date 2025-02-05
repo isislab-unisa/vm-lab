@@ -1,28 +1,28 @@
 import streamlit as st
 from streamlit import switch_page
 
+from backend import Role
 from backend.database import get_db
 from backend.models import User
-from backend.role import Role
-from frontend.components.interactive_data_table import interactive_data_table
-from frontend.page_names import PageNames
-from frontend.page_setup import page_setup
-from utils.session_state import set_session_state_item
+
+from frontend import PageNames, page_setup
+from frontend.click_handlers.user import user_details_clicked
+from frontend.components import interactive_data_table
 
 ################################
 #            SETUP             #
 ################################
 
 psd = page_setup(
-	title="Manage Users",
+	title=PageNames.MANAGE_USER_LIST.label,
 	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
-	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD,
+	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD(),
 )
 
 current_username = psd.user_name
 if current_username is None:
-	switch_page(PageNames.ERROR)
+	switch_page(PageNames.ERROR())
 
 
 ################################
@@ -41,12 +41,15 @@ def get_user_data_from_db():
 	result = []
 	for user in user_list:
 		user_dict = {
+			# Hidden
 			"original_object": user,
+			# Shown in columns
 			"username": user.username,
 			"first_name": user.first_name,
 			"last_name": user.last_name,
 			"email": user.email,
 			"role": user.role,
+			# Button disabled settings
 			"buttons_disabled": {}
 		}
 		result.append(user_dict)
@@ -55,20 +58,10 @@ def get_user_data_from_db():
 
 
 ################################
-#   CLICK HANDLER FUNCTIONS    #
-################################
-
-def handle_user_details_click(data_row):
-	callback_user: User = data_row["original_object"]
-	set_session_state_item("selected_user", callback_user)
-	switch_page(PageNames.DETAILS_USER)
-
-
-################################
 #             PAGE             #
 ################################
 
-st.title("Manage Users")
+st.title(PageNames.MANAGE_USER_LIST.label)
 
 interactive_data_table(
 	key="data_table_users",
@@ -99,7 +92,7 @@ interactive_data_table(
 	button_settings={
 		"View": {
 			"primary": True,
-			"callback": handle_user_details_click,
+			"callback": user_details_clicked,
 			"icon": ":material/arrow_forward:",
 		},
 	},

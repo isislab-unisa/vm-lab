@@ -1,15 +1,25 @@
 import streamlit as st
 
-from frontend.custom_forms.authentication import register_user
-from frontend.page_setup import page_setup
+from frontend import page_setup, PageNames
+from frontend.forms.authentication import register_user_form
+
+
+################################
+#            SETUP             #
+################################
 
 page_setup(
-	title="Register",
+	title=PageNames.REGISTER.label,
 	access_control="unregistered_only",
 )
 
+
+################################
+#             PAGE             #
+################################
+
 try:
 	# TODO: limit the registration attempts to 5-6 captcha errors
-	register_user()
+	register_user_form()
 except Exception as e:
 	st.error(e)

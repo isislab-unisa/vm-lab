@@ -23,7 +23,7 @@ class PageNames:
 	)
 	YOU_ARE_IN_WAITING_LIST = PageEntry(
 		"pages/wait.py",
-		"Waiting List"
+		"You are in the Waiting List"
 	)
 
 	REGISTER = PageEntry(

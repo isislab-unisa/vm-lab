@@ -41,7 +41,7 @@ def add_to_db(db: Session, object_to_add: VirtualMachine | Bookmark | User):
 	Add a new Virtual Machine, Bookmark, or User to the database.
 	:raises Exception: If something went wrong.
 	"""
-	db.delete(object_to_add)
+	db.add(object_to_add)
 	db.commit()
 
 def delete_from_db(db: Session, object_to_delete: VirtualMachine | Bookmark | User):
