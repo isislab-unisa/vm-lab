@@ -1,9 +1,9 @@
 from .ModuleResponseError import ModuleResponseError
 from .VmNotSharedError import VmNotSharedError
-from .NotFoundInDatabaseError import NotFoundInDatabaseError
+from .NotFoundError import NotFoundError
 
 __all__ = [
 	'ModuleResponseError',
 	'VmNotSharedError',
-	'NotFoundInDatabaseError',
+	'NotFoundError',
 ]

@@ -1,6 +1,6 @@
-class NotFoundInDatabaseError(Exception):
+class NotFoundError(Exception):
 	def __init__(self, what):
-		self.message = f"{what} not found in the database."
+		self.message = f"{what} not found."
 		super().__init__(self.message)
 
 	def __str__(self):

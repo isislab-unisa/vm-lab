@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from streamlit import switch_page
 from streamlit_authenticator import Authenticate
 
-from backend.authentication import is_logged_in, get_current_user_role, get_or_create_authenticator_object, \
+from backend.authentication.current_user_data import is_logged_in, get_current_user_role, \
 	get_current_user_full_name, get_current_user_name, get_current_user_email
+from backend.authentication.authenticator_creation import get_or_create_authenticator_object
 from backend.models import User
 from backend.role import Role, role_in_white_list
 from frontend.components.sidebar_menu import sidebar_menu

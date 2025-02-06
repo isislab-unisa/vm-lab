@@ -7,7 +7,7 @@ from typing import Optional, List
 from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
-from backend.authentication import create_new_user
+from backend.authentication.user_data_manipulation import create_new_user
 
 from frontend import PageNames
 

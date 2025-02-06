@@ -125,8 +125,10 @@ def interactive_data_table(key: str, data: list[dict],
 
 def render_buttons(button_settings, data_index, data_row, key, use_width):
 	all_disabled_buttons = data_row.get("buttons_disabled", None)
+
 	for button_label, button_configuration in button_settings.items():
 		button_type = "primary" if button_configuration.get("primary", False) else "secondary"
+
 		if all_disabled_buttons is None:
 			button_disabled = False
 		else:

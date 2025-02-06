@@ -1,7 +1,9 @@
 import streamlit as st
 
+from backend import add_to_db
 from backend.database import get_db
 from backend.models import Bookmark, User
+from frontend.components import error_message
 
 
 def bookmark_add_form(current_username: str):
@@ -25,10 +27,9 @@ def bookmark_add_form(current_username: str):
 					user = User.find_by_user_name(db, current_username)
 					new_bookmark.user_id = user.id
 
-					db.add(new_bookmark)
-					db.commit()
+					add_to_db(db, new_bookmark)
 			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
+				error_message(unknown_exception=e)
 			else:
 				st.cache_data.clear()  # Refresh table
 				st.rerun()
@@ -48,7 +49,7 @@ def bookmark_edit_form(bookmark: Bookmark):
 				bookmark.link = link
 				db.commit()
 			except Exception as e:
-				st.error(f"An error has occurred: **{e}**")
+				error_message(unknown_exception=e)
 			else:
 				st.cache_data.clear()  # Refresh table
 				st.rerun()

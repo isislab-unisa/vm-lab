@@ -1,16 +1,18 @@
 import time
-
 import requests
 import streamlit as st
+
 from paramiko import AuthenticationException
 from streamlit import switch_page
 
-from backend.database import get_db, delete_from_db
-from backend.models import VirtualMachine
 from exceptions import ModuleResponseError, VmNotSharedError
-from frontend.components import confirm_dialog, error_toast, error_message
+
+from backend.models import VirtualMachine
+
 from frontend import PageNames
+from frontend.components import error_message
 from frontend.forms.vm import add_vm_form, vm_delete_form
+
 from utils.session_state import set_session_state_item
 from utils.terminal_connection import test_connection_with_paramiko, send_credentials_to_external_module, \
 	build_module_url

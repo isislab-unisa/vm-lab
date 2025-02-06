@@ -3,7 +3,7 @@ from streamlit_authenticator import UpdateError
 
 from backend import Role
 from backend.models import User
-from backend.authentication import edit_role
+from backend.authentication.user_data_manipulation import edit_role
 
 from frontend.components import error_message
 

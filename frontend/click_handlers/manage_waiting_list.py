@@ -3,7 +3,7 @@ from streamlit import switch_page
 
 from backend import Role, get_db, delete_from_db
 from backend.models import User
-from backend.authentication import remove_user_in_authenticator_object
+from backend.authentication.authenticator_manipulation import remove_user_in_authenticator_object
 
 from frontend import PageNames
 from frontend.components import confirm_dialog, error_message

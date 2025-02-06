@@ -3,7 +3,7 @@ from streamlit import switch_page
 
 from backend.database import get_db, add_to_db, delete_from_db
 from backend.models import VirtualMachine, User
-from exceptions import NotFoundInDatabaseError
+from exceptions import NotFoundError
 from frontend.components import error_message, error_toast
 from frontend.components.confirm import confirm_dialog
 from frontend.page_names import PageNames
@@ -43,7 +43,7 @@ def add_vm_form(current_username: str):
 					user = User.find_by_user_name(db, current_username)
 
 					if user is None:
-						raise NotFoundInDatabaseError("User")
+						raise NotFoundError("User")
 
 					new_vm.user_id = user.id
 
@@ -54,7 +54,7 @@ def add_vm_form(current_username: str):
 						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
 
 					add_to_db(db, new_vm)
-			except NotFoundInDatabaseError as e:
+			except NotFoundError as e:
 				error_message(cause=str(e), when="while creating a new VM")
 			except Exception as e:
 				error_message(unknown_exception=e, when="while creating a new VM")

@@ -4,13 +4,13 @@ from time import sleep
 from streamlit import switch_page
 from streamlit_authenticator import UpdateError
 
-from backend import Role, get_db
-from backend.authentication import edit_username, edit_email, edit_password, edit_first_last_name, edit_role
+from backend import Role
+from backend.authentication.user_data_manipulation import edit_username, edit_email, edit_password, edit_first_last_name, edit_role
 from backend.models import User
 
 from frontend import PageNames
 from frontend.components import error_message
-from frontend.forms.authentication import PASSWORD_INSTRUCTIONS, USERNAME_INSTRUCTIONS
+from frontend.forms.registration import PASSWORD_INSTRUCTIONS, USERNAME_INSTRUCTIONS
 
 from utils.session_state import set_session_state_item, get_session_state_item, pop_session_state_item
 
@@ -53,7 +53,7 @@ def change_role_form(user: User, requesting_role: Role):
 			st.cache_data.clear() # Refresh table data
 			st.rerun()
 		except UpdateError as e:
-			error_message(cause=str(e))
+			error_message(intro="", cause=str(e))
 		except Exception as e:
 			error_message(unknown_exception=e)
 
@@ -81,8 +81,10 @@ def change_username(current_username: str, clear_on_submit: bool = False, key: s
 				set_session_state_item('username-change-success', True)
 				sleep(0.2)  # Wait to let the login cookie deletion happen during logout
 				switch_page(PageNames.LOGIN())
+			except UpdateError as e:
+				error_message(intro="", cause=str(e))
 			except Exception as e:
-				st.error(e)
+				error_message(unknown_exception=e)
 
 
 def change_email(current_email: str, clear_on_submit: bool = False, key: str = 'Change email'):
@@ -111,8 +113,10 @@ def change_email(current_email: str, clear_on_submit: bool = False, key: str = '
 				set_session_state_item('email', new_email)
 				set_session_state_item('email-change-success', True)
 				switch_page(PageNames.USER_SETTINGS())
+			except UpdateError as e:
+				error_message(intro="", cause=str(e))
 			except Exception as e:
-				st.error(e)
+				error_message(unknown_exception=e)
 
 
 def change_password(current_username: str, clear_on_submit: bool = False, key: str = 'Change password'):
@@ -141,8 +145,10 @@ def change_password(current_username: str, clear_on_submit: bool = False, key: s
 				edit_password(current_username, current_password, new_password, new_password_repeat)
 				set_session_state_item('password-change-success', True)
 				switch_page(PageNames.USER_SETTINGS())
+			except UpdateError as e:
+				error_message(intro="", cause=str(e))
 			except Exception as e:
-				st.error(e)
+				error_message(unknown_exception=e)
 
 
 def change_first_last_name(current_username: str, current_name_surname: str, clear_on_submit: bool = False,
@@ -183,5 +189,7 @@ def change_first_last_name(current_username: str, current_name_surname: str, cle
 				set_session_state_item('name', f'{edited_first_name} {edited_last_name}')
 				set_session_state_item('name-surname-change-success', True)
 				switch_page(PageNames.USER_SETTINGS())
+			except UpdateError as e:
+				error_message(intro="", cause=str(e))
 			except Exception as e:
-				st.error(e)
+				error_message(unknown_exception=e)

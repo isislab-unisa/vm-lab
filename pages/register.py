@@ -1,7 +1,7 @@
 import streamlit as st
 
 from frontend import page_setup, PageNames
-from frontend.forms.authentication import register_user_form
+from frontend.forms.registration import register_user_form
 
 
 ################################
