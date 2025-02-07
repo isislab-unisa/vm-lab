@@ -3,26 +3,16 @@
 
 Manage all your VMs in the browser.
 
+![VM_Lab_Both_My_Dashboard](https://github.com/user-attachments/assets/9632ba97-88ca-49c3-a2cc-7abd0d89200f)
+
+
 ## Documentation
 For the full documentation (still WIP) go [here](https://github.com/isislab-unisa/vm-lab/wiki)
 
-## Update pip requirements
-```shell
-pip install -r requirements.txt
-```
-
-## Run
-After having installed all the requirements, run this in venv:
-```shell
-streamlit run app.py
-```
+Get started [here](https://github.com/isislab-unisa/vm-lab/wiki/Getting-Started)!
 
 
-## Useful stuff (for PyCharm)
-### Update the pip requirements
+## More Screenshots
+![VM_Lab_Both_VM_Connection](https://github.com/user-attachments/assets/541d1a92-feae-4d0a-bf32-4bb75a6933ab)
 
-Search everywhere:
-`Sync Python Requirements...`
-
-1. `Tools`
-2. `Sync Python Requirements...`
+![VM_Lab_Both_Users](https://github.com/user-attachments/assets/19d32a7a-ebdf-4eca-aaae-f814e92b6891)
