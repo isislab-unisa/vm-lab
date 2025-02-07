@@ -1,120 +1,136 @@
 import streamlit as st
+from typing import Literal
 from streamlit import switch_page
 
-from backend.authentication import get_current_user_role
 from backend.database import get_db
-from backend.models import VirtualMachine, Bookmark, User
-from backend.role import Role
-from frontend.custom_components import interactive_data_table, confirm_dialog
-from frontend.custom_forms.vm_connections import vm_add_clicked, vm_connect_clicked, vm_delete_clicked, vm_edit_clicked, \
-	bookmark_add_clicked, bookmark_delete_clicked, bookmark_edit_clicked
-from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
-from utils.session_state import get_session_state_item
+from backend.models import VirtualMachine, Bookmark
+from backend.role import Role, role_has_enough_priority
 
-page_setup(
-	title="My VMs",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
-	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.USER],
+from frontend import PageNames, page_setup
+from frontend.components import interactive_data_table, error_message
+from frontend.click_handlers.vm import vm_connect_clicked, vm_add_clicked, vm_edit_clicked, vm_delete_clicked
+from frontend.click_handlers.bookmark import bookmark_add_clicked, bookmark_edit_clicked, bookmark_delete_clicked
+
+################################
+#            SETUP             #
+################################
+
+psd = page_setup(
+	title="My Dashboard",
+	access_control="accepted_roles_only",
+	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
 
-
-current_username = get_session_state_item("username")
-current_role = get_current_user_role()
+current_username = psd.user_name
+current_role = psd.user_role
 
 if current_username is None or current_role is None:
-	switch_page(PageNames.error)
+	switch_page(PageNames.ERROR())
 
 
-@st.cache_data
-def get_vm_data_from_db():
-	with get_db() as db_vm_list:
-		print("Accessing db for vms...")
-		vm_list = VirtualMachine.find_by_user_name(db_vm_list, current_username)
-		current_user = User.find_by_user_name(db_vm_list, current_username)
-
-	result = []
-	for vm in vm_list:
-		if vm.ssh_key:
-			auth_type = ":material/key: SSH Key"
-		elif vm.password:
-			auth_type = ":material/password: Password"
-		else:
-			auth_type = ":material/do_not_disturb_on: None"
-
-		vm_dict = {
-			"original_object": vm, # Hidden object from the db ready to use
-			"current_user_id": current_user.id, # Hidden id
-			"name": vm.name,
-			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
-			"username": vm.username,
-			"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
-			"auth": auth_type,
-			"buttons_disabled": {
-
-			}
-		}
-		result.append(vm_dict)
-
-	return result
-
+################################
+#     REFRESH DB FUNCTIONS     #
+################################
 
 @st.cache_data
-def get_vm_data_from_db_for_all_users():
-	with get_db() as db_vm_list:
-		print("Accessing db for vms...")
-		vm_list = VirtualMachine.find_all(db_vm_list, shared=True, exclude_user_name=current_username)
+def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
+	"""
+	Fetch VM data from the database.
 
-	result = []
-	for vm in vm_list:
-		if vm.ssh_key:
-			auth_type = ":material/key: SSH Key"
-		elif vm.password:
-			auth_type = ":material/password: Password"
-		else:
-			auth_type = ":material/do_not_disturb_on: None"
+	:param scope: Whether to get the VMs for the current user ("this_user") or all users except for the current user ("all_users").
+	:return: List of dictionaries with VM info.
+	"""
+	requesting_user_name = current_username
 
-		vm_dict = {
-			"original_object": vm, # Hidden object from the db ready to use
-			"name": vm.name,
-			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
-			"username": vm.username,
-			"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
-			"auth": auth_type,
-			"owner": vm.user.__dict__["username"],
-			"buttons_disabled": {
+	try:
+		with get_db() as db:
+			if scope == "this_user":
+				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name)
+			elif scope == "all_users":
+				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=requesting_user_name)
+			else:
+				raise ValueError("Invalid scope. Use 'user' or 'all'.")
 
-			}
+		result = []
+		for vm in vm_list:
+			result.append(build_vm_dict(vm, requesting_user_name))
 
-		}
-		result.append(vm_dict)
+		return result
+	except ValueError as e:
+		error_message(cause=str(e))
+	except Exception as e:
+		error_message(unknown_exception=e)
 
-	return result
+
+def build_vm_dict(vm: VirtualMachine, requesting_user_name: str):
+	"""Build a correct dictionary with the VM info to display in the table."""
+	if vm.ssh_key:
+		auth_type = ":material/key: SSH Key"
+	elif vm.password:
+		auth_type = ":material/password: Password"
+	else:
+		auth_type = ":material/do_not_disturb_on: None"
+
+	try:
+		owner = vm.user.username
+	except KeyError:
+		raise KeyError(f"Could not find the owner of the VM `{vm.name}`.")
+
+	vm_dict = {
+		# Hidden
+		"original_object": vm,
+		"requesting_user": requesting_user_name,
+		# Shown in columns
+		"name": vm.name,
+		"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
+		"username": vm.username,
+		"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
+		"auth": auth_type,
+		"owner": owner,
+		# Button disabled settings
+		"buttons_disabled": {}
+	}
+
+	return vm_dict
+
 
 @st.cache_data
 def get_bookmark_data_from_db():
 	with get_db() as db_bookmark_list:
-		print("Accessing db for bookmarks...")
 		bookmark_list = Bookmark.find_by_user_name(db_bookmark_list, current_username)
 
 	result = []
 	for bookmark in bookmark_list:
 		bookmark_dict = {
+			# Hidden
 			"original_object": bookmark,
+			# Shown in columns
 			"name": bookmark.name,
 			"url": bookmark.link,
+			# Button disabled settings
+			"buttons_disabled": {}
 		}
 		result.append(bookmark_dict)
 
 	return result
 
+
+################################
+#             PAGE             #
+################################
+
 st.title(":blue[:material/tv:] My VMs")
-st.button("Add VM", type="primary", icon=":material/add:", on_click=lambda: vm_add_clicked(current_username))
+st.button(
+	"Add VM",
+	type="primary",
+	icon=":material/add:",
+	on_click=lambda: vm_add_clicked(current_username)
+)
 
 interactive_data_table(
-	key="data_table_myvms",
-	data=get_vm_data_from_db(),
-	refresh_data_callback=get_vm_data_from_db,
+	key="data_table_this_user_vms",
+	data=get_vm_data_from_db("this_user"),
+	refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
 	column_settings={
 		"Name": {
 			"column_width": 1,
@@ -164,10 +180,15 @@ interactive_data_table(
 st.divider()
 st.title(":orange[:material/bookmark:] My Bookmarks")
 
-st.button("Add Bookmark", type="primary", icon=":material/add:", on_click=lambda: bookmark_add_clicked(current_username))
+st.button(
+	"Add Bookmark",
+	type="primary",
+	icon=":material/add:",
+	on_click=lambda: bookmark_add_clicked(current_username)
+)
 
 interactive_data_table(
-	key="data_table_mybookmarks",
+	key="data_table_bookmarks",
 	data=get_bookmark_data_from_db(),
 	refresh_data_callback=get_bookmark_data_from_db,
 	column_settings={
@@ -200,24 +221,21 @@ interactive_data_table(
 )
 
 minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
-show_users_vms = False
-
-if minimum_permissions == "manager" and (current_role == Role.ADMIN or current_role == Role.MANAGER):
-	show_users_vms = True
-elif minimum_permissions == "admin" and (current_role == Role.ADMIN):
-	show_users_vms = True
-
-
-if show_users_vms:
+if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions)):
 	st.divider()
 	st.title(":green[:material/tv_signin:] Other Users' VMs")
 
-	st.button("Add and Assign a new VM", icon=":material/assignment_add:", type="primary", on_click=lambda: print("test"))
+	st.button(
+		"Assign a new VM",
+		icon=":material/assignment_add:",
+		type="primary",
+		on_click=lambda: print("Yet to implement...")  # TODO: Implement this
+	)
 
 	interactive_data_table(
-		key="data_table_usersvms",
-		data=get_vm_data_from_db_for_all_users(),
-		refresh_data_callback=get_vm_data_from_db_for_all_users,
+		key="data_table_all_users_vms",
+		data=get_vm_data_from_db("all_users"),
+		refresh_data_callback=lambda: get_vm_data_from_db("all_users"),
 		column_settings={
 			"Name": {
 				"column_width": 1,

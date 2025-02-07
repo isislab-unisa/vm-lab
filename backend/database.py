@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from yaml import SafeLoader
 
-from backend.models import User
+from backend.models import User, VirtualMachine, Bookmark
 
 #################################
 #     DATABASE CREDENTIALS      #
@@ -34,6 +34,27 @@ def get_db() -> Session:
 		yield db
 	finally:
 		db.close()
+
+
+def add_to_db(db: Session, object_to_add: VirtualMachine | Bookmark | User) -> VirtualMachine | Bookmark | User:
+	"""
+	Add a new Virtual Machine, Bookmark, or User to the database.
+	:raises Exception: If something went wrong.
+	:return: The refreshed object that has been added.
+	"""
+	db.add(object_to_add)
+	db.commit()
+	db.refresh(object_to_add)
+	return object_to_add
+
+
+def delete_from_db(db: Session, object_to_delete: VirtualMachine | Bookmark | User):
+	"""
+	Removes a Virtual Machine, Bookmark, or User to the database.
+	:raises Exception: If something went wrong.
+	"""
+	db.delete(object_to_delete)
+	db.commit()
 
 
 ##################################

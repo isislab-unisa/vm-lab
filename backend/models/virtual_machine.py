@@ -91,16 +91,15 @@ class VirtualMachine(Base):
 		"""
 		query = db.query(VirtualMachine)
 
-		if shared is not None:
-			query = query.filter(VirtualMachine.shared == shared)
-
 		if exclude_user_id is not None:
 			query = query.filter(VirtualMachine.user_id != exclude_user_id)
 		elif exclude_user_name is not None:
 			query = query.join(User).filter(User.username != exclude_user_name)
 
-		query_result: list[Type[VirtualMachine]] = query.all()
+		if shared is not None:
+			query = query.filter(VirtualMachine.shared == shared)
 
+		query_result: list[Type[VirtualMachine]] = query.all()
 		return cast(List[VirtualMachine], query_result)
 
 
@@ -135,7 +134,6 @@ class VirtualMachine(Base):
 		query_result: list[Type[VirtualMachine]] = (query
 				.filter(VirtualMachine.user_id == user_id)
 				.all())
-
 		return cast(List[VirtualMachine], query_result)
 
 
@@ -158,7 +156,6 @@ class VirtualMachine(Base):
 				.join(VirtualMachine.user)
 				.filter(User.username == user_name)
 				.all())
-
 		return cast(List[VirtualMachine], query_result)
 
 

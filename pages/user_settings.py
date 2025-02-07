@@ -1,18 +1,18 @@
 import streamlit as st
 
-from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_forms.user_details import change_username, change_email, change_password, change_first_last_name
-from utils.session_state import get_session_state_item
+from frontend import page_setup
+from frontend.forms.user import change_username, change_email, change_password, change_first_last_name
 
-page_setup(
+psd = page_setup(
 	title="User Settings",
-	access_control=AccessControlType.LOGGED_IN_ONLY
+	access_control="logged_in_only"
 )
 
+username = psd.user_name
+email = psd.user_email
+first_last_name = psd.user_full_name
+
 st.title("User Settings")
-username = get_session_state_item("username")
-email = get_session_state_item("email")
-first_last_name = get_session_state_item("name")
 
 if username is None:
 	st.error("Error, no username found")

@@ -4,27 +4,8 @@ from enum import Enum
 class Role(Enum):
 	ADMIN = 'admin'
 	MANAGER = 'manager'
-	USER = 'user'
+	SIDEKICK = 'sidekick'
 	NEW_USER = 'new_user'
-
-	def to_string(self):
-		"""Converts this role enum to its value."""
-		return self.value
-
-	@staticmethod
-	def from_string(role_str: str):
-		"""Converts a string into an equivalent role enum."""
-		match role_str:
-			case Role.NEW_USER.value:
-				return Role.NEW_USER
-			case Role.USER.value:
-				return Role.USER
-			case Role.MANAGER.value:
-				return Role.MANAGER
-			case Role.ADMIN.value:
-				return Role.ADMIN
-			case _:
-				return None
 
 	def to_phrase(self):
 		"""Converts this role enum to a presentable phrase."""
@@ -33,13 +14,40 @@ class Role(Enum):
 	@staticmethod
 	def from_phrase(phrase: str):
 		"""Converts a presentable phrase into an equivalent role enum."""
-		match phrase.lower():
-			case 'admin':
-				return Role.ADMIN
-			case 'manager':
-				return Role.MANAGER
-			case 'user':
-				return Role.USER
-			case _:
-				return Role.NEW_USER
+		return Role(phrase.lower().replace(" ", "_"))
 
+
+def role_has_enough_priority(current_role: Role, minimum_role_required: Role) -> bool:
+	"""
+	Checks whether a role has a sufficient priority level to meet a minimum role requirement.
+	Where the admin has the highest priority level, while a new user has the lowest priority level.
+
+	:param current_role: The current role
+	:param minimum_role_required: The minimum required role
+	:return: `True` if the role has sufficient (equal or greater) priority, `False` otherwise
+	"""
+	def to_priority(r) -> int:
+		match r:
+			case Role.ADMIN:
+				return 0
+			case Role.MANAGER:
+				return 1
+			case Role.SIDEKICK:
+				return 2
+			case Role.NEW_USER:
+				return 3
+
+	current_priority = to_priority(current_role)
+	minimum_priority = to_priority(minimum_role_required)
+
+	return current_priority <= minimum_priority
+
+
+def role_in_white_list(current_role: Role, white_list: list[Role]) -> bool:
+	"""
+	Checks whether a role is present in a list of authorized roles.
+	:param current_role: The current role
+	:param white_list: A list of authorized roles
+	:return: `True` if the role is present in a list of authorized roles, `False` otherwise
+	"""
+	return current_role in white_list

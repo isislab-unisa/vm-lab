@@ -4,40 +4,42 @@ from streamlit import switch_page
 
 from backend.role import Role
 from backend.database import get_db
-from backend.models import VirtualMachine, User
+from backend.models import VirtualMachine
 from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_forms.vm_details import edit_vm, delete_vm, edit_vm_password, delete_password, edit_vm_ssh_key, delete_ssh_key
+from frontend.page_setup import page_setup
+from frontend.forms.vm import vm_edit_form, vm_delete_form, vm_password_edit_form, vm_password_delete_form, vm_ssh_key_edit_form, ssh_key_delete_form
 from utils.session_state import get_session_state_item
 
-page_setup(
+psd = page_setup(
 	title="Edit VM",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
-	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.USER],
+	access_control="accepted_roles_only",
+	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
 )
 
 selected_vm: VirtualMachine = get_session_state_item("selected_vm")
-current_username: str = get_session_state_item("username")
+current_username: str = psd.user_name
 
 if selected_vm is None or current_username is None:
-	switch_page(PageNames.my_vms)
+	switch_page(PageNames.MAIN_DASHBOARD())
 
 st.header(f"Edit VM `{selected_vm.name}`")
 
 with get_db() as db:
-	user = User.find_by_user_name(db, current_username)
+	user = psd.get_user(db)
 
-	edit_vm(selected_vm)
+	vm_edit_form(selected_vm)
 
-	edit_vm_password(selected_vm, user)
+	vm_password_edit_form(selected_vm, user)
 
 	if selected_vm.password:
-		delete_password(selected_vm)
+		vm_password_delete_form(selected_vm)
 
-	edit_vm_ssh_key(selected_vm, user)
+	vm_ssh_key_edit_form(selected_vm, user)
 
 	if selected_vm.ssh_key:
-		delete_ssh_key(selected_vm)
+		ssh_key_delete_form(selected_vm)
 
-	delete_vm(selected_vm)
+
+	if st.button("Delete VM", type="primary"):
+		vm_delete_form(selected_vm)
 

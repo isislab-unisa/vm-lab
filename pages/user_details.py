@@ -1,31 +1,104 @@
-import streamlit as st
+from typing import Literal
 
+import streamlit as st
 from streamlit import switch_page
 
-from backend.role import Role
-from backend.database import get_db
+from backend import Role, get_db
 from backend.models import User, VirtualMachine
-from backend.authentication import get_current_user_role, edit_user_in_authenticator_object
-from frontend.custom_forms.vm_connections import vm_connect_clicked, vm_edit_clicked, vm_delete_clicked
-from frontend.page_names import PageNames
-from frontend.page_options import page_setup, AccessControlType
-from frontend.custom_components import display_table_with_actions, interactive_data_table
-from utils.session_state import get_session_state_item, pop_session_state_item, set_session_state_item
-from utils.terminal_connection import send_credentials_to_external_module
 
-page_setup(
-	title="User Details",
-	access_control=AccessControlType.ACCEPTED_ROLES_ONLY,
+from frontend import PageNames, page_setup
+from frontend.click_handlers.vm import vm_connect_clicked, vm_edit_clicked, vm_delete_clicked
+from frontend.components import error_message
+from frontend.components.interactive_data_table import interactive_data_table
+from frontend.forms.user import change_role_form
+
+from utils.session_state import get_session_state_item
+
+
+################################
+#            SETUP             #
+################################
+
+psd = page_setup(
+	title=PageNames.DETAILS_USER.label,
+	access_control="accepted_roles_only",
 	accepted_roles=[Role.ADMIN, Role.MANAGER],
-	role_not_accepted_redirect=PageNames.my_vms,
+	role_not_accepted_redirect=PageNames.MAIN_DASHBOARD(),
 )
 
-
+curren_role = psd.user_role
 selected_user: User = get_session_state_item("selected_user")
-curren_role: Role = get_current_user_role()
 
 if selected_user is None or curren_role is None:
-	switch_page(PageNames.manage_users)
+	switch_page(PageNames.MANAGE_USER_LIST())
+
+
+
+@st.cache_data
+def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
+	"""
+	Fetch VM data from the database.
+
+	:param scope: Whether to get the VMs for the current user ("this_user") or all users except for the current user ("all_users").
+	:return: List of dictionaries with VM info.
+	"""
+	requesting_user_name = selected_user.username
+
+	try:
+		with get_db() as db:
+			if scope == "this_user":
+				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name)
+			elif scope == "all_users":
+				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=requesting_user_name)
+			else:
+				raise ValueError("Invalid scope. Use 'user' or 'all'.")
+
+		result = []
+		for vm in vm_list:
+			result.append(build_vm_dict(vm, requesting_user_name))
+
+		return result
+	except ValueError as e:
+		error_message(cause=str(e))
+	except Exception as e:
+		error_message(unknown_exception=e)
+
+
+def build_vm_dict(vm: VirtualMachine, requesting_user_name: str):
+	"""Build a correct dictionary with the VM info to display in the table."""
+	if vm.ssh_key:
+		auth_type = ":material/key: SSH Key"
+	elif vm.password:
+		auth_type = ":material/password: Password"
+	else:
+		auth_type = ":material/do_not_disturb_on: None"
+
+	try:
+		owner = vm.user.username
+	except KeyError:
+		raise KeyError(f"Could not find the owner of the VM `{vm.name}`.")
+
+	vm_dict = {
+		# Hidden
+		"original_object": vm,
+		"requesting_user": requesting_user_name,
+		# Shown in columns
+		"name": vm.name,
+		"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
+		"username": vm.username,
+		"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
+		"auth": auth_type,
+		"owner": owner,
+		# Button disabled settings
+		"buttons_disabled": {}
+	}
+
+	return vm_dict
+
+
+################################
+#             PAGE             #
+################################
 
 st.header(f"Details of user `{selected_user.username}`")
 st.write(f"ID: {selected_user.id}")
@@ -34,73 +107,16 @@ st.write(f"First Name: {selected_user.first_name}")
 st.write(f"Last Name: {selected_user.last_name}")
 
 # Role select box
-if curren_role == Role.ADMIN:
-	selection = st.selectbox(
-		"Role",
-		[Role.to_phrase(Role.USER), Role.to_phrase(Role.MANAGER)],
-		index=0 if selected_user.role == Role.USER.value else 1
-	)
-
-	if Role.from_phrase(selection).value == selected_user.role:
-		button = st.button("Change Role", type="primary", disabled=True)
-	else:
-		button = st.button("Change Role", type="primary")
-
-	if get_session_state_item("role-change-success"):
-		pop_session_state_item("role-change-success")
-		st.success("Role changed successfully")
-
-	if button:
-		print("Change Role")
-		with get_db() as db:
-			user = User.find_by_id(db, selected_user.id)
-			user.role = Role.from_phrase(selection).value
-			db.commit()
-			db.refresh(user)
-			set_session_state_item("selected_user", user)
-			set_session_state_item("role-change-success", True)
-			edit_user_in_authenticator_object(user.username, user)
-			switch_page(PageNames.user_details)
-else:
-	st.write(f"Role: {Role.to_phrase(Role.from_string(selected_user.role))}")
+change_role_form(selected_user, curren_role)
 
 st.divider()
 st.subheader("Virtual Machines")
 
-
-@st.cache_data
-def get_user_vm_from_db():
-	with get_db() as db_list:
-		vm_list = VirtualMachine.find_by_user_name(db_list, selected_user.username)
-
-	result = []
-	for vm in vm_list:
-		if vm.ssh_key:
-			auth_type = "`SSH Key`"
-		elif vm.password:
-			auth_type = "`Password`"
-		else:
-			auth_type = "`None`"
-
-		vm_dict = {
-			"original_object": vm, # Hidden object from the db ready to use
-			"name": vm.name,
-			"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
-			"username": vm.username,
-			"auth": auth_type,
-			"buttons_disabled": {
-
-			}
-		}
-		result.append(vm_dict)
-
-	return result
-
-
+# Reuse the functions from my_vms.py
 interactive_data_table(
-	key="data_table_myvms",
-	data=get_user_vm_from_db(),
-	refresh_data_callback=get_user_vm_from_db,
+	key="data_table_this_user_vms",
+	data=get_vm_data_from_db("this_user"),
+	refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
 	column_settings={
 		"Name": {
 			"column_width": 1,
@@ -113,6 +129,10 @@ interactive_data_table(
 		"Username": {
 			"column_width": 1,
 			"data_name": "username"
+		},
+		"Is Shared": {
+			"column_width": 1,
+			"data_name": "shared"
 		},
 		"Auth": {
 			"column_width": 1,

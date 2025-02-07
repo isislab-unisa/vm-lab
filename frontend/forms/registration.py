@@ -2,14 +2,15 @@
 # FROM `streamlit_authenticator\views\authentication_view.py`
 #
 # (Authenticate.register_user)
-from typing import Optional, List
-
 import streamlit as st
+from typing import Optional, List
 from streamlit import switch_page
 from streamlit_authenticator.utilities import Helpers
 
-from backend.authentication import create_new_user
-from frontend.page_names import PageNames
+from backend.authentication.user_data_manipulation import create_new_user
+
+from frontend import PageNames
+
 from utils.session_state import set_session_state_item
 
 PASSWORD_INSTRUCTIONS = """
@@ -27,8 +28,10 @@ USERNAME_INSTRUCTIONS = """
 		"""
 
 
-def register_user(key: str = 'Register user', clear_on_submit: bool = False, domains: Optional[List[str]] = None,
-				  captcha: bool = True):
+def register_user_form(key: str = 'Register user',
+					   clear_on_submit: bool = False,
+					   domains: Optional[List[str]] = None,
+					   captcha: bool = True):
 	"""
 	Renders a form for user registration.
 
@@ -73,4 +76,4 @@ def register_user(key: str = 'Register user', clear_on_submit: bool = False, dom
 			)
 			# Switch page if there is no error with the registration
 			set_session_state_item('registration-success', True)
-			switch_page(PageNames.login)
+			switch_page(PageNames.LOGIN())

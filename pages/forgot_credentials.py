@@ -1,6 +1,10 @@
-from frontend.page_options import page_setup, AccessControlType
+from frontend import page_setup, PageNames
+
+################################
+#            SETUP             #
+################################
 
 page_setup(
-	title="Forgot Credentials",
-	access_control=AccessControlType.UNREGISTERED_ONLY,
+	title=PageNames.FORGOT_CREDENTIALS.label,
+	access_control="unregistered_only",
 )

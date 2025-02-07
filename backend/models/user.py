@@ -65,14 +65,14 @@ class User(Base):
 	def find_all(db: Session,
 				 exclude_user_id: int = None,
 				 exclude_user_name: str = None,
-				 exclude_user_role: Role = None
+				 exclude_user_roles: list[Role] = None
 				 ) -> list[User]:
 		"""
-		Find all users in the database, eventually excluding one of them or an entire role.
+		Find all users in the database, eventually excluding one of them or/and an entire role.
 		:param db: The database session obtained with get_db()
 		:param exclude_user_id: The id of the user to exclude
 		:param exclude_user_name: The name of the user to exclude
-		:param exclude_user_role: The role of the user to exclude
+		:param exclude_user_roles: The roles to exclude
 		:return A list of users
 		"""
 		query = db.query(User)
@@ -81,8 +81,10 @@ class User(Base):
 			query = query.filter(User.id != exclude_user_id)
 		elif exclude_user_name is not None:
 			query = query.filter(User.username != exclude_user_name)
-		elif exclude_user_role is not None:
-			query = query.filter(User.role != exclude_user_role.to_string())
+
+		if exclude_user_roles is not None:
+			for role in exclude_user_roles:
+				query = query.filter(User.role != role.value)
 
 		query_result: list[Type[User]] = query.all()
 		return cast(List[User], query_result)
@@ -148,9 +150,8 @@ class User(Base):
 			query = query.filter(User.username != exclude_user_name)
 
 		query_result: list[Type[User]] = (query
-				.filter(User.role == role.to_string())
+				.filter(User.role == role.value)
 				.all())
-
 		return cast(List[User], query_result)
 
 

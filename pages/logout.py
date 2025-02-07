@@ -1,11 +1,20 @@
 import streamlit as st
 
-from frontend.page_options import page_setup, AccessControlType
+from frontend import page_setup, PageNames
 
-authenticator = page_setup(
-    title="Logout",
-    access_control=AccessControlType.LOGGED_IN_ONLY,
+################################
+#            SETUP             #
+################################
+
+psd = page_setup(
+    title=PageNames.LOGOUT.label,
+    access_control="logged_in_only",
 )
 
+
+################################
+#             PAGE             #
+################################
+
 st.cache_data.clear()  # Clear cache to refresh table data
-authenticator.logout(location="unrendered")
+psd.authenticator.logout(location="unrendered")
