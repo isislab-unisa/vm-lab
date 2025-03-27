@@ -40,30 +40,39 @@ def load_private_key(key_str):
 
 def test_connection_with_paramiko(hostname: str, port: int, username: str,
 								  password: str = None, ssh_key: bytes = None):
+	"""
+	Makes a connection to the target host to test if the connection and credentials are working.
+	:raises paramiko.ssh_exception.AuthenticationException: If the credentials are invalid.
+	:raises ValueError: If no SSH key or password is provided.
+	"""
 	ssh_client = paramiko.SSHClient()
 	ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-	if ssh_key:
-		private_key = load_private_key(ssh_key.decode("utf-8"))
-		ssh_client.connect(
-			hostname=hostname,
-			port=port,
-			username=username,
-			pkey=private_key
-		)
-	elif password:
-		ssh_client.connect(
-			hostname=hostname,
-			port=port,
-			username=username,
-			password=password
-		)
-	else:
+	try:
+		if ssh_key:
+			# Prioritize SSH key
+			private_key = load_private_key(ssh_key.decode("utf-8"))
+			ssh_client.connect(
+				hostname=hostname,
+				port=port,
+				username=username,
+				pkey=private_key
+			)
+		elif password:
+			ssh_client.connect(
+				hostname=hostname,
+				port=port,
+				username=username,
+				password=password
+			)
+		else:
+			raise ValueError("No SSH key or password provided.")
+	except Exception as e:
+		# Throw the Exception
+		raise e
+	finally:
+		# Close the client in all cases
 		ssh_client.close()
-		raise ValueError("No ssh key or password provided.")
-
-	ssh_client.close()
-
 
 
 def send_credentials_to_external_module(module_type: Literal["ssh", "sftp"],
@@ -86,6 +95,7 @@ def send_credentials_to_external_module(module_type: Literal["ssh", "sftp"],
 	# Make the correct request body
 	if ssh_key:
 		if module_type == "ssh":
+			# Send a request to alfresco-ssh
 			module_response = requests.post(
 				url=module_url,
 				data={
@@ -98,6 +108,7 @@ def send_credentials_to_external_module(module_type: Literal["ssh", "sftp"],
 				}
 			)
 		elif module_type == "sftp":
+			# Send a request to alfresco-sftp
 			module_response = requests.post(
 				url=module_url,
 				json={
@@ -110,6 +121,7 @@ def send_credentials_to_external_module(module_type: Literal["ssh", "sftp"],
 			)
 	elif password:
 		if module_type == "ssh":
+			# Send a request to alfresco-ssh
 			module_response = requests.post(
 				url=module_url,
 				json={
@@ -120,6 +132,7 @@ def send_credentials_to_external_module(module_type: Literal["ssh", "sftp"],
 				},
 			)
 		elif module_type == "sftp":
+			# Send a request to alfresco-sftp
 			module_response = requests.post(
 				url=module_url,
 				json={

@@ -61,7 +61,6 @@ def delete_from_db(db: Session, object_to_delete: VirtualMachine | Bookmark | Us
 #       Load Initial Users       #
 ##################################
 
-# TODO: Initialize database if it does not exist
 def load_initial_users():
 	"""
     Loads initial users into the database from a YAML file if the users table is empty.
