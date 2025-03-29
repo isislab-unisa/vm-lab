@@ -15,8 +15,9 @@ from backend.models import User, VirtualMachine, Bookmark
 db_username = st.secrets['db_username']
 db_password = st.secrets['db_password']
 db_address = st.secrets['db_address']
+db_port = st.secrets["db_port"]
 db_name = st.secrets['db_name']
-DATABASE_URL = f"postgresql+psycopg2://{db_username}:{db_password}@{db_address}/{db_name}"
+DATABASE_URL = f"postgresql+psycopg2://{db_username}:{db_password}@{db_address}:{db_port}/{db_name}"
 
 ################################
 #       DATABASE SESSION       #

@@ -9,8 +9,8 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: vm-lab
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data # persistent storage
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql # database initialization script
 
   main_app:
     build: .
