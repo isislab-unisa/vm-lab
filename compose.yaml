@@ -20,5 +20,19 @@ services:
     depends_on:
       - db
 
+  support_ssh_flask:
+    build: 
+      context: https://github.com/isislab-unisa/alfresco-ssh.git
+    container_name: support_ssh_flask
+    ports:
+      - "5000:5000"
+
+  support_sftp_express:
+    build:
+      context: https://github.com/isislab-unisa/alfresco-sftp.git
+    container_name: support_sftp_express
+    ports:
+      - "3000:3000"
+
 volumes:
   postgres_data:
