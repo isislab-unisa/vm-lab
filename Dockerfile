@@ -18,7 +18,7 @@ COPY . .
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-RUN cp template_secrets.toml .streamlit/secrets.toml
+RUN mv template_secrets.toml .streamlit/secrets.toml
 
 # Generate random keys for secrets.toml
 RUN export COOKIE_KEY=$(openssl rand -base64 32) && sed -i "s|some cookie key|$COOKIE_KEY|g" .streamlit/secrets.toml
