@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
 # PARTIALLY GENERATED with docker init
+# Help with streamlit and docker: https://docs.streamlit.io/deploy/tutorials/docker
 
 FROM python:3.12.9-slim
 
@@ -12,17 +13,11 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install necessary build dependencies.
+# Install necessary packages and delete apt-get cache.
 # - curl: for healthcheck
-# - libpq-dev, gcc, build-essential: for psycopg2
-# - software-properties-common: for add-apt-repository
 # - openssl: for generating keys
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \ 
-    software-properties-common \
-    libpq-dev \
-    gcc \
+    curl \
     openssl \
     && rm -rf /var/lib/apt/lists/*
 
