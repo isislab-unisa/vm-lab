@@ -4,7 +4,7 @@ services:
     image: postgres:latest
     container_name: postgres_db_standalone
     ports:
-      - "5432:5432"
+      - "6543:5432" # change port to avoid conflict with other services
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password

@@ -1,3 +1,16 @@
+-- !!! WARNING: THIS FILE DOES NOT CREATE THE DATABASE !!!
+-- This file is used by the docker compose file, where the db is already created
+-- If you need it, you can create it like this
+--
+-- CREATE DATABASE "vm-lab"
+--     WITH
+--     OWNER = username
+--     ENCODING = 'UTF8'
+--     LOCALE_PROVIDER = 'libc'
+--     CONNECTION LIMIT = -1
+--     IS_TEMPLATE = False;
+
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,

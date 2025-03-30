@@ -4,7 +4,7 @@ services:
     image: postgres:latest
     container_name: postgres_db
     ports:
-      - "5432:5432"
+      - "6543:5432" # change port to avoid conflict with other services
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
@@ -26,14 +26,14 @@ services:
       context: https://github.com/isislab-unisa/alfresco-ssh.git
     container_name: support_ssh_flask
     ports:
-      - "5000:5000"
+      - "5001:5000" # change port to avoid conflict with other services
 
   support_sftp_express:
     build:
       context: https://github.com/isislab-unisa/alfresco-sftp.git
     container_name: support_sftp_express
     ports:
-      - "3000:3000"
+      - "3001:3000" # change port to avoid conflict with other services
 
 volumes:
   postgres_data:
