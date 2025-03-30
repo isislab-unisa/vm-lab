@@ -1,8 +1,8 @@
-name: vm_lab_compose
+name: vm_lab_compose_standalone
 services:
   db:
     image: postgres:latest
-    container_name: postgres_db
+    container_name: postgres_db_standalone
     ports:
       - "5432:5432"
     environment:
@@ -15,25 +15,11 @@ services:
 
   main_app:
     build: .
-    container_name: main_app
+    container_name: main_app_standalone
     ports:
       - "8501:8501"
     depends_on:
       - db
-
-  support_ssh_flask:
-    build: 
-      context: https://github.com/isislab-unisa/alfresco-ssh.git
-    container_name: support_ssh_flask
-    ports:
-      - "5000:5000"
-
-  support_sftp_express:
-    build:
-      context: https://github.com/isislab-unisa/alfresco-sftp.git
-    container_name: support_sftp_express
-    ports:
-      - "3000:3000"
 
 volumes:
   postgres_data:
