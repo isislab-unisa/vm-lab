@@ -18,7 +18,7 @@ from frontend.click_handlers.bookmark import bookmark_add_clicked, bookmark_edit
 psd = page_setup(
 	title="My Dashboard",
 	access_control="accepted_roles_only",
-	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
+	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK, Role.REGULAR],
 )
 
 current_username = psd.user_name
@@ -119,106 +119,117 @@ def get_bookmark_data_from_db():
 #             PAGE             #
 ################################
 
-st.title(":blue[:material/tv:] My VMs")
-st.button(
-	"Add VM",
-	type="primary",
-	icon=":material/add:",
-	on_click=lambda: vm_add_clicked(current_username)
-)
+my_vms_title = "My VMs"
 
-interactive_data_table(
-	key="data_table_this_user_vms",
-	data=get_vm_data_from_db("this_user"),
-	refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
-	column_settings={
-		"Name": {
-			"column_width": 1,
-			"data_name": "name"
-		},
-		"Host": {
-			"column_width": 1,
-			"data_name": "host_complete"
-		},
-		"Username": {
-			"column_width": 1,
-			"data_name": "username"
-		},
-		"Is Shared": {
-			"column_width": 1,
-			"data_name": "shared"
-		},
-		"Auth": {
-			"column_width": 1,
-			"data_name": "auth"
-		},
-	},
-	button_settings={
-		"Connect": {
-			"primary": True,
-			"callback": vm_connect_clicked,
-			"icon": ":material/arrow_forward:",
-		},
-		"Edit": {
-			"primary": False,
-			"callback": vm_edit_clicked,
-			"icon": ":material/edit:",
-		},
-		"Delete": {
-			"primary": False,
-			"callback": vm_delete_clicked,
-			"icon": ":material/delete:",
-		}
-	},
-	action_header_name=None,
-	popover_settings={
-		"text": "View"
-	},
-	filters_expanded=False
-)
+if current_role == Role.REGULAR:
+	my_vms_title = "VMs Assigned To Me"
 
-st.divider()
-st.title(":orange[:material/bookmark:] My Bookmarks")
+st.title(f":blue[:material/tv:] {my_vms_title}")
 
-st.button(
-	"Add Bookmark",
-	type="primary",
-	icon=":material/add:",
-	on_click=lambda: bookmark_add_clicked(current_username)
-)
+if current_role != Role.REGULAR:
+	st.button(
+		"Add VM",
+		type="primary",
+		icon=":material/add:",
+		on_click=lambda: vm_add_clicked(current_username)
+	)
 
-interactive_data_table(
-	key="data_table_bookmarks",
-	data=get_bookmark_data_from_db(),
-	refresh_data_callback=get_bookmark_data_from_db,
-	column_settings={
-		"Name": {
-			"column_width": 1,
-			"data_name": "name"
+	interactive_data_table(
+		key="data_table_this_user_vms",
+		data=get_vm_data_from_db("this_user"),
+		refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
+		column_settings={
+			"Name": {
+				"column_width": 1,
+				"data_name": "name"
+			},
+			"Host": {
+				"column_width": 1,
+				"data_name": "host_complete"
+			},
+			"Username": {
+				"column_width": 1,
+				"data_name": "username"
+			},
+			"Is Shared": {
+				"column_width": 1,
+				"data_name": "shared"
+			},
+			"Auth": {
+				"column_width": 1,
+				"data_name": "auth"
+			},
 		},
-		"URL": {
-			"column_width": 3,
-			"data_name": "url"
+		button_settings={
+			"Connect": {
+				"primary": True,
+				"callback": vm_connect_clicked,
+				"icon": ":material/arrow_forward:",
+			},
+			"Edit": {
+				"primary": False,
+				"callback": vm_edit_clicked,
+				"icon": ":material/edit:",
+			},
+			"Delete": {
+				"primary": False,
+				"callback": vm_delete_clicked,
+				"icon": ":material/delete:",
+			}
 		},
-	},
-	button_settings={
-		"Edit": {
-			"primary": False,
-			"callback": bookmark_edit_clicked,
-			"icon": ":material/edit:",
+		action_header_name=None,
+		popover_settings={
+			"text": "View"
 		},
-		"Delete": {
-			"primary": False,
-			"callback": bookmark_delete_clicked,
-			"icon": ":material/delete:",
-		}
-	},
-	action_header_name=None,
-	popover_settings={
-		"text": "View"
-	},
-	filters_expanded=False
-)
+		filters_expanded=False
+	)
+else:
+	pass
+
+
+if current_role != Role.REGULAR:
+	st.divider()
+	st.title(":orange[:material/bookmark:] My Bookmarks")
+
+	st.button(
+		"Add Bookmark",
+		type="primary",
+		icon=":material/add:",
+		on_click=lambda: bookmark_add_clicked(current_username)
+	)
+
+	interactive_data_table(
+		key="data_table_bookmarks",
+		data=get_bookmark_data_from_db(),
+		refresh_data_callback=get_bookmark_data_from_db,
+		column_settings={
+			"Name": {
+				"column_width": 1,
+				"data_name": "name"
+			},
+			"URL": {
+				"column_width": 3,
+				"data_name": "url"
+			},
+		},
+		button_settings={
+			"Edit": {
+				"primary": False,
+				"callback": bookmark_edit_clicked,
+				"icon": ":material/edit:",
+			},
+			"Delete": {
+				"primary": False,
+				"callback": bookmark_delete_clicked,
+				"icon": ":material/delete:",
+			}
+		},
+		action_header_name=None,
+		popover_settings={
+			"text": "View"
+		},
+		filters_expanded=False
+	)
 
 minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
 if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions)):

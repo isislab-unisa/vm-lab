@@ -32,7 +32,7 @@ first_users:
       first_name: David
       last_name: Peters
       password: pqr
-      role: sidekick
+      role: regular
 
     - username: slong
       email: slong@gmail.com

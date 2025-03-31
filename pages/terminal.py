@@ -17,7 +17,7 @@ from utils.session_state import get_session_state_item
 page_setup(
 	title=PageNames.VM_CONNECTION.label,
 	access_control="accepted_roles_only",
-	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK],
+	accepted_roles=[Role.ADMIN, Role.MANAGER, Role.SIDEKICK, Role.REGULAR],
 )
 
 selected_vm = get_session_state_item("selected_vm")

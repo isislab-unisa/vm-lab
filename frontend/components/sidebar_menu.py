@@ -27,10 +27,25 @@ def sidebar_menu(role: Role | None, full_name: str | None):
 					label=PageNames.LOGOUT.label
 				)
 
+			case Role.REGULAR:
+				st.page_link(
+					page=PageNames.MAIN_DASHBOARD.file_name,
+					label=PageNames.MAIN_DASHBOARD.label
+				)
+				st.page_link(
+					page=PageNames.USER_SETTINGS.file_name,
+					label=PageNames.USER_SETTINGS.label
+				)
+				st.page_link(
+					page=PageNames.LOGOUT.file_name,
+					label=PageNames.LOGOUT.label
+				)
+
 			case Role.SIDEKICK:
 				st.page_link(
 					page=PageNames.MAIN_DASHBOARD.file_name,
-					label=PageNames.MAIN_DASHBOARD.label)
+					label=PageNames.MAIN_DASHBOARD.label
+				)
 				st.page_link(
 					page=PageNames.USER_SETTINGS.file_name,
 					label=PageNames.USER_SETTINGS.label
