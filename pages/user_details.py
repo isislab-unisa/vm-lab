@@ -12,6 +12,7 @@ from frontend.click_handlers.vm import vm_connect_clicked, vm_edit_clicked, vm_d
 from frontend.components import error_message, confirm_dialog
 from frontend.components.interactive_data_table import interactive_data_table
 from frontend.forms.user import change_role_form
+from utils.refresh_db_functions import get_vm_data_from_db
 
 from utils.session_state import get_session_state_item, set_session_state_item
 
@@ -29,70 +30,8 @@ psd = page_setup(
 curren_role = psd.user_role
 selected_user: User = get_session_state_item("selected_user")
 
-if selected_user is None or curren_role is None or get_session_state_item("user_has_been_disabled"):
+if selected_user is None or curren_role is None or get_session_state_item("user_has_been_disabled_or_enabled"):
 	switch_page(PageNames.MANAGE_USER_LIST())
-
-
-@st.cache_data
-def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
-	"""
-	Fetch VM data from the database.
-
-	:param scope: Whether to get the VMs for the current user ("this_user") or all users except for the current user ("all_users").
-	:return: List of dictionaries with VM info.
-	"""
-	requesting_user_name = selected_user.username
-
-	try:
-		with get_db() as db:
-			if scope == "this_user":
-				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name)
-			elif scope == "all_users":
-				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=requesting_user_name)
-			else:
-				raise ValueError("Invalid scope. Use 'user' or 'all'.")
-
-		result = []
-		for vm in vm_list:
-			result.append(build_vm_dict(vm, requesting_user_name))
-
-		return result
-	except ValueError as e:
-		error_message(cause=str(e))
-	except Exception as e:
-		error_message(unknown_exception=e)
-
-
-def build_vm_dict(vm: VirtualMachine, requesting_user_name: str):
-	"""Build a correct dictionary with the VM info to display in the table."""
-	if vm.ssh_key:
-		auth_type = ":material/key: SSH Key"
-	elif vm.password:
-		auth_type = ":material/password: Password"
-	else:
-		auth_type = ":material/do_not_disturb_on: None"
-
-	try:
-		owner = vm.user.username
-	except KeyError:
-		raise KeyError(f"Could not find the owner of the VM `{vm.name}`.")
-
-	vm_dict = {
-		# Hidden
-		"original_object": vm,
-		"requesting_user": requesting_user_name,
-		# Shown in columns
-		"name": vm.name,
-		"host_complete": f":blue[{vm.host}] : :red[{vm.port}]",
-		"username": vm.username,
-		"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
-		"auth": auth_type,
-		"owner": owner,
-		# Button disabled settings
-		"buttons_disabled": {}
-	}
-
-	return vm_dict
 
 
 ################################
@@ -114,17 +53,27 @@ change_role_form(selected_user, curren_role)
 
 def disable():
 	disable_user(selected_user.username)
-	set_session_state_item("user_has_been_disabled", True)
+	set_session_state_item("user_has_been_disabled_or_enabled", True)
+
+	# Force all vms to be shared
+	with get_db() as db:
+		vms = VirtualMachine.find_by_user_name(db, selected_user.username)
+		for vm in vms:
+			if not vm.shared:
+				vm.shared = True
+				db.commit()
+
 
 
 if not selected_user.disabled:
 	st.button("Disable User", on_click=lambda: confirm_dialog(
 		":warning: WARNING: Are you sure you want to disable this user?",
-		"The user and the created VMs will not be deleted.",
+		"The user WILL NOT be deleted. All the user's VMs will become shared.",
 		is_confirm_button_type_primary=True,
 		confirm_button_callback=lambda: disable(),
 	))
 else:
+	st.button("Revert Disabling")
 	st.button("Delete")
 
 
@@ -134,8 +83,8 @@ st.subheader("Virtual Machines")
 # Reuse the functions from my_vms.py
 interactive_data_table(
 	key="data_table_this_user_vms",
-	data=get_vm_data_from_db("this_user"),
-	refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
+	data=get_vm_data_from_db(selected_user.username, "owned_vms", True),
+	refresh_data_callback=lambda: get_vm_data_from_db(selected_user.username, "owned_vms", True),
 	column_settings={
 		"Name": {
 			"column_width": 1,

@@ -26,9 +26,9 @@ if current_username is None:
 	switch_page(PageNames.ERROR())
 
 
-if get_session_state_item("user_has_been_disabled"):
+if get_session_state_item("user_has_been_disabled_or_enabled"):
 	st.cache_data.clear()
-	pop_session_state_item("user_has_been_disabled")
+	pop_session_state_item("user_has_been_disabled_or_enabled")
 
 
 ################################
@@ -55,7 +55,7 @@ def get_user_data_from_db():
 			"last_name": user.last_name,
 			"email": user.email,
 			"role": user.role,
-			"disabled": ":heavy_check_mark: Yes" if user.disabled else ":x: No",
+			"disabled": ":x: Yes" if user.disabled else "No",
 			# Button disabled settings
 			"buttons_disabled": {}
 		}

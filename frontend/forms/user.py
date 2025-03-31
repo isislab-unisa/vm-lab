@@ -23,10 +23,10 @@ def change_role_form(user: User, requesting_role: Role):
 
 	index = 0
 	match user.role:
-		case Role.SIDEKICK.value:
-			index = 0
-		case Role.MANAGER.value:
+		case Role.REGULAR.value:
 			index = 1
+		case Role.MANAGER.value:
+			index = 2
 
 	selected_role = st.selectbox(
 		"Role",
