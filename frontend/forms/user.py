@@ -17,9 +17,9 @@ from utils.session_state import set_session_state_item, get_session_state_item, 
 
 def change_role_form(user: User, requesting_role: Role):
 	if requesting_role == Role.ADMIN:
-		available_roles = [Role.to_phrase(Role.SIDEKICK), Role.to_phrase(Role.MANAGER)]
+		available_roles = [Role.to_phrase(Role.SIDEKICK), Role.to_phrase(Role.REGULAR), Role.to_phrase(Role.MANAGER)]
 	else:
-		available_roles = [Role.to_phrase(Role.SIDEKICK)]
+		available_roles = [Role.to_phrase(Role.SIDEKICK), Role.to_phrase(Role.REGULAR)]
 
 	index = 0
 	match user.role:
