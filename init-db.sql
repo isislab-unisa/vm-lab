@@ -18,7 +18,8 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    role VARCHAR(10) NOT NULL
+    role VARCHAR(10) NOT NULL,
+    disabled BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE virtual_machines (

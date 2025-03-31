@@ -44,6 +44,6 @@ def remove_user_in_authenticator_object(username: str) -> Authenticate:
 	"""
 	authenticator: Authenticate = get_or_create_authenticator_object()
 	credentials: dict = authenticator.authentication_controller.authentication_model.credentials['usernames']
-	credentials.pop(username)
+	credentials.pop(username, None)
 	set_session_state_item('authenticator', authenticator)
 	return authenticator

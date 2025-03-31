@@ -3,11 +3,11 @@ from sqlalchemy.exc import IntegrityError
 from streamlit_authenticator import RegisterError, UpdateError
 from streamlit_authenticator.utilities import Validator, Helpers
 
-from backend import Role, get_db, add_to_db
+from backend import Role, get_db, add_to_db, delete_from_db
 from backend.models import User
 from backend.authentication.authenticator_creation import get_or_create_authenticator_object
 from backend.authentication.authenticator_manipulation import add_new_user_to_authenticator_object, \
-	edit_user_in_authenticator_object
+	edit_user_in_authenticator_object, remove_user_in_authenticator_object
 
 
 def create_new_user(new_first_name: str, new_last_name: str, new_email: str,
@@ -315,3 +315,39 @@ def edit_role(username: str, new_role: Role):
 		db.refresh(user)
 
 		edit_user_in_authenticator_object(username, user)
+
+
+def disable_user(username: str):
+	"""
+	Disables a user by removing it from in the authenticator.
+	:param username: The username of the user to be disabled
+	:raises UpdateError If the user has not been found
+	"""
+	with get_db() as db:
+		user = User.find_by_user_name(db, username)
+
+		if user is None:
+			raise UpdateError(f'User with username {username} does not exist')
+
+		user.disabled = True
+		db.commit()
+		db.refresh(user)
+
+		remove_user_in_authenticator_object(username)
+
+
+def delete_user(username: str):
+	"""
+	Deletes a user from the database.
+	:param username: The username of the user to be deleted
+	:raises UpdateError If the user has not been found
+	"""
+	with get_db() as db:
+		user = User.find_by_user_name(db, username)
+
+		if user is None:
+			raise UpdateError(f'User with username {username} does not exist')
+
+		delete_from_db(db, user)
+
+		remove_user_in_authenticator_object(username)

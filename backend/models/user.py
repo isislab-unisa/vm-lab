@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import bcrypt
 from typing import Type, List, cast
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship, Session
 
 from .base_model import Base
@@ -25,6 +25,7 @@ class User(Base):
 	role = Column(String(10), nullable=False)
 	first_name = Column(String(50), nullable=False)
 	last_name = Column(String(50), nullable=False)
+	disabled = Column(Boolean, nullable=False, default=False)
 
 	################################
 	#  RELATIONSHIPS ONE-TO-MANY   #
@@ -63,6 +64,7 @@ class User(Base):
 
 	@staticmethod
 	def find_all(db: Session,
+				 disabled: bool = None,
 				 exclude_user_id: int = None,
 				 exclude_user_name: str = None,
 				 exclude_user_roles: list[Role] = None
@@ -70,12 +72,16 @@ class User(Base):
 		"""
 		Find all users in the database, eventually excluding one of them or/and an entire role.
 		:param db: The database session obtained with get_db()
+		:param disabled: If the user must be disabled or not
 		:param exclude_user_id: The id of the user to exclude
 		:param exclude_user_name: The name of the user to exclude
 		:param exclude_user_roles: The roles to exclude
 		:return A list of users
 		"""
 		query = db.query(User)
+
+		if disabled is not None:
+			query = query.filter(User.disabled == disabled)
 
 		if exclude_user_id is not None:
 			query = query.filter(User.id != exclude_user_id)
@@ -178,6 +184,7 @@ class User(Base):
 				f"email={self.email}, "
 				f"first_name={self.first_name}, "
 				f"last_name={self.last_name}, "
+				f"disabled={self.disabled}, "
 				f"vm_count={len(self.virtual_machines)}, "
 				f"bookmark_count={len(self.bookmarks)}"
 				f")")

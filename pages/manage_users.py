@@ -8,6 +8,7 @@ from backend.models import User
 from frontend import PageNames, page_setup
 from frontend.click_handlers.user import user_details_clicked
 from frontend.components import interactive_data_table
+from utils.session_state import get_session_state_item, pop_session_state_item
 
 ################################
 #            SETUP             #
@@ -23,6 +24,11 @@ psd = page_setup(
 current_username = psd.user_name
 if current_username is None:
 	switch_page(PageNames.ERROR())
+
+
+if get_session_state_item("user_has_been_disabled"):
+	st.cache_data.clear()
+	pop_session_state_item("user_has_been_disabled")
 
 
 ################################
@@ -49,6 +55,7 @@ def get_user_data_from_db():
 			"last_name": user.last_name,
 			"email": user.email,
 			"role": user.role,
+			"disabled": ":heavy_check_mark: Yes" if user.disabled else ":x: No",
 			# Button disabled settings
 			"buttons_disabled": {}
 		}
@@ -87,6 +94,10 @@ interactive_data_table(
 		"Role": {
 			"column_width": 1,
 			"data_name": "role"
+		},
+		"Is Disabled": {
+			"column_width": 1,
+			"data_name": "disabled"
 		}
 	},
 	button_settings={

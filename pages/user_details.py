@@ -4,16 +4,16 @@ import streamlit as st
 from streamlit import switch_page
 
 from backend import Role, get_db
+from backend.authentication.user_data_manipulation import disable_user
 from backend.models import User, VirtualMachine
 
 from frontend import PageNames, page_setup
 from frontend.click_handlers.vm import vm_connect_clicked, vm_edit_clicked, vm_delete_clicked
-from frontend.components import error_message
+from frontend.components import error_message, confirm_dialog
 from frontend.components.interactive_data_table import interactive_data_table
 from frontend.forms.user import change_role_form
 
-from utils.session_state import get_session_state_item
-
+from utils.session_state import get_session_state_item, set_session_state_item
 
 ################################
 #            SETUP             #
@@ -29,9 +29,8 @@ psd = page_setup(
 curren_role = psd.user_role
 selected_user: User = get_session_state_item("selected_user")
 
-if selected_user is None or curren_role is None:
+if selected_user is None or curren_role is None or get_session_state_item("user_has_been_disabled"):
 	switch_page(PageNames.MANAGE_USER_LIST())
-
 
 
 @st.cache_data
@@ -100,14 +99,34 @@ def build_vm_dict(vm: VirtualMachine, requesting_user_name: str):
 #             PAGE             #
 ################################
 
-st.header(f"Details of user `{selected_user.username}`")
+if selected_user.disabled:
+	st.header(f"Details of user `{selected_user.username}` (USER HAS BEEN DISABLED)")
+else:
+	st.header(f"Details of user `{selected_user.username}`")
 st.write(f"ID: {selected_user.id}")
 st.write(f"Email: {selected_user.email}")
 st.write(f"First Name: {selected_user.first_name}")
 st.write(f"Last Name: {selected_user.last_name}")
 
+
 # Role select box
 change_role_form(selected_user, curren_role)
+
+def disable():
+	disable_user(selected_user.username)
+	set_session_state_item("user_has_been_disabled", True)
+
+
+if not selected_user.disabled:
+	st.button("Disable User", on_click=lambda: confirm_dialog(
+		":warning: WARNING: Are you sure you want to disable this user?",
+		"The user and the created VMs will not be deleted.",
+		is_confirm_button_type_primary=True,
+		confirm_button_callback=lambda: disable(),
+	))
+else:
+	st.button("Delete")
+
 
 st.divider()
 st.subheader("Virtual Machines")

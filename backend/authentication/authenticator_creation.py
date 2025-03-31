@@ -17,7 +17,7 @@ def get_db_users_credentials() -> dict:
 	credentials = {"usernames": {}}
 
 	with get_db() as db:
-		users = User.find_all(db)
+		users = User.find_all(db, disabled=False)
 		for user in users:
 			credentials["usernames"][user.username] = user.to_credentials_dict()
 
