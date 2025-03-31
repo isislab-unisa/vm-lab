@@ -16,9 +16,9 @@ def new_user_accept_clicked_as_admin(data_row):
 	return new_user_accept_form(
 		user_to_accept=user_to_accept,
 		available_roles_str=[
-			# TODO: Add Regular user
+			Role.to_phrase(Role.MANAGER),
 			Role.to_phrase(Role.SIDEKICK),
-			Role.to_phrase(Role.MANAGER)
+			Role.to_phrase(Role.REGULAR),
 		]
 	)
 
@@ -29,8 +29,8 @@ def new_user_accept_clicked_as_manager(data_row):
 	return new_user_accept_form(
 		user_to_accept=user_to_accept,
 		available_roles_str=[
-			# TODO: Add Regular user
-			Role.to_phrase(Role.SIDEKICK)
+			Role.to_phrase(Role.SIDEKICK),
+			Role.to_phrase(Role.REGULAR),
 		]
 	)
 

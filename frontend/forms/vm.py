@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit import switch_page
 
+from backend import Role
 from backend.database import get_db, add_to_db, delete_from_db
 from backend.models import VirtualMachine, User
 from exceptions import NotFoundError
@@ -67,14 +68,14 @@ def add_vm_form(current_username: str):
 def assign_vm_form(current_username: str):
 	"""Dialog to add a new Virtual Machine."""
 	with get_db() as db:
-		found_users = User.find_all(db)
+		found_users = User.find_all(db, exclude_user_roles=[Role.NEW_USER, Role.ADMIN, Role.MANAGER])
 		users = []
 		for user in found_users:
 			users.append(user.username)
 
 
-	with st.form(f"add-vm-form", border=False):
-		assign_to = st.selectbox()
+	with st.form(f"assign-vm-form", border=False):
+		assign_to = st.selectbox("Assign to user", users, index=0)
 		name = st.text_input("VM name", placeholder="Insert name")
 		host = st.text_input("Host", placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=22, placeholder="Insert port")
@@ -125,6 +126,8 @@ def vm_edit_form(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 				 key: str = 'Edit VM information'):
 	with st.form(key=key, clear_on_submit=clear_on_submit):
 		st.subheader('Edit VM information')
+		if selected_vm.assigned_to:
+			st.text(f"Assigned to user: {selected_vm.assigned_to}")
 		name = st.text_input("VM name", value=selected_vm.name, placeholder="Insert name")
 		host = st.text_input("Host", value=selected_vm.host, placeholder="Insert IP address or domain")
 		port = st.number_input("Port", value=selected_vm.port, placeholder="Insert port")
