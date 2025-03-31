@@ -4,7 +4,7 @@ import streamlit as st
 from streamlit import switch_page
 
 from backend import Role, get_db
-from backend.authentication.user_data_manipulation import disable_user
+from backend.authentication.user_data_manipulation import disable_user, delete_user
 from backend.models import User, VirtualMachine
 
 from frontend import PageNames, page_setup
@@ -64,17 +64,37 @@ def disable():
 				db.commit()
 
 
+def delete():
+	delete_user(selected_user.username)
+	set_session_state_item("user_has_been_disabled_or_enabled", True)
+
+
+def revert():
+	disable_user(selected_user.username, revert=True)
+	set_session_state_item("user_has_been_disabled_or_enabled", True)
+
 
 if not selected_user.disabled:
 	st.button("Disable User", on_click=lambda: confirm_dialog(
 		":warning: WARNING: Are you sure you want to disable this user?",
 		"The user WILL NOT be deleted. All the user's VMs will become shared.",
 		is_confirm_button_type_primary=True,
-		confirm_button_callback=lambda: disable(),
+		confirm_button_callback=disable,
 	))
 else:
-	st.button("Revert Disabling")
-	st.button("Delete")
+	st.button("Revert Disabling", on_click=lambda: confirm_dialog(
+		"Are you sure you want to **REVERT THE DISABLING** of this user?",
+		"All the user's VMs will still be shared.",
+		is_confirm_button_type_primary=True,
+		confirm_button_callback=revert,
+	))
+
+	st.button("Delete User", on_click=lambda: confirm_dialog(
+		":warning: WARNING: Are you sure you want to **PERMANENTLY DELETE** this user?",
+		"All the user's VMs will be DELETED.",
+		is_confirm_button_type_primary=True,
+		confirm_button_callback=delete,
+	))
 
 
 st.divider()

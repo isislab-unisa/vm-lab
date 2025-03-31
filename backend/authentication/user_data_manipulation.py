@@ -4,7 +4,7 @@ from streamlit_authenticator import RegisterError, UpdateError
 from streamlit_authenticator.utilities import Validator, Helpers
 
 from backend import Role, get_db, add_to_db, delete_from_db
-from backend.models import User
+from backend.models import User, VirtualMachine, Bookmark
 from backend.authentication.authenticator_creation import get_or_create_authenticator_object
 from backend.authentication.authenticator_manipulation import add_new_user_to_authenticator_object, \
 	edit_user_in_authenticator_object, remove_user_in_authenticator_object
@@ -317,7 +317,7 @@ def edit_role(username: str, new_role: Role):
 		edit_user_in_authenticator_object(username, user)
 
 
-def disable_user(username: str):
+def disable_user(username: str, revert: bool = False):
 	"""
 	Disables a user by removing it from in the authenticator.
 	:param username: The username of the user to be disabled
@@ -329,7 +329,7 @@ def disable_user(username: str):
 		if user is None:
 			raise UpdateError(f'User with username {username} does not exist')
 
-		user.disabled = True
+		user.disabled = not revert
 		db.commit()
 		db.refresh(user)
 
@@ -348,6 +348,17 @@ def delete_user(username: str):
 		if user is None:
 			raise UpdateError(f'User with username {username} does not exist')
 
+		# Delete VMs
+		user_vms = VirtualMachine.find_by_user_name(db, user.username)
+		for vm in user_vms:
+			delete_from_db(db, vm)
+
+		# Delete Bookmarks
+		user_bookmarks = Bookmark.find_by_user_name(db, user.username)
+		for bookmark in user_bookmarks:
+			delete_from_db(db, bookmark)
+
+		# Delete User
 		delete_from_db(db, user)
 
 		remove_user_in_authenticator_object(username)
