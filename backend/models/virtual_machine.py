@@ -26,6 +26,7 @@ class VirtualMachine(Base):
 	password = Column(String(128))
 	ssh_key = Column(LargeBinary)
 	shared = Column(Boolean, nullable=False, default=True)
+	assigned_to = Column(String(50), nullable=True)
 
 	################################
 	#         FOREIGN KEYS         #
@@ -94,7 +95,10 @@ class VirtualMachine(Base):
 		if exclude_user_id is not None:
 			query = query.filter(VirtualMachine.user_id != exclude_user_id)
 		elif exclude_user_name is not None:
-			query = query.join(User).filter(User.username != exclude_user_name)
+			# It will exclude a vm only if its owner is the excluded username and the assigned_to field is None
+			query = query.join(User).filter(
+				~((User.username == exclude_user_name) & (VirtualMachine.assigned_to == None))
+			)
 
 		if shared is not None:
 			query = query.filter(VirtualMachine.shared == shared)
@@ -138,7 +142,7 @@ class VirtualMachine(Base):
 
 
 	@staticmethod
-	def find_by_user_name(db: Session, user_name: str, shared: bool = None) -> list[VirtualMachine]:
+	def find_by_user_name(db: Session, user_name: str, shared: bool = None, exclude_assigned_to: bool = False) -> list[VirtualMachine]:
 		"""
 		Find all virtual machines in the database owned by a user with a specific name.
 		Can optionally filter in or out vms that are shared.
@@ -152,10 +156,31 @@ class VirtualMachine(Base):
 		if shared is not None:
 			query = query.filter(VirtualMachine.shared == shared)
 
+		if exclude_assigned_to:
+			query = query.filter(VirtualMachine.assigned_to.is_(None))
+
+
 		query_result: list[Type[VirtualMachine]] = (query
 				.join(VirtualMachine.user)
 				.filter(User.username == user_name)
 				.all())
+		return cast(List[VirtualMachine], query_result)
+
+
+	@staticmethod
+	def find_by_assigned_to(db: Session, user_name: str) -> list[VirtualMachine]:
+		"""
+		Find all virtual machines in the database assigned to a user with a specific username.
+		Can optionally filter in or out vms that are shared.
+		:param db: The database session obtained with get_db()
+		:param user_name: The username of the user
+		:return: A list of virtual machines owned by a user
+		"""
+		query = db.query(VirtualMachine)
+
+		query_result: list[Type[VirtualMachine]] = (query
+													.filter(VirtualMachine.assigned_to == user_name)
+													.all())
 		return cast(List[VirtualMachine], query_result)
 
 
@@ -170,5 +195,6 @@ class VirtualMachine(Base):
 				f"host={self.host}, "
 				f"port={self.port}, "
 				f"shared={self.shared}, "
+				f"assigned_to={self.assigned_to}, "
 				f"user_id={self.user_id}"
 				f")")

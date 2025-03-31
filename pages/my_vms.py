@@ -8,7 +8,8 @@ from backend.role import Role, role_has_enough_priority
 
 from frontend import PageNames, page_setup
 from frontend.components import interactive_data_table, error_message
-from frontend.click_handlers.vm import vm_connect_clicked, vm_add_clicked, vm_edit_clicked, vm_delete_clicked
+from frontend.click_handlers.vm import vm_connect_clicked, vm_add_clicked, vm_edit_clicked, vm_delete_clicked, \
+	vm_assign_clicked
 from frontend.click_handlers.bookmark import bookmark_add_clicked, bookmark_edit_clicked, bookmark_delete_clicked
 
 ################################
@@ -33,7 +34,7 @@ if current_username is None or current_role is None:
 ################################
 
 @st.cache_data
-def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
+def get_vm_data_from_db(scope: Literal["owned_vms", "assigned_vms", "all_vms"]):
 	"""
 	Fetch VM data from the database.
 
@@ -44,12 +45,14 @@ def get_vm_data_from_db(scope: Literal["this_user", "all_users"] = "user"):
 
 	try:
 		with get_db() as db:
-			if scope == "this_user":
-				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name)
-			elif scope == "all_users":
+			if scope == "owned_vms":
+				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name, exclude_assigned_to=True)
+			elif scope == "assigned_vms":
+				vm_list = VirtualMachine.find_by_assigned_to(db, requesting_user_name)
+			elif scope == "all_vms":
 				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=requesting_user_name)
 			else:
-				raise ValueError("Invalid scope. Use 'user' or 'all'.")
+				raise ValueError("Invalid scope.")
 
 		result = []
 		for vm in vm_list:
@@ -87,6 +90,7 @@ def build_vm_dict(vm: VirtualMachine, requesting_user_name: str):
 		"shared": ":heavy_check_mark: Yes" if vm.shared else ":x: No",
 		"auth": auth_type,
 		"owner": owner,
+		"assigned_to": vm.assigned_to,
 		# Button disabled settings
 		"buttons_disabled": {}
 	}
@@ -119,14 +123,8 @@ def get_bookmark_data_from_db():
 #             PAGE             #
 ################################
 
-my_vms_title = "My VMs"
-
-if current_role == Role.REGULAR:
-	my_vms_title = "VMs Assigned To Me"
-
-st.title(f":blue[:material/tv:] {my_vms_title}")
-
 if current_role != Role.REGULAR:
+	st.title(f":blue[:material/tv:] Owned VMs")
 	st.button(
 		"Add VM",
 		type="primary",
@@ -136,8 +134,8 @@ if current_role != Role.REGULAR:
 
 	interactive_data_table(
 		key="data_table_this_user_vms",
-		data=get_vm_data_from_db("this_user"),
-		refresh_data_callback=lambda: get_vm_data_from_db("this_user"),
+		data=get_vm_data_from_db("owned_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db("owned_vms"),
 		column_settings={
 			"Name": {
 				"column_width": 1,
@@ -183,9 +181,41 @@ if current_role != Role.REGULAR:
 		},
 		filters_expanded=False
 	)
-else:
-	pass
 
+if current_role == Role.SIDEKICK or current_role == Role.REGULAR:
+	st.title(f":green[:material/tv:] Assigned VMs")
+	interactive_data_table(
+		key="data_table_assigned_vms_to_this_user",
+		data=get_vm_data_from_db("assigned_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db("assigned_vms"),
+		column_settings={
+			"Name": {
+				"column_width": 1,
+				"data_name": "name"
+			},
+			"Host": {
+				"column_width": 1,
+				"data_name": "host_complete"
+			},
+			"Username": {
+				"column_width": 1,
+				"data_name": "username"
+			},
+			"Auth": {
+				"column_width": 1,
+				"data_name": "auth"
+			},
+		},
+		button_settings={
+			"Connect": {
+				"primary": True,
+				"callback": vm_connect_clicked,
+				"icon": ":material/arrow_forward:",
+			},
+		},
+		action_header_name=None,
+		filters_expanded=False
+	)
 
 if current_role != Role.REGULAR:
 	st.divider()
@@ -231,22 +261,21 @@ if current_role != Role.REGULAR:
 		filters_expanded=False
 	)
 
-minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
-if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions)):
+
+if current_role == Role.ADMIN or current_role == Role.MANAGER:
 	st.divider()
 	st.title(":green[:material/tv_signin:] Other Users' VMs")
-
 	st.button(
 		"Assign a new VM",
 		icon=":material/assignment_add:",
 		type="primary",
-		on_click=lambda: print("Yet to implement...")  # TODO: Implement this
+		on_click=lambda: vm_assign_clicked(current_username)
 	)
 
 	interactive_data_table(
 		key="data_table_all_users_vms",
-		data=get_vm_data_from_db("all_users"),
-		refresh_data_callback=lambda: get_vm_data_from_db("all_users"),
+		data=get_vm_data_from_db("all_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db("all_vms"),
 		column_settings={
 			"Name": {
 				"column_width": 1,
@@ -267,6 +296,10 @@ if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions))
 			"Is Shared": {
 				"column_width": 1,
 				"data_name": "shared"
+			},
+			"Assigned To": {
+				"column_width": 1,
+				"data_name": "assigned_to"
 			},
 			"Auth": {
 				"column_width": 1,
@@ -296,3 +329,9 @@ if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions))
 		},
 		filters_expanded=False
 	)
+
+# minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
+# if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions)):
+
+
+

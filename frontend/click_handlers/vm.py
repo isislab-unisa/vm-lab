@@ -11,16 +11,21 @@ from backend.models import VirtualMachine
 
 from frontend import PageNames
 from frontend.components import error_message
-from frontend.forms.vm import add_vm_form, vm_delete_form
+from frontend.forms.vm import add_vm_form, vm_delete_form, assign_vm_form
 
 from utils.session_state import set_session_state_item
 from utils.terminal_connection import test_connection_with_paramiko, send_credentials_to_external_module, \
 	build_module_url
 
 
-@st.dialog("Add new VM")
+@st.dialog("Add a new VM")
 def vm_add_clicked(current_username: str):
 	return add_vm_form(current_username)
+
+
+@st.dialog("Assign a new VM")
+def vm_assign_clicked(current_username: str):
+	return assign_vm_form(current_username)
 
 
 def vm_edit_clicked(data_row):

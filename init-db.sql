@@ -30,6 +30,7 @@ CREATE TABLE virtual_machines (
     ssh_key BYTEA,
     password VARCHAR(128),
     shared BOOLEAN NOT NULL DEFAULT true,
+    assigned_to VARCHAR(50),
     user_id INTEGER NOT NULL, 
     CONSTRAINT fk_user FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE 

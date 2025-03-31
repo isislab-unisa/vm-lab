@@ -64,6 +64,63 @@ def add_vm_form(current_username: str):
 				st.rerun()
 
 
+def assign_vm_form(current_username: str):
+	"""Dialog to add a new Virtual Machine."""
+	with get_db() as db:
+		found_users = User.find_all(db)
+		users = []
+		for user in found_users:
+			users.append(user.username)
+
+
+	with st.form(f"add-vm-form", border=False):
+		assign_to = st.selectbox()
+		name = st.text_input("VM name", placeholder="Insert name")
+		host = st.text_input("Host", placeholder="Insert IP address or domain")
+		port = st.number_input("Port", value=22, placeholder="Insert port")
+		username = st.text_input("Username", placeholder="Insert SSH username")
+		password = st.text_input("Password (optional)", type="password", placeholder="Insert password (optional)")
+		ssh_key = st.file_uploader("SSH Key (optional)")
+		st.divider()
+		submit_button = st.form_submit_button("Save", use_container_width=True)
+
+	if submit_button:
+		if not name or not host or not port or not username:
+			st.warning("Fill out all of the required fields.")
+		else:
+			try:
+				with get_db() as db:
+					new_vm = VirtualMachine(
+						name=name,
+						host=host,
+						port=port,
+						username=username,
+						assigned_to=assign_to,
+						shared=True,
+					)
+					user = User.find_by_user_name(db, current_username)
+
+					if user is None:
+						raise NotFoundError("User")
+
+					new_vm.user_id = user.id
+
+					if password:
+						new_vm.password = VirtualMachine.encrypt_password(password)
+
+					if ssh_key:
+						new_vm.ssh_key = VirtualMachine.encrypt_key(ssh_key.getvalue())
+
+					add_to_db(db, new_vm)
+			except NotFoundError as e:
+				error_message(cause=str(e), when="while creating a new VM")
+			except Exception as e:
+				error_message(unknown_exception=e, when="while creating a new VM")
+			else:
+				st.success(f"Created")
+				st.cache_data.clear()  # Refresh my_vms table
+				st.rerun()
+
 def vm_edit_form(selected_vm: VirtualMachine, clear_on_submit: bool = False,
 				 key: str = 'Edit VM information'):
 	with st.form(key=key, clear_on_submit=clear_on_submit):
