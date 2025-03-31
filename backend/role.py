@@ -5,6 +5,7 @@ class Role(Enum):
 	ADMIN = 'admin'
 	MANAGER = 'manager'
 	SIDEKICK = 'sidekick'
+	REGULAR = 'regular'
 	NEW_USER = 'new_user'
 
 	def to_phrase(self):
@@ -34,8 +35,10 @@ def role_has_enough_priority(current_role: Role, minimum_role_required: Role) ->
 				return 1
 			case Role.SIDEKICK:
 				return 2
-			case Role.NEW_USER:
+			case Role.REGULAR:
 				return 3
+			case Role.NEW_USER:
+				return 4
 
 	current_priority = to_priority(current_role)
 	minimum_priority = to_priority(minimum_role_required)
