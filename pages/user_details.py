@@ -103,8 +103,8 @@ st.subheader("Virtual Machines")
 # Reuse the functions from my_vms.py
 interactive_data_table(
 	key="data_table_this_user_vms",
-	data=get_vm_data_from_db(selected_user.username, "owned_vms", True),
-	refresh_data_callback=lambda: get_vm_data_from_db(selected_user.username, "owned_vms", True),
+	data=get_vm_data_from_db(selected_user.username, "my_owned_vms", True),
+	refresh_data_callback=lambda: get_vm_data_from_db(selected_user.username, "my_owned_vms", True),
 	column_settings={
 		"Name": {
 			"column_width": 1,

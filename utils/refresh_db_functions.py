@@ -8,7 +8,9 @@ from frontend.components import error_message
 
 
 @st.cache_data
-def get_vm_data_from_db(requesting_user_name: str, scope: Literal["owned_vms", "assigned_vms", "all_vms"], shared: bool = None):
+def get_vm_data_from_db(username: str,
+						scope: Literal["my_owned_vms", "my_assigned_vms", "all_owned_vms", "all_assigned_vms"],
+						shared: bool = None):
 	"""
 	Fetch VM data from the database.
 
@@ -17,18 +19,20 @@ def get_vm_data_from_db(requesting_user_name: str, scope: Literal["owned_vms", "
 	"""
 	try:
 		with get_db() as db:
-			if scope == "owned_vms":
-				vm_list = VirtualMachine.find_by_user_name(db, requesting_user_name, exclude_assigned_to=True, shared=shared)
-			elif scope == "assigned_vms":
-				vm_list = VirtualMachine.find_by_assigned_to(db, requesting_user_name)
-			elif scope == "all_vms":
-				vm_list = VirtualMachine.find_all(db, shared=True, exclude_user_name=requesting_user_name)
+			if scope == "my_owned_vms":
+				vm_list = VirtualMachine.find_by_user_name(db, username, exclude_assigned_to=True, shared=shared)
+			elif scope == "my_assigned_vms":
+				vm_list = VirtualMachine.find_by_assigned_to(db, username)
+			elif scope == "all_owned_vms":
+				vm_list = VirtualMachine.find_all(db, shared=True, assigned_to=False, exclude_user_name=username)
+			elif scope == "all_assigned_vms":
+				vm_list = VirtualMachine.find_all(db, assigned_to=True)
 			else:
-				raise ValueError("Invalid scope.")
+				raise ValueError(f"Invalid vm search scope.")
 
 		result = []
 		for vm in vm_list:
-			result.append(build_vm_dict(vm, requesting_user_name))
+			result.append(build_vm_dict(vm, username))
 
 		return result
 	except ValueError as e:

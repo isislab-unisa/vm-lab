@@ -77,6 +77,7 @@ class VirtualMachine(Base):
 	@staticmethod
 	def find_all(db: Session,
 				 shared: bool = None,
+				 assigned_to: bool = None,
 				 exclude_user_id: int = None,
 				 exclude_user_name: str = None
 				 ) -> list[VirtualMachine]:
@@ -95,13 +96,16 @@ class VirtualMachine(Base):
 		if exclude_user_id is not None:
 			query = query.filter(VirtualMachine.user_id != exclude_user_id)
 		elif exclude_user_name is not None:
-			# It will exclude a vm only if its owner is the excluded username and the assigned_to field is None
-			query = query.join(User).filter(
-				~((User.username == exclude_user_name) & (VirtualMachine.assigned_to == None))
-			)
+			query = query.join(User).filter(User.username != exclude_user_name)
 
 		if shared is not None:
 			query = query.filter(VirtualMachine.shared == shared)
+
+		if assigned_to is not None:
+			if assigned_to:
+				query = query.filter(VirtualMachine.assigned_to.isnot(None))
+			else:
+				query = query.filter(VirtualMachine.assigned_to.is_(None))
 
 		query_result: list[Type[VirtualMachine]] = query.all()
 		return cast(List[VirtualMachine], query_result)

@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit import switch_page
 
-from backend.role import Role
+from backend.role import Role, role_has_enough_priority
 
 from frontend import PageNames, page_setup
 from frontend.components import interactive_data_table
@@ -32,7 +32,7 @@ if current_username is None or current_role is None:
 ################################
 
 if current_role != Role.REGULAR:
-	st.title(f":blue[:material/tv:] Owned VMs")
+	st.title(f":blue[:material/tv:] My VMs")
 	st.button(
 		"Add VM",
 		type="primary",
@@ -42,8 +42,8 @@ if current_role != Role.REGULAR:
 
 	interactive_data_table(
 		key="data_table_this_user_vms",
-		data=get_vm_data_from_db(current_username, "owned_vms"),
-		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "owned_vms"),
+		data=get_vm_data_from_db(current_username, "my_owned_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "my_owned_vms"),
 		column_settings={
 			"Name": {
 				"column_width": 1,
@@ -91,11 +91,11 @@ if current_role != Role.REGULAR:
 	)
 
 if current_role == Role.SIDEKICK or current_role == Role.REGULAR:
-	st.title(f":green[:material/tv:] Assigned VMs")
+	st.title(f":green[:material/tv:] VMs Assigned to Me")
 	interactive_data_table(
 		key="data_table_assigned_vms_to_this_user",
-		data=get_vm_data_from_db(current_username, "assigned_vms"),
-		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "assigned_vms"),
+		data=get_vm_data_from_db(current_username, "my_assigned_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "my_assigned_vms"),
 		column_settings={
 			"Name": {
 				"column_width": 1,
@@ -172,7 +172,7 @@ if current_role != Role.REGULAR:
 
 if current_role == Role.ADMIN or current_role == Role.MANAGER:
 	st.divider()
-	st.title(":green[:material/tv_signin:] Other Users' VMs")
+	st.title(":green[:material/tv_signin:] Assigned VMs")
 	st.button(
 		"Assign a new VM",
 		icon=":material/assignment_add:",
@@ -181,9 +181,9 @@ if current_role == Role.ADMIN or current_role == Role.MANAGER:
 	)
 
 	interactive_data_table(
-		key="data_table_all_users_vms",
-		data=get_vm_data_from_db(current_username, "all_vms"),
-		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "all_vms"),
+		key="data_table_all_assigned_vms",
+		data=get_vm_data_from_db(current_username, "all_assigned_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "all_assigned_vms"),
 		column_settings={
 			"Name": {
 				"column_width": 1,
@@ -238,8 +238,70 @@ if current_role == Role.ADMIN or current_role == Role.MANAGER:
 		filters_expanded=False
 	)
 
-# minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
-# if role_has_enough_priority(current_role, Role.from_phrase(minimum_permissions)):
+minimum_permissions = st.secrets["vm_sharing_minimum_permissions"]
 
+try:
+	minimum_role = Role.from_phrase(minimum_permissions)
+except ValueError:
+	minimum_role = None # "disabled" in secrets.toml
 
-
+if minimum_role and role_has_enough_priority(current_role, minimum_role):
+	st.divider()
+	st.title(":red[:material/lan:] Other Users' VMs")
+	interactive_data_table(
+		key="data_table_all_users_vms",
+		data=get_vm_data_from_db(current_username, "all_owned_vms"),
+		refresh_data_callback=lambda: get_vm_data_from_db(current_username, "all_owned_vms"),
+		column_settings={
+			"Name": {
+				"column_width": 1,
+				"data_name": "name"
+			},
+			"Owner": {
+				"column_width": 1,
+				"data_name": "owner"
+			},
+			"Host": {
+				"column_width": 1,
+				"data_name": "host_complete"
+			},
+			"Username": {
+				"column_width": 1,
+				"data_name": "username"
+			},
+			"Is Shared": {
+				"column_width": 1,
+				"data_name": "shared"
+			},
+			"Assigned To": {
+				"column_width": 1,
+				"data_name": "assigned_to"
+			},
+			"Auth": {
+				"column_width": 1,
+				"data_name": "auth"
+			},
+		},
+		button_settings={
+			"Connect": {
+				"primary": True,
+				"callback": vm_connect_clicked,
+				"icon": ":material/arrow_forward:",
+			},
+			"Edit": {
+				"primary": False,
+				"callback": vm_edit_clicked,
+				"icon": ":material/edit:",
+			},
+			"Delete": {
+				"primary": False,
+				"callback": vm_delete_clicked,
+				"icon": ":material/delete:",
+			}
+		},
+		action_header_name=None,
+		popover_settings={
+			"text": "View"
+		},
+		filters_expanded=False
+	)
