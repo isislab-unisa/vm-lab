@@ -1,8 +1,11 @@
+# https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 [client]
-showSidebarNavigation = false
+showSidebarNavigation = false # Hide the default navigation sidebar to display a custom one
+showErrorDetails = "none" # In the browser, Streamlit displays generic exception messages.
+toolbarMode = "viewer" # Hide the developer options in the top right menu.
 
 [browser]
 gatherUsageStats = false
 
 [server]
-maxUploadSize = 1
+maxUploadSize = 1 # Cannot do floats
