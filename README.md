@@ -1,18 +1,42 @@
-# vm-lab
-[![Python Version](https://img.shields.io/badge/Python-3.12.8-blue?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3128/)
+# VM Lab
+![Python Static Badge](https://img.shields.io/badge/Python%203.12.9-blue?style=for-the-badge&logo=python&logoColor=black&labelColor=yellow&link=https%3A%2F%2Fwww.python.org%2Fdownloads%2Frelease%2Fpython-3129%2F)
+![Streamlit Static Badge](https://img.shields.io/badge/Streamlit-%23FF4B4B?style=for-the-badge&logo=streamlit&logoColor=%23FF4B4B&labelColor=white&link=https%3A%2F%2Fstreamlit.io%2F)
+![PostgreSQL Static Badge](https://img.shields.io/badge/PostgreSQL-%234169E1?style=for-the-badge&logo=postgresql&logoColor=%234169E1&labelColor=lightgray&link=https%3A%2F%2Fwww.sqlalchemy.org%2F)
+![SQLAlchemy Static Badge](https://img.shields.io/badge/SQLAlchemy-%23D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=%23D71F00&labelColor=%23768776&link=https%3A%2F%2Fwww.sqlalchemy.org%2F)
 
-Manage all your VMs in the browser.
 
-![VM_Lab_Both_My_Dashboard](https://github.com/user-attachments/assets/9632ba97-88ca-49c3-a2cc-7abd0d89200f)
 
+## Welcome to VM-Lab
+
+**VM-Lab** is a web-based platform for managing virtual machines (VMs), users, and bookmarks, designed for educational, research and work environments. It provides a user-friendly interface for both end-users and administrators, with robust authentication, role-based access control, and seamless integration with SSH/SFTP modules.
+
+![dashboard](https://github.com/user-attachments/assets/36688f89-b3fd-46c6-8fdf-1191a99470ff)
+
+
+## Features
+
+- **User Management**: Registration, approval workflow, role assignment, and credential editing.
+- **Role-Based Access Control**: Fine-grained permissions for Admins, Managers, Sidekicks, Regular Users, and New Users.
+- **VM Management**: Create, assign, edit, connect, and delete VMs with secure password/SSH key handling.
+- **Bookmarks**: Save and manage useful links.
+- **Interactive UI**: Built with Streamlit, featuring custom components like interactive data tables and dialogs.
+- **Secure Authentication**: Uses [Streamlit-Authenticator](https://github.com/mkhorasani/Streamlit-Authenticator) with encrypted credentials and session management.
+- **Database Integration**: PostgreSQL backend with SQLAlchemy ORM.
+- **Modular Architecture**: Clean separation of backend, frontend, utilities, and configuration.
+- **Deployment Flexibility**: Supports both Docker-based and local development setups.
+
+![connection](https://github.com/user-attachments/assets/6d5b63c1-40ef-4ece-a89f-acebe7f8ff09)
 
 ## Documentation
-For the full documentation (still WIP) go [here](https://github.com/isislab-unisa/vm-lab/wiki)
 
-Get started [here](https://github.com/isislab-unisa/vm-lab/wiki/Getting-Started)!
+Full documentation and guides are available in the [Wiki](https://github.com/isislab-unisa/vm-lab/wiki).
 
 
-## More Screenshots
-![VM_Lab_Both_VM_Connection](https://github.com/user-attachments/assets/541d1a92-feae-4d0a-bf32-4bb75a6933ab)
+## Contributing
 
-![VM_Lab_Both_Users](https://github.com/user-attachments/assets/19d32a7a-ebdf-4eca-aaae-f814e92b6891)
+- See [Contributing-To-The-Wiki](https://github.com/isislab-unisa/vm-lab/wiki/Contributing-To-The-Wiki) for documentation standards and contribution guidelines.
+- Issues and feature requests are welcome!
+
+## License
+
+[MIT License](LICENSE)
