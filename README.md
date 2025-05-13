@@ -1,5 +1,5 @@
 # VM Lab
-![Python Static Badge](https://img.shields.io/badge/Python%203.12.9-blue?style=for-the-badge&logo=python&logoColor=black&labelColor=yellow&link=https%3A%2F%2Fwww.python.org%2Fdownloads%2Frelease%2Fpython-3129%2F)
+![Python Static Badge](https://img.shields.io/badge/Python%203.12.9-%233776AB?style=for-the-badge&logo=python&logoColor=%233776AB&labelColor=yellow&link=https%3A%2F%2Fwww.python.org%2Fdownloads%2Frelease%2Fpython-3129%2F)
 ![Streamlit Static Badge](https://img.shields.io/badge/Streamlit-%23FF4B4B?style=for-the-badge&logo=streamlit&logoColor=%23FF4B4B&labelColor=white&link=https%3A%2F%2Fstreamlit.io%2F)
 ![PostgreSQL Static Badge](https://img.shields.io/badge/PostgreSQL-%234169E1?style=for-the-badge&logo=postgresql&logoColor=%234169E1&labelColor=lightgray&link=https%3A%2F%2Fwww.sqlalchemy.org%2F)
 ![SQLAlchemy Static Badge](https://img.shields.io/badge/SQLAlchemy-%23D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=%23D71F00&labelColor=%23768776&link=https%3A%2F%2Fwww.sqlalchemy.org%2F)
