@@ -20,6 +20,6 @@ page_setup(
 
 try:
 	# TODO: limit the registration attempts to 5-6 captcha errors
-	register_user_form()
+	register_user_form(captcha=False)
 except Exception as e:
 	st.error(e)
