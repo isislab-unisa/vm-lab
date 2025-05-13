@@ -71,6 +71,7 @@ def register_user_form(key: str = 'Register user',
 				new_username=new_username,
 				new_password=new_password,
 				new_password_repeat=new_password_repeat,
+				captcha=captcha,
 				entered_captcha=entered_captcha,
 				domains=domains
 			)
