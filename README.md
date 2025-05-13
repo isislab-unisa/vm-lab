@@ -6,9 +6,9 @@
 
 
 
-## Welcome to VM-Lab
+## Welcome
 
-**VM-Lab** is a web-based platform for managing virtual machines (VMs), users, and bookmarks, designed for educational, research and work environments. It provides a user-friendly interface for both end-users and administrators, with robust authentication, role-based access control, and seamless integration with SSH/SFTP modules.
+**VM Lab** is a web-based platform for managing virtual machines (VMs), users, and bookmarks, designed for educational, research and work environments. It provides a user-friendly interface for both end-users and administrators, with robust authentication, role-based access control, and seamless integration with SSH/SFTP modules.
 
 ![dashboard](https://github.com/user-attachments/assets/36688f89-b3fd-46c6-8fdf-1191a99470ff)
 
