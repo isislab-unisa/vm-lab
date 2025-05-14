@@ -27,6 +27,12 @@
 
 ![connection](https://github.com/user-attachments/assets/6d5b63c1-40ef-4ece-a89f-acebe7f8ff09)
 
+## Other modules
+This project is part of a modular architecture. Find out more about it [here](https://github.com/isislab-unisa/vm-lab/wiki/The-External-Modules).
+
+- [SSH Module](https://github.com/isislab-unisa/alfresco-ssh)
+- [SFTP Module](https://github.com/isislab-unisa/alfresco-sftp)
+
 ## Documentation
 
 Full documentation and guides are available in the [Wiki](https://github.com/isislab-unisa/vm-lab/wiki).
